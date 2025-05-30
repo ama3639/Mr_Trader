@@ -1,0 +1,91 @@
+{
+  "api_servers": {
+    "base_url": "http://localhost",
+    "strategies": {
+      "price_action": {
+        "name": "Price Action Analysis",
+        "url": "http://localhost:8001/analyze_price_action/",
+        "health_url": "http://localhost:8001/health/",
+        "timeout": 30,
+        "retry_count": 3,
+        "package_levels": ["basic", "premium", "vip", "ghost"],
+        "cache_duration": 60
+      },
+      "martingale": {
+        "name": "Martingale Strategy",
+        "url": "http://localhost:8021/analyze_martingale/",
+        "health_url": "http://localhost:8021/health/",
+        "timeout": 45,
+        "retry_count": 3,
+        "package_levels": ["premium", "vip", "ghost"],
+        "cache_duration": 60
+      },
+      "cup_handle": {
+        "name": "Cup and Handle Pattern",
+        "url": "http://localhost:8013/analyze_cup_handle/",
+        "health_url": "http://localhost:8013/health/",
+        "timeout": 30,
+        "retry_count": 3,
+        "package_levels": ["premium", "vip", "ghost"],
+        "cache_duration": 60
+      },
+      "ichimoku": {
+        "name": "Ichimoku Cloud",
+        "url": "http://localhost:8002/analyze_ichimoku/",
+        "health_url": "http://localhost:8002/health/",
+        "timeout": 30,
+        "retry_count": 3,
+        "package_levels": ["vip", "ghost"],
+        "cache_duration": 60
+      },
+      "fibonacci": {
+        "name": "Fibonacci Retracement",
+        "url": "http://localhost:8003/analyze_fibonacci/",
+        "health_url": "http://localhost:8003/health/",
+        "timeout": 30,
+        "retry_count": 3,
+        "package_levels": ["vip", "ghost"],
+        "cache_duration": 60
+      },
+      "komo_plus": {
+        "name": "Komo Plus Strategy",
+        "url": "http://localhost:8004/analyze_komo_plus/",
+        "health_url": "http://localhost:8004/health/",
+        "timeout": 40,
+        "retry_count": 3,
+        "package_levels": ["ghost"],
+        "cache_duration": 60
+      }
+    },
+    "package_hierarchy": {
+      "basic": {
+        "level": 1,
+        "strategies": ["price_action"]
+      },
+      "premium": {
+        "level": 2,
+        "strategies": ["price_action", "martingale", "cup_handle"]
+      },
+      "vip": {
+        "level": 3,
+        "strategies": ["price_action", "martingale", "cup_handle", "ichimoku", "fibonacci"]
+      },
+      "ghost": {
+        "level": 4,
+        "strategies": ["price_action", "martingale", "cup_handle", "ichimoku", "fibonacci", "komo_plus"]
+      }
+    }
+  },
+  "live_price": {
+    "binance": {
+      "url": "http://localhost:8001/live_price/",
+      "timeout": 10,
+      "retry_count": 2
+    }
+  },
+  "cache_settings": {
+    "default_duration": 60,
+    "min_request_interval": 60,
+    "max_cache_size": 1000
+  }
+}

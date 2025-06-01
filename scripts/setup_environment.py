@@ -1,405 +1,515 @@
-#!/usr/bin/env python3
 """
-اسکریپت راه‌اندازی محیط MrTrader Bot
+اسکریپت راه‌اندازی محیط - نصب و پیکربندی اولیه پروژه
 """
+
 import os
 import sys
-import shutil
 import subprocess
+import shutil
+import sqlite3
 from pathlib import Path
-import argparse
-import json
+from datetime import datetime
 
-# اضافه کردن پوشه پروژه به path
-project_root = Path(__file__).parent.parent
-sys.path.insert(0, str(project_root))
-
+class Colors:
+    """رنگ‌های ترمینال"""
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKCYAN = '\033[96m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
 
 class EnvironmentSetup:
     """کلاس راه‌اندازی محیط"""
     
     def __init__(self):
-        self.project_root = project_root
+        self.project_root = Path(__file__).parent.parent
+        self.required_python_version = (3, 8)
         self.required_dirs = [
-            "data",
-            "logs", 
-            "backups",
-            "backups/daily",
-            "backups/weekly", 
-            "backups/monthly",
-            "reports",
-            "reports/analysis",
-            "reports/user_reports",
-            "reports/admin_reports"
+            'data', 'logs', 'backups', 'reports', 'assets',
+            'backups/daily', 'backups/weekly', 'backups/monthly',
+            'reports/analysis', 'reports/user_reports', 'reports/admin_reports',
+            'assets/images', 'assets/icons', 'assets/fonts'
         ]
         
-        self.required_files = {
-            ".env": ".env.example",
-            "data/.gitkeep": None,
-            "logs/.gitkeep": None,
-            "backups/.gitkeep": None,
-            "reports/.gitkeep": None
-        }
+    def print_colored(self, message: str, color: str = Colors.OKGREEN):
+        """چاپ پیام رنگی"""
+        print(f"{color}{message}{Colors.ENDC}")
     
-    def setup_full_environment(self):
-        """راه‌اندازی کامل محیط"""
-        print("🚀 شروع راه‌اندازی محیط MrTrader Bot")
-        print("="*50)
-        
-        steps = [
-            ("بررسی Python", self.check_python_version),
-            ("ایجاد پوشه‌ها", self.create_directories),
-            ("ایجاد فایل‌ها", self.create_files),
-            ("نصب وابستگی‌ها", self.install_dependencies),
-            ("تنظیم پایگاه داده", self.setup_database),
-            ("بررسی تنظیمات", self.verify_configuration),
-            ("تست اتصالات", self.test_connections)
-        ]
-        
-        for step_name, step_function in steps:
-            print(f"\n📋 {step_name}...")
-            try:
-                result = step_function()
-                if result:
-                    print(f"✅ {step_name}: موفق")
-                else:
-                    print(f"⚠️ {step_name}: با هشدار")
-            except Exception as e:
-                print(f"❌ {step_name}: خطا - {e}")
-                return False
-        
-        print("\n" + "="*50)
-        print("🎉 راه‌اندازی محیط با موفقیت تکمیل شد!")
-        self._print_next_steps()
-        
-        return True
+    def print_step(self, step_number: int, description: str):
+        """چاپ مرحله"""
+        self.print_colored(f"\n{Colors.BOLD}📋 مرحله {step_number}: {description}{Colors.ENDC}")
     
-    def check_python_version(self):
+    def check_python_version(self) -> bool:
         """بررسی نسخه Python"""
-        try:
-            version = sys.version_info
-            
-            if version < (3, 8):
-                raise Exception(f"Python 3.8+ مورد نیاز است. نسخه فعلی: {version.major}.{version.minor}")
-            
-            print(f"  Python نسخه {version.major}.{version.minor}.{version.micro}")
-            
-            # بررسی pip
-            try:
-                import pip
-                print(f"  pip موجود است")
-            except ImportError:
-                raise Exception("pip نصب نیست")
-            
+        current_version = sys.version_info[:2]
+        if current_version >= self.required_python_version:
+            self.print_colored(f"✅ Python {sys.version} - سازگار است")
             return True
-            
-        except Exception as e:
-            print(f"  ❌ {e}")
+        else:
+            self.print_colored(
+                f"❌ Python {current_version[0]}.{current_version[1]} نصب است. "
+                f"حداقل Python {self.required_python_version[0]}.{self.required_python_version[1]} مورد نیاز است.",
+                Colors.FAIL
+            )
             return False
     
     def create_directories(self):
         """ایجاد پوشه‌های مورد نیاز"""
-        try:
-            created_count = 0
-            
-            for dir_path in self.required_dirs:
-                full_path = self.project_root / dir_path
+        self.print_step(1, "ایجاد ساختار پوشه‌ها")
+        
+        for dir_path in self.required_dirs:
+            full_path = self.project_root / dir_path
+            try:
+                full_path.mkdir(parents=True, exist_ok=True)
                 
-                if not full_path.exists():
-                    full_path.mkdir(parents=True, exist_ok=True)
-                    print(f"  📁 ایجاد شد: {dir_path}")
-                    created_count += 1
-                else:
-                    print(f"  📁 موجود: {dir_path}")
-            
-            if created_count > 0:
-                print(f"  ✅ {created_count} پوشه جدید ایجاد شد")
-            else:
-                print(f"  ✅ تمام پوشه‌ها موجود بودند")
-            
-            return True
-            
-        except Exception as e:
-            print(f"  ❌ خطا در ایجاد پوشه‌ها: {e}")
-            return False
-    
-    def create_files(self):
-        """ایجاد فایل‌های مورد نیاز"""
-        try:
-            created_count = 0
-            
-            for target_file, source_file in self.required_files.items():
-                target_path = self.project_root / target_file
-                
-                if not target_path.exists():
-                    if source_file:
-                        # کپی از فایل نمونه
-                        source_path = self.project_root / source_file
-                        if source_path.exists():
-                            shutil.copy2(source_path, target_path)
-                            print(f"  📄 کپی شد: {source_file} → {target_file}")
-                        else:
-                            print(f"  ⚠️ فایل نمونه یافت نشد: {source_file}")
-                    else:
-                        # ایجاد فایل خالی
-                        target_path.touch()
-                        print(f"  📄 ایجاد شد: {target_file}")
-                    
-                    created_count += 1
-                else:
-                    print(f"  📄 موجود: {target_file}")
-            
-            # ایجاد .gitkeep برای پوشه‌های خالی
-            gitkeep_dirs = ["logs", "backups", "reports"]
-            for dir_name in gitkeep_dirs:
-                gitkeep_file = self.project_root / dir_name / ".gitkeep"
+                # ایجاد فایل .gitkeep برای پوشه‌های خالی
+                gitkeep_file = full_path / '.gitkeep'
                 if not gitkeep_file.exists():
-                    gitkeep_file.write_text("# Keep this directory in git\n")
-                    print(f"  📄 ایجاد شد: {dir_name}/.gitkeep")
+                    gitkeep_file.touch()
+                
+                self.print_colored(f"📁 {dir_path} ✅")
+            except Exception as e:
+                self.print_colored(f"❌ خطا در ایجاد {dir_path}: {e}", Colors.FAIL)
+    
+    def install_requirements(self):
+        """نصب وابستگی‌ها"""
+        self.print_step(2, "نصب وابستگی‌ها")
+        
+        requirements_file = self.project_root / 'requirements.txt'
+        
+        if not requirements_file.exists():
+            self.print_colored("❌ فایل requirements.txt یافت نشد!", Colors.FAIL)
+            return False
+        
+        try:
+            # به‌روزرسانی pip
+            subprocess.run([sys.executable, '-m', 'pip', 'install', '--upgrade', 'pip'], 
+                         check=True, capture_output=True)
+            self.print_colored("✅ pip به‌روزرسانی شد")
             
-            if created_count > 0:
-                print(f"  ✅ {created_count} فایل جدید ایجاد شد")
-            
+            # نصب وابستگی‌ها
+            subprocess.run([sys.executable, '-m', 'pip', 'install', '-r', str(requirements_file)], 
+                         check=True, capture_output=True)
+            self.print_colored("✅ تمام وابستگی‌ها نصب شدند")
             return True
             
-        except Exception as e:
-            print(f"  ❌ خطا در ایجاد فایل‌ها: {e}")
-            return False
-    
-    def install_dependencies(self):
-        """نصب وابستگی‌ها"""
-        try:
-            requirements_file = self.project_root / "requirements.txt"
-            
-            if not requirements_file.exists():
-                print("  ⚠️ فایل requirements.txt یافت نشد")
-                return False
-            
-            print("  📦 نصب وابستگی‌ها...")
-            
-            # اجرای pip install
-            result = subprocess.run([
-                sys.executable, "-m", "pip", "install", "-r", str(requirements_file)
-            ], capture_output=True, text=True)
-            
-            if result.returncode == 0:
-                print("  ✅ وابستگی‌ها با موفقیت نصب شدند")
-                return True
-            else:
-                print(f"  ❌ خطا در نصب وابستگی‌ها:")
-                print(f"  {result.stderr}")
-                return False
-                
-        except Exception as e:
-            print(f"  ❌ خطا در نصب وابستگی‌ها: {e}")
+        except subprocess.CalledProcessError as e:
+            self.print_colored(f"❌ خطا در نصب وابستگی‌ها: {e}", Colors.FAIL)
             return False
     
     def setup_database(self):
-        """تنظیم پایگاه داده"""
+        """راه‌اندازی پایگاه داده"""
+        self.print_step(3, "راه‌اندازی پایگاه داده")
+        
+        db_path = self.project_root / 'data' / 'mrtrader.db'
+        
         try:
-            # اجرای migration script
-            migration_script = self.project_root / "scripts" / "migrate_database.py"
+            # ایجاد پایگاه داده
+            conn = sqlite3.connect(str(db_path))
+            cursor = conn.cursor()
             
-            if migration_script.exists():
-                print("  🗄️ راه‌اندازی پایگاه داده...")
+            # ایجاد جداول اصلی
+            tables_sql = [
+                # جدول کاربران
+                """
+                CREATE TABLE IF NOT EXISTS users (
+                    user_id INTEGER PRIMARY KEY,
+                    username TEXT,
+                    first_name TEXT,
+                    last_name TEXT,
+                    email TEXT,
+                    phone TEXT,
+                    registration_date TEXT NOT NULL,
+                    last_login TEXT,
+                    status TEXT DEFAULT 'active',
+                    is_admin BOOLEAN DEFAULT 0,
+                    is_vip BOOLEAN DEFAULT 0,
+                    referred_by INTEGER,
+                    referral_code TEXT,
+                    current_package TEXT,
+                    stats TEXT,
+                    settings TEXT,
+                    notes TEXT DEFAULT '',
+                    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+                );
+                """,
                 
-                result = subprocess.run([
-                    sys.executable, str(migration_script)
-                ], capture_output=True, text=True)
+                # جدول تراکنش‌ها
+                """
+                CREATE TABLE IF NOT EXISTS transactions (
+                    transaction_id TEXT PRIMARY KEY,
+                    user_id INTEGER NOT NULL,
+                    transaction_type TEXT NOT NULL,
+                    status TEXT NOT NULL,
+                    amount REAL NOT NULL,
+                    currency TEXT DEFAULT 'USD',
+                    package_id TEXT,
+                    package_name TEXT,
+                    subscription_duration TEXT,
+                    payment_details TEXT,
+                    description TEXT,
+                    notes TEXT DEFAULT '',
+                    created_date TEXT NOT NULL,
+                    updated_date TEXT NOT NULL,
+                    completed_date TEXT,
+                    refunded_date TEXT,
+                    from_package_id TEXT,
+                    to_package_id TEXT,
+                    upgrade_days_remaining INTEGER,
+                    referrer_user_id INTEGER,
+                    referral_reward_amount REAL DEFAULT 0.0
+                );
+                """,
                 
-                if result.returncode == 0:
-                    print("  ✅ پایگاه داده راه‌اندازی شد")
-                    return True
-                else:
-                    print(f"  ❌ خطا در راه‌اندازی پایگاه داده:")
-                    print(f"  {result.stderr}")
-                    return False
-            else:
-                print("  ⚠️ اسکریپت migration یافت نشد")
+                # جدول لاگ‌ها
+                """
+                CREATE TABLE IF NOT EXISTS logs (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    timestamp TEXT NOT NULL,
+                    level TEXT NOT NULL,
+                    category TEXT NOT NULL,
+                    user_id INTEGER,
+                    message TEXT NOT NULL,
+                    details TEXT,
+                    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+                );
+                """,
                 
-                # ایجاد پایگاه داده خالی
-                db_path = self.project_root / "data" / "mrtrader.db"
-                if not db_path.exists():
-                    db_path.touch()
-                    print("  📄 فایل پایگاه داده خالی ایجاد شد")
+                # جدول کش
+                """
+                CREATE TABLE IF NOT EXISTS cache (
+                    key TEXT PRIMARY KEY,
+                    value TEXT NOT NULL,
+                    expiry_time TEXT NOT NULL,
+                    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+                );
+                """,
                 
-                return True
-                
+                # جدول تنظیمات
+                """
+                CREATE TABLE IF NOT EXISTS settings (
+                    key TEXT PRIMARY KEY,
+                    value TEXT NOT NULL,
+                    category TEXT DEFAULT 'general',
+                    description TEXT,
+                    updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+                );
+                """
+            ]
+            
+            for sql in tables_sql:
+                cursor.execute(sql)
+            
+            # ایجاد ایندکس‌ها
+            indexes_sql = [
+                "CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);",
+                "CREATE INDEX IF NOT EXISTS idx_users_status ON users(status);",
+                "CREATE INDEX IF NOT EXISTS idx_transactions_user ON transactions(user_id);",
+                "CREATE INDEX IF NOT EXISTS idx_transactions_status ON transactions(status);",
+                "CREATE INDEX IF NOT EXISTS idx_logs_timestamp ON logs(timestamp);",
+                "CREATE INDEX IF NOT EXISTS idx_logs_user ON logs(user_id);",
+                "CREATE INDEX IF NOT EXISTS idx_cache_expiry ON cache(expiry_time);"
+            ]
+            
+            for sql in indexes_sql:
+                cursor.execute(sql)
+            
+            # درج تنظیمات پیش‌فرض
+            default_settings = [
+                ('bot_token', 'YOUR_BOT_TOKEN_HERE', 'telegram', 'توکن ربات تلگرام'),
+                ('admin_chat_id', '0', 'telegram', 'شناسه چت ادمین'),
+                ('api_base_url', 'https://api.mrtrader.bot', 'api', 'آدرس پایه API'),
+                ('cache_ttl', '3600', 'performance', 'مدت زمان نگهداری کش (ثانیه)'),
+                ('max_daily_requests_free', '5', 'limits', 'حداکثر درخواست روزانه برای کاربران رایگان'),
+                ('maintenance_mode', 'false', 'system', 'حالت تعمیرات'),
+                ('version', '1.0.0', 'system', 'نسخه سیستم')
+            ]
+            
+            cursor.executemany(
+                "INSERT OR IGNORE INTO settings (key, value, category, description) VALUES (?, ?, ?, ?)",
+                default_settings
+            )
+            
+            conn.commit()
+            conn.close()
+            
+            self.print_colored(f"✅ پایگاه داده ایجاد شد: {db_path}")
+            return True
+            
         except Exception as e:
-            print(f"  ❌ خطا در تنظیم پایگاه داده: {e}")
+            self.print_colored(f"❌ خطا در راه‌اندازی پایگاه داده: {e}", Colors.FAIL)
             return False
     
-    def verify_configuration(self):
-        """بررسی تنظیمات"""
-        try:
-            config_issues = []
-            
-            # بررسی فایل .env
-            env_file = self.project_root / ".env"
-            if env_file.exists():
-                env_content = env_file.read_text()
-                
-                required_vars = [
-                    "BOT_TOKEN",
-                    "ADMIN_USER_ID",
-                    "DATABASE_PATH"
-                ]
-                
-                for var in required_vars:
-                    if f"{var}=your_" in env_content or f"{var}=" not in env_content:
-                        config_issues.append(f"متغیر {var} تنظیم نشده")
-            else:
-                config_issues.append("فایل .env وجود ندارد")
-            
-            # بررسی فایل‌های config
-            config_dir = self.project_root / "config"
-            if config_dir.exists():
-                required_configs = ["api_servers_config.json"]
-                for config_file in required_configs:
-                    if not (config_dir / config_file).exists():
-                        config_issues.append(f"فایل {config_file} موجود نیست")
-            
-            if config_issues:
-                print("  ⚠️ مسائل تنظیمات:")
-                for issue in config_issues:
-                    print(f"    • {issue}")
-                return False
-            else:
-                print("  ✅ تنظیمات صحیح هستند")
-                return True
-                
-        except Exception as e:
-            print(f"  ❌ خطا در بررسی تنظیمات: {e}")
-            return False
-    
-    def test_connections(self):
-        """تست اتصالات"""
-        try:
-            print("  🔗 تست اتصالات...")
-            
-            # تست پایگاه داده
+    def create_env_file(self):
+        """ایجاد فایل .env"""
+        self.print_step(4, "ایجاد فایل تنظیمات محیطی")
+        
+        env_file = self.project_root / '.env'
+        env_example_file = self.project_root / '.env.example'
+        
+        if env_file.exists():
+            self.print_colored("⚠️ فایل .env موجود است، رد می‌شود", Colors.WARNING)
+            return True
+        
+        if env_example_file.exists():
             try:
-                import sqlite3
-                db_path = self.project_root / "data" / "mrtrader.db"
-                
-                if db_path.exists():
-                    conn = sqlite3.connect(db_path)
-                    conn.execute("SELECT 1")
-                    conn.close()
-                    print("    ✅ اتصال پایگاه داده")
-                else:
-                    print("    ⚠️ فایل پایگاه داده وجود ندارد")
+                shutil.copy2(env_example_file, env_file)
+                self.print_colored("✅ فایل .env از .env.example کپی شد")
+                self.print_colored("🔧 لطفاً متغیرهای محیطی را در فایل .env تنظیم کنید", Colors.WARNING)
+                return True
             except Exception as e:
-                print(f"    ❌ خطا در اتصال پایگاه داده: {e}")
-            
-            # تست import های اصلی
-            try:
-                import telegram
-                print("    ✅ telegram library")
-            except ImportError:
-                print("    ❌ telegram library نصب نیست")
-            
-            try:
-                import requests
-                print("    ✅ requests library")
-            except ImportError:
-                print("    ❌ requests library نصب نیست")
-            
-            return True
-            
-        except Exception as e:
-            print(f"  ❌ خطا در تست اتصالات: {e}")
-            return False
-    
-    def _print_next_steps(self):
-        """چاپ مراحل بعدی"""
-        print("\n📋 مراحل بعدی:")
-        print("1. فایل .env را ویرایش کنید و اطلاعات صحیح را وارد کنید")
-        print("2. BOT_TOKEN را از @BotFather دریافت کنید")
-        print("3. ADMIN_USER_ID را تنظیم کنید")
-        print("4. API کلیدها را در .env اضافه کنید")
-        print("5. ربات را با python main.py اجرا کنید")
-        print("\n🔧 دستورات مفید:")
-        print("  • تست سلامت: python scripts/health_check.py")
-        print("  • بکاپ: python scripts/backup_data.py create")
-        print("  • پاک‌سازی: python scripts/cleanup_logs.py --analyze")
-    
-    def create_sample_config(self):
-        """ایجاد تنظیمات نمونه"""
-        try:
-            config_dir = self.project_root / "config"
-            
-            # ایجاد api_servers_config.json نمونه
-            api_config = {
-                "binance": {
-                    "base_url": "https://api.binance.com",
-                    "endpoints": {
-                        "ticker": "/api/v3/ticker/24hr",
-                        "klines": "/api/v3/klines",
-                        "ping": "/api/v3/ping"
-                    },
-                    "rate_limit": 1200,
-                    "timeout": 10
-                },
-                "coingecko": {
-                    "base_url": "https://api.coingecko.com/api/v3",
-                    "endpoints": {
-                        "ping": "/ping",
-                        "coins_list": "/coins/list",
-                        "simple_price": "/simple/price"
-                    },
-                    "rate_limit": 100,
-                    "timeout": 10
-                }
-            }
-            
-            api_config_file = config_dir / "api_servers_config.json"
-            if not api_config_file.exists():
-                with open(api_config_file, 'w', encoding='utf-8') as f:
-                    json.dump(api_config, f, indent=2, ensure_ascii=False)
-                print(f"  📄 ایجاد شد: config/api_servers_config.json")
-            
-            return True
-            
-        except Exception as e:
-            print(f"  ❌ خطا در ایجاد تنظیمات نمونه: {e}")
-            return False
+                self.print_colored(f"❌ خطا در کپی فایل .env: {e}", Colors.FAIL)
+                return False
+        else:
+            # ایجاد فایل .env پیش‌فرض
+            env_content = """# تنظیمات MrTrader Bot
+# لطفاً مقادیر زیر را با اطلاعات واقعی جایگزین کنید
 
+# Telegram Bot
+BOT_TOKEN=YOUR_BOT_TOKEN_HERE
+ADMIN_CHAT_ID=YOUR_ADMIN_CHAT_ID
+
+# Database
+DATABASE_URL=sqlite:///data/mrtrader.db
+
+# API Configuration
+API_BASE_URL=https://api.mrtrader.bot
+API_KEY=YOUR_API_KEY
+API_SECRET=YOUR_API_SECRET
+
+# Redis (اختیاری - برای کش)
+REDIS_URL=redis://localhost:6379
+
+# Payment Gateways
+ZARINPAL_MERCHANT_ID=YOUR_ZARINPAL_MERCHANT_ID
+MELLAT_TERMINAL_ID=YOUR_MELLAT_TERMINAL_ID
+MELLAT_USERNAME=YOUR_MELLAT_USERNAME
+MELLAT_PASSWORD=YOUR_MELLAT_PASSWORD
+
+# External APIs
+BINANCE_API_KEY=YOUR_BINANCE_API_KEY
+BINANCE_API_SECRET=YOUR_BINANCE_API_SECRET
+
+# System
+DEBUG=False
+LOG_LEVEL=INFO
+ENVIRONMENT=production
+
+# Security
+SECRET_KEY=YOUR_SECRET_KEY_HERE
+ENCRYPTION_KEY=YOUR_ENCRYPTION_KEY
+
+# Performance
+CACHE_TTL=3600
+MAX_WORKERS=4
+"""
+            
+            try:
+                with open(env_file, 'w', encoding='utf-8') as f:
+                    f.write(env_content)
+                self.print_colored("✅ فایل .env ایجاد شد")
+                self.print_colored("🔧 لطفاً متغیرهای محیطی را تنظیم کنید", Colors.WARNING)
+                return True
+            except Exception as e:
+                self.print_colored(f"❌ خطا در ایجاد فایل .env: {e}", Colors.FAIL)
+                return False
+    
+    def set_permissions(self):
+        """تنظیم دسترسی‌ها"""
+        self.print_step(5, "تنظیم دسترسی‌ها")
+        
+        if os.name == 'posix':  # Unix/Linux/Mac
+            try:
+                # تنظیم دسترسی برای پوشه‌های حساس
+                sensitive_dirs = ['data', 'logs', 'backups']
+                for dir_name in sensitive_dirs:
+                    dir_path = self.project_root / dir_name
+                    if dir_path.exists():
+                        os.chmod(dir_path, 0o750)
+                
+                # تنظیم دسترسی برای فایل .env
+                env_file = self.project_root / '.env'
+                if env_file.exists():
+                    os.chmod(env_file, 0o600)
+                
+                # قابل اجرا کردن اسکریپت‌ها
+                scripts_dir = self.project_root / 'scripts'
+                if scripts_dir.exists():
+                    for script_file in scripts_dir.glob('*.py'):
+                        os.chmod(script_file, 0o755)
+                
+                self.print_colored("✅ دسترسی‌ها تنظیم شدند")
+                return True
+                
+            except Exception as e:
+                self.print_colored(f"⚠️ خطا در تنظیم دسترسی‌ها: {e}", Colors.WARNING)
+                return False
+        else:
+            self.print_colored("ℹ️ تنظیم دسترسی‌ها در Windows پشتیبانی نمی‌شود", Colors.OKBLUE)
+            return True
+    
+    def create_systemd_service(self):
+        """ایجاد سرویس systemd (فقط Linux)"""
+        if os.name != 'posix':
+            return True
+        
+        try:
+            import pwd
+            current_user = pwd.getpwuid(os.getuid()).pw_name
+        except:
+            current_user = 'mrtrader'
+        
+        service_content = f"""[Unit]
+Description=MrTrader Bot
+After=network.target
+
+[Service]
+Type=simple
+User={current_user}
+WorkingDirectory={self.project_root}
+Environment=PATH={self.project_root}/venv/bin
+ExecStart={sys.executable} main.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+"""
+        
+        try:
+            service_file = self.project_root / 'mrtrader.service'
+            with open(service_file, 'w') as f:
+                f.write(service_content)
+            
+            self.print_colored("✅ فایل سرویس systemd ایجاد شد")
+            self.print_colored(f"💡 برای نصب: sudo cp {service_file} /etc/systemd/system/", Colors.OKBLUE)
+            return True
+            
+        except Exception as e:
+            self.print_colored(f"⚠️ خطا در ایجاد سرویس systemd: {e}", Colors.WARNING)
+            return False
+    
+    def run_tests(self):
+        """اجرای تست‌های اولیه"""
+        self.print_step(6, "اجرای تست‌های اولیه")
+        
+        try:
+            # تست import های اصلی
+            test_imports = [
+                'sqlite3', 'asyncio', 'json', 'datetime',
+                'telegram', 'aiohttp', 'requests'
+            ]
+            
+            for module_name in test_imports:
+                try:
+                    __import__(module_name)
+                    self.print_colored(f"✅ {module_name}")
+                except ImportError:
+                    self.print_colored(f"❌ {module_name} - نصب نشده", Colors.FAIL)
+                    return False
+            
+            # تست دسترسی به فایل‌ها
+            db_path = self.project_root / 'data' / 'mrtrader.db'
+            if db_path.exists():
+                try:
+                    conn = sqlite3.connect(str(db_path))
+                    cursor = conn.cursor()
+                    cursor.execute("SELECT COUNT(*) FROM users")
+                    conn.close()
+                    self.print_colored("✅ اتصال پایگاه داده")
+                except Exception as e:
+                    self.print_colored(f"❌ خطا در اتصال پایگاه داده: {e}", Colors.FAIL)
+                    return False
+            
+            self.print_colored("✅ همه تست‌ها موفقیت‌آمیز بودند")
+            return True
+            
+        except Exception as e:
+            self.print_colored(f"❌ خطا در اجرای تست‌ها: {e}", Colors.FAIL)
+            return False
+    
+    def show_next_steps(self):
+        """نمایش مراحل بعدی"""
+        self.print_colored(f"\n{Colors.BOLD}🎉 راه‌اندازی تکمیل شد!{Colors.ENDC}")
+        
+        next_steps = [
+            "1. فایل .env را ویرایش کنید و توکن ربات تلگرام را وارد کنید",
+            "2. شناسه چت ادمین را در .env تنظیم کنید", 
+            "3. کلیدهای API های مورد نیاز را پیکربندی کنید",
+            "4. ربات را با دستور python main.py اجرا کنید",
+            "5. /start را در تلگرام برای ربات ارسال کنید"
+        ]
+        
+        self.print_colored(f"\n{Colors.BOLD}📋 مراحل بعدی:{Colors.ENDC}")
+        for step in next_steps:
+            self.print_colored(step, Colors.OKBLUE)
+        
+        self.print_colored(f"\n{Colors.BOLD}📚 مستندات:{Colors.ENDC}")
+        self.print_colored("• README.md - راهنمای کامل", Colors.OKBLUE)
+        self.print_colored("• docs/ - مستندات تخصصی", Colors.OKBLUE)
+        
+        self.print_colored(f"\n{Colors.BOLD}🆘 پشتیبانی:{Colors.ENDC}")
+        self.print_colored("• GitHub Issues: https://github.com/mrtrader/bot/issues", Colors.OKBLUE)
+        self.print_colored("• ایمیل: support@mrtrader.bot", Colors.OKBLUE)
+    
+    def run_setup(self):
+        """اجرای کامل راه‌اندازی"""
+        self.print_colored(f"{Colors.BOLD}🚀 شروع راه‌اندازی MrTrader Bot{Colors.ENDC}")
+        self.print_colored(f"📅 {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        
+        # بررسی پیش‌نیازها
+        if not self.check_python_version():
+            return False
+        
+        # اجرای مراحل راه‌اندازی
+        steps = [
+            self.create_directories,
+            self.install_requirements,
+            self.setup_database,
+            self.create_env_file,
+            self.set_permissions,
+            self.create_systemd_service,
+            self.run_tests
+        ]
+        
+        for step_func in steps:
+            try:
+                if not step_func():
+                    self.print_colored("❌ راه‌اندازی متوقف شد", Colors.FAIL)
+                    return False
+            except KeyboardInterrupt:
+                self.print_colored("\n⚠️ راه‌اندازی توسط کاربر لغو شد", Colors.WARNING)
+                return False
+            except Exception as e:
+                self.print_colored(f"❌ خطای غیرمنتظره: {e}", Colors.FAIL)
+                return False
+        
+        self.show_next_steps()
+        return True
 
 def main():
     """تابع اصلی"""
-    parser = argparse.ArgumentParser(description="راه‌اندازی محیط MrTrader Bot")
-    parser.add_argument("--quick", action="store_true",
-                       help="راه‌اندازی سریع (بدون نصب وابستگی‌ها)")
-    parser.add_argument("--config-only", action="store_true",
-                       help="فقط ایجاد تنظیمات")
-    
-    args = parser.parse_args()
+    setup = EnvironmentSetup()
     
     try:
-        setup = EnvironmentSetup()
-        
-        if args.config_only:
-            print("🔧 ایجاد تنظیمات نمونه...")
-            return setup.create_sample_config()
-        elif args.quick:
-            print("⚡ راه‌اندازی سریع...")
-            success = True
-            success &= setup.create_directories()
-            success &= setup.create_files()
-            success &= setup.create_sample_config()
-            return success
+        success = setup.run_setup()
+        if success:
+            setup.print_colored("\n✅ راه‌اندازی با موفقیت تکمیل شد!", Colors.OKGREEN)
+            sys.exit(0)
         else:
-            return setup.setup_full_environment()
-        
+            setup.print_colored("\n❌ راه‌اندازی با خطا مواجه شد!", Colors.FAIL)
+            sys.exit(1)
     except KeyboardInterrupt:
-        print("\n⏹️ راه‌اندازی متوقف شد")
-        return False
+        setup.print_colored("\n⚠️ راه‌اندازی لغو شد", Colors.WARNING)
+        sys.exit(1)
     except Exception as e:
-        print(f"❌ خطای غیرمنتظره: {e}")
-        return False
-
+        setup.print_colored(f"\n❌ خطای غیرمنتظره: {e}", Colors.FAIL)
+        sys.exit(1)
 
 if __name__ == "__main__":
-    success = main()
-    sys.exit(0 if success else 1)
+    main()

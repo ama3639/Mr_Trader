@@ -1,547 +1,856 @@
 """
-توابع کمکی عمومی برای MrTrader Bot
+ابزارهای کمکی - توابع عمومی و کاربردی
 """
+
+import re
+import json
 import hashlib
 import secrets
 import string
-import uuid
-import random
-import asyncio
-import functools
+from typing import Any, Dict, List, Optional, Union, Tuple
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Union, Callable, Tuple
-import json
-import base64
-from urllib.parse import urlparse
-import logging
+import asyncio
+from functools import wraps
+import time
 
+def generate_random_string(length: int = 8, 
+                         use_uppercase: bool = True,
+                         use_lowercase: bool = True, 
+                         use_digits: bool = True,
+                         use_special: bool = False) -> str:
+    """تولید رشته تصادفی"""
+    chars = ""
+    if use_uppercase:
+        chars += string.ascii_uppercase
+    if use_lowercase:
+        chars += string.ascii_lowercase
+    if use_digits:
+        chars += string.digits
+    if use_special:
+        chars += "!@#$%^&*"
+    
+    if not chars:
+        chars = string.ascii_letters + string.digits
+    
+    return ''.join(secrets.choice(chars) for _ in range(length))
 
-logger = logging.getLogger(__name__)
+def generate_referral_code(length: int = 8) -> str:
+    """تولید کد رفرال"""
+    return generate_random_string(length, use_lowercase=False, use_special=False)
 
+def generate_transaction_id() -> str:
+    """تولید شناسه تراکنش"""
+    timestamp = str(int(time.time()))
+    random_part = generate_random_string(6, use_lowercase=False)
+    return f"TXN{timestamp}{random_part}"
 
-class StringHelper:
-    """توابع کمکی رشته"""
-    
-    @staticmethod
-    def generate_random_string(length: int = 8, include_digits: bool = True, 
-                             include_uppercase: bool = True, include_lowercase: bool = True) -> str:
-        """تولید رشته تصادفی"""
-        chars = ""
-        if include_lowercase:
-            chars += string.ascii_lowercase
-        if include_uppercase:
-            chars += string.ascii_uppercase
-        if include_digits:
-            chars += string.digits
-        
-        if not chars:
-            chars = string.ascii_letters + string.digits
-        
-        return ''.join(secrets.choice(chars) for _ in range(length))
-    
-    @staticmethod
-    def generate_referral_code(user_id: int, length: int = 8) -> str:
-        """تولید کد رفرال"""
-        # ترکیب user_id با رشته تصادفی
-        random_part = StringHelper.generate_random_string(length - 4, include_lowercase=False)
-        user_part = str(user_id)[-4:].zfill(4)
-        return f"{random_part}{user_part}"
-    
-    @staticmethod
-    def generate_transaction_id(prefix: str = "TXN") -> str:
-        """تولید شناسه تراکنش"""
-        timestamp = int(datetime.now().timestamp())
-        random_part = StringHelper.generate_random_string(6, include_lowercase=False)
-        return f"{prefix}_{timestamp}_{random_part}"
-    
-    @staticmethod
-    def generate_subscription_id() -> str:
-        """تولید شناسه اشتراک"""
-        return f"SUB_{uuid.uuid4().hex[:12].upper()}"
-    
-    @staticmethod
-    def truncate_text(text: str, max_length: int = 100, suffix: str = "...") -> str:
-        """کوتاه کردن متن"""
-        if not text or len(text) <= max_length:
-            return text
-        
-        return text[:max_length - len(suffix)] + suffix
-    
-    @staticmethod
-    def sanitize_filename(filename: str) -> str:
-        """پاک‌سازی نام فایل"""
-        # حذف کاراکترهای خطرناک
-        dangerous_chars = ['/', '\\', '?', '%', '*', ':', '|', '"', '<', '>']
-        for char in dangerous_chars:
-            filename = filename.replace(char, '_')
-        
-        return filename.strip()
-    
-    @staticmethod
-    def extract_mention(text: str) -> Optional[str]:
-        """استخراج منشن از متن"""
-        import re
-        pattern = r'@([a-zA-Z0-9_]{5,32})'
-        match = re.search(pattern, text)
-        return match.group(1) if match else None
-    
-    @staticmethod
-    def mask_sensitive_data(data: str, visible_chars: int = 4) -> str:
-        """پنهان کردن داده حساس"""
-        if len(data) <= visible_chars * 2:
-            return '*' * len(data)
-        
-        return data[:visible_chars] + '*' * (len(data) - visible_chars * 2) + data[-visible_chars:]
+def hash_string(text: str, salt: str = "") -> str:
+    """هش کردن رشته با SHA256"""
+    combined = f"{text}{salt}"
+    return hashlib.sha256(combined.encode('utf-8')).hexdigest()
 
+def mask_sensitive_data(data: str, 
+                       show_first: int = 2, 
+                       show_last: int = 2, 
+                       mask_char: str = "*") -> str:
+    """پنهان کردن داده‌های حساس"""
+    if len(data) <= show_first + show_last:
+        return mask_char * len(data)
+    
+    masked_length = len(data) - show_first - show_last
+    return f"{data[:show_first]}{mask_char * masked_length}{data[-show_last:]}"
 
-class CryptoHelper:
-    """توابع کمکی رمزنگاری"""
+def format_number(number: Union[int, float], 
+                 decimal_places: int = 2,
+                 use_comma: bool = True) -> str:
+    """فرمت‌بندی اعداد"""
+    if isinstance(number, int):
+        formatted = f"{number:,}" if use_comma else str(number)
+    else:
+        formatted = f"{number:,.{decimal_places}f}" if use_comma else f"{number:.{decimal_places}f}"
     
-    @staticmethod
-    def hash_password(password: str) -> str:
-        """هش کردن رمز عبور"""
-        return hashlib.sha256(password.encode()).hexdigest()
-    
-    @staticmethod
-    def generate_api_key(length: int = 32) -> str:
-        """تولید کلید API"""
-        return secrets.token_urlsafe(length)
-    
-    @staticmethod
-    def generate_secret_key(length: int = 64) -> str:
-        """تولید کلید مخفی"""
-        return secrets.token_hex(length)
-    
-    @staticmethod
-    def encode_data(data: str) -> str:
-        """رمزگذاری ساده داده"""
-        return base64.b64encode(data.encode()).decode()
-    
-    @staticmethod
-    def decode_data(encoded_data: str) -> str:
-        """رمزگشایی داده"""
-        try:
-            return base64.b64decode(encoded_data.encode()).decode()
-        except Exception:
-            return ""
-    
-    @staticmethod
-    def create_checksum(data: str) -> str:
-        """ایجاد checksum"""
-        return hashlib.md5(data.encode()).hexdigest()
-    
-    @staticmethod
-    def verify_checksum(data: str, checksum: str) -> bool:
-        """تأیید checksum"""
-        return CryptoHelper.create_checksum(data) == checksum
+    return formatted
 
+def format_currency(amount: float, 
+                   currency: str = "USD",
+                   decimal_places: int = 2) -> str:
+    """فرمت‌بندی ارز"""
+    formatted_amount = format_number(amount, decimal_places)
+    
+    currency_symbols = {
+        "USD": "$",
+        "EUR": "€",
+        "GBP": "£",
+        "IRR": "ریال",
+        "USDT": "USDT",
+        "BTC": "₿"
+    }
+    
+    symbol = currency_symbols.get(currency, currency)
+    
+    if currency in ["IRR"]:
+        return f"{formatted_amount} {symbol}"
+    else:
+        return f"{symbol}{formatted_amount}"
 
-class TimeHelper:
-    """توابع کمکی زمان"""
+def format_percentage(value: float, decimal_places: int = 2) -> str:
+    """فرمت‌بندی درصد"""
+    return f"{value:.{decimal_places}f}%"
+
+def format_time_delta(delta: timedelta) -> str:
+    """فرمت‌بندی مدت زمان"""
+    total_seconds = int(delta.total_seconds())
     
-    @staticmethod
-    def get_timestamp() -> int:
-        """دریافت timestamp فعلی"""
-        return int(datetime.now().timestamp())
+    if total_seconds < 60:
+        return f"{total_seconds} ثانیه"
+    elif total_seconds < 3600:
+        minutes = total_seconds // 60
+        return f"{minutes} دقیقه"
+    elif total_seconds < 86400:
+        hours = total_seconds // 3600
+        minutes = (total_seconds % 3600) // 60
+        if minutes > 0:
+            return f"{hours} ساعت و {minutes} دقیقه"
+        return f"{hours} ساعت"
+    else:
+        days = total_seconds // 86400
+        hours = (total_seconds % 86400) // 3600
+        if hours > 0:
+            return f"{days} روز و {hours} ساعت"
+        return f"{days} روز"
+
+def parse_user_input(text: str) -> Dict[str, Any]:
+    """پارس کردن ورودی کاربر"""
+    result = {
+        "original": text,
+        "cleaned": text.strip(),
+        "words": text.strip().split(),
+        "numbers": re.findall(r'\d+\.?\d*', text),
+        "urls": re.findall(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', text)
+    }
     
-    @staticmethod
-    def timestamp_to_datetime(timestamp: Union[int, float]) -> datetime:
-        """تبدیل timestamp به datetime"""
-        return datetime.fromtimestamp(timestamp)
+    # استخراج نمادهای ارز
+    symbols = re.findall(r'\b[A-Z]{2,10}\b', text.upper())
+    result["symbols"] = list(set(symbols))
     
-    @staticmethod
-    def is_weekend(dt: datetime = None) -> bool:
-        """بررسی آخر هفته"""
-        if dt is None:
-            dt = datetime.now()
-        return dt.weekday() >= 5  # شنبه = 5, یکشنبه = 6
+    return result
+
+def extract_signal_details(analysis_data: Union[Dict[str, Any], str]) -> Dict[str, Any]:
+    """استخراج جزئیات سیگنال از داده‌های تحلیل (پشتیبانی از انواع مختلف)"""
+    details = {
+        "signal_direction": "neutral",
+        "entry_price": 0.0,
+        "stop_loss": 0.0,
+        "take_profit": 0.0,
+        "support": 0.0,
+        "resistance": 0.0,
+        "strength": "medium",
+        "confidence": 50.0,
+        "strategy_type": "unknown",
+        "pattern_confidence": 0.0,
+        "risk_reward_ratio": 0.0
+    }
     
-    @staticmethod
-    def get_market_hours() -> Tuple[bool, str]:
-        """بررسی ساعات کاری بازار"""
-        now = datetime.now()
+    # دریافت متن تحلیل
+    analysis_text = ""
+    if isinstance(analysis_data, dict):
+        analysis_text = analysis_data.get("analysis_text", str(analysis_data))
+        # بررسی وجود فیلدهای مستقیم در JSON
+        if "signal_direction" in analysis_data:
+            details["signal_direction"] = analysis_data["signal_direction"]
+        if "entry_price" in analysis_data:
+            details["entry_price"] = float(analysis_data["entry_price"])
+        if "stop_loss" in analysis_data:
+            details["stop_loss"] = float(analysis_data["stop_loss"])
+        if "take_profit" in analysis_data:
+            details["take_profit"] = float(analysis_data["take_profit"])
+        if "confidence" in analysis_data:
+            details["confidence"] = float(analysis_data["confidence"])
+    else:
+        analysis_text = str(analysis_data)
+    
+    text = analysis_text.lower()
+    
+    # تشخیص نوع استراتژی بر اساس محتوا
+    if "momentum" in text or "مومنتوم" in text:
+        details["strategy_type"] = "momentum"
+        details.update(_extract_momentum_details(analysis_text))
+    elif "double top" in text or "دو قله" in text or "double bottom" in text or "دو کف" in text:
+        details["strategy_type"] = "pattern"
+        details.update(_extract_pattern_details(analysis_text))
+    elif "ichimoku" in text or "ایچیموکو" in text:
+        details["strategy_type"] = "ichimoku"
+        details.update(_extract_ichimoku_details(analysis_text))
+    elif "fibonacci" in text or "فیبوناچی" in text:
+        details["strategy_type"] = "fibonacci"
+        details.update(_extract_fibonacci_details(analysis_text))
+    elif "bollinger" in text or "بولینگر" in text:
+        details["strategy_type"] = "bollinger"
+        details.update(_extract_bollinger_details(analysis_text))
+    elif "rsi" in text:
+        details["strategy_type"] = "rsi"
+        details.update(_extract_rsi_details(analysis_text))
+    elif "macd" in text:
+        details["strategy_type"] = "macd"
+        details.update(_extract_macd_details(analysis_text))
+    elif "candlestick" in text or "کندل" in text:
+        details["strategy_type"] = "candlestick"
+        details.update(_extract_candlestick_details(analysis_text))
+    elif "triangle" in text or "مثلث" in text:
+        details["strategy_type"] = "triangle"
+        details.update(_extract_triangle_details(analysis_text))
+    elif "wedge" in text or "گوه" in text:
+        details["strategy_type"] = "wedge"
+        details.update(_extract_wedge_details(analysis_text))
+    elif "diamond" in text or "الماس" in text:
+        details["strategy_type"] = "diamond"
+        details.update(_extract_diamond_details(analysis_text))
+    elif "head" in text and "shoulder" in text:
+        details["strategy_type"] = "head_shoulders"
+        details.update(_extract_head_shoulders_details(analysis_text))
+    elif "volume" in text or "حجم" in text:
+        details["strategy_type"] = "volume"
+        details.update(_extract_volume_details(analysis_text))
+    else:
+        # تحلیل عمومی
+        details.update(_extract_general_details(analysis_text))
+    
+    return details
+
+def _extract_momentum_details(analysis_text: str) -> Dict[str, Any]:
+    """استخراج جزئیات مخصوص استراتژی مومنتوم"""
+    details = {}
+    
+    # تشخیص جهت سیگنال
+    if "خرید" in analysis_text or "buy" in analysis_text.lower():
+        details["signal_direction"] = "خرید"
+    elif "فروش" in analysis_text or "sell" in analysis_text.lower():
+        details["signal_direction"] = "فروش"
+    elif "خنثی" in analysis_text or "neutral" in analysis_text.lower():
+        details["signal_direction"] = "خنثی"
+    
+    # استخراج قیمت‌ها با regex بهتر
+    entry_match = re.search(r'entry price:\s*([\d,]+\.?\d*)', analysis_text, re.IGNORECASE)
+    sl_match = re.search(r'sl:\s*([\d,]+\.?\d*)', analysis_text, re.IGNORECASE)
+    tp_match = re.search(r'tp:\s*([\d,]+\.?\d*)', analysis_text, re.IGNORECASE)
+    
+    if entry_match:
+        details["entry_price"] = float(entry_match.group(1).replace(',', ''))
+    if sl_match:
+        details["stop_loss"] = float(sl_match.group(1).replace(',', ''))
+    if tp_match:
+        details["take_profit"] = float(tp_match.group(1).replace(',', ''))
+    
+    # استخراج Risk/Reward
+    rr_match = re.search(r'risk/reward:\s*([\d.]+)', analysis_text, re.IGNORECASE)
+    if rr_match:
+        details["risk_reward_ratio"] = float(rr_match.group(1))
+    
+    # تشخیص قدرت
+    if "قوی" in analysis_text or "strong" in analysis_text.lower():
+        details["strength"] = "قوی"
+        details["confidence"] = 85.0
+    elif "ضعیف" in analysis_text or "weak" in analysis_text.lower():
+        details["strength"] = "ضعیف"
+        details["confidence"] = 35.0
+    else:
+        details["strength"] = "متوسط"
+        details["confidence"] = 60.0
+    
+    return details
+
+def _extract_pattern_details(analysis_text: str) -> Dict[str, Any]:
+    """استخراج جزئیات مخصوص الگوهای قیمتی"""
+    details = {}
+    
+    # استخراج درصد اطمینان الگو
+    confidence_match = re.search(r'اطمینان:\s*(\d+)%', analysis_text)
+    if confidence_match:
+        details["pattern_confidence"] = float(confidence_match.group(1))
+        details["confidence"] = float(confidence_match.group(1))
+    
+    # استخراج تکمیل الگو
+    completion_match = re.search(r'تکمیل الگو:\s*(\d+)%', analysis_text)
+    if completion_match:
+        details["pattern_completion"] = float(completion_match.group(1))
+    
+    # تشخیص سیگنال از وضعیت الگو
+    if "فعال شده" in analysis_text or "شکست" in analysis_text:
+        if "double bottom" in analysis_text.lower() or "دو کف" in analysis_text:
+            details["signal_direction"] = "خرید"
+            details["strength"] = "بسیار قوی"
+        elif "double top" in analysis_text.lower() or "دو قله" in analysis_text:
+            details["signal_direction"] = "فروش"
+            details["strength"] = "بسیار قوی"
+    elif "تشکیل شده" in analysis_text:
+        details["signal_direction"] = "انتظار"
+        details["strength"] = "متوسط"
+    
+    # استخراج هدف قیمتی
+    target_match = re.search(r'هدف قیمتی:\s*([\d,]+\.?\d*)', analysis_text)
+    if target_match:
+        details["take_profit"] = float(target_match.group(1).replace(',', ''))
+    
+    return details
+
+def _extract_ichimoku_details(analysis_text: str) -> Dict[str, Any]:
+    """استخراج جزئیات مخصوص ایچیموکو"""
+    details = {}
+    
+    # تشخیص وضعیت ابر
+    if "بالای ابر" in analysis_text:
+        details["signal_direction"] = "خرید"
+        details["strength"] = "قوی"
+    elif "زیر ابر" in analysis_text:
+        details["signal_direction"] = "فروش"
+        details["strength"] = "قوی"
+    elif "داخل ابر" in analysis_text:
+        details["signal_direction"] = "خنثی"
+        details["strength"] = "ضعیف"
+    
+    # استخراج خطوط ایچیموکو
+    tenkan_match = re.search(r'tenkan[_\s]sen:\s*([\d,]+\.?\d*)', analysis_text, re.IGNORECASE)
+    kijun_match = re.search(r'kijun[_\s]sen:\s*([\d,]+\.?\d*)', analysis_text, re.IGNORECASE)
+    
+    if tenkan_match:
+        details["tenkan_sen"] = float(tenkan_match.group(1).replace(',', ''))
+    if kijun_match:
+        details["kijun_sen"] = float(kijun_match.group(1).replace(',', ''))
+    
+    return details
+
+def _extract_fibonacci_details(analysis_text: str) -> Dict[str, Any]:
+    """استخراج جزئیات مخصوص فیبوناچی"""
+    details = {}
+    
+    # استخراج سطوح فیبوناچی
+    fib_levels = re.findall(r'(\d+\.?\d*)%.*?([\d,]+\.?\d*)', analysis_text)
+    if fib_levels:
+        details["fibonacci_levels"] = fib_levels
+    
+    # تشخیص بازگشت یا شکست
+    if "بازگشت" in analysis_text:
+        details["signal_direction"] = "خرید" if "صعودی" in analysis_text else "فروش"
+        details["strength"] = "متوسط"
+    elif "شکست" in analysis_text:
+        details["signal_direction"] = "ادامه روند"
+        details["strength"] = "قوی"
+    
+    return details
+
+def _extract_bollinger_details(analysis_text: str) -> Dict[str, Any]:
+    """استخراج جزئیات مخصوص باندهای بولینگر"""
+    details = {}
+    
+    if "باند بالا" in analysis_text:
+        details["signal_direction"] = "فروش"
+        details["strength"] = "متوسط"
+    elif "باند پایین" in analysis_text:
+        details["signal_direction"] = "خرید"
+        details["strength"] = "متوسط"
+    elif "باند میانی" in analysis_text:
+        details["signal_direction"] = "خنثی"
+        details["strength"] = "ضعیف"
+    
+    return details
+
+def _extract_rsi_details(analysis_text: str) -> Dict[str, Any]:
+    """استخراج جزئیات مخصوص RSI"""
+    details = {}
+    
+    # استخراج مقدار RSI
+    rsi_match = re.search(r'rsi.*?:\s*(\d+\.?\d*)', analysis_text, re.IGNORECASE)
+    if rsi_match:
+        rsi_value = float(rsi_match.group(1))
+        details["rsi_value"] = rsi_value
         
-        # بازار کریپتو 24/7 فعال است
-        if True:  # کریپتو
-            return True, "بازار کریپتو همیشه فعال است"
-        
-        # برای بازارهای سنتی
-        if TimeHelper.is_weekend(now):
-            return False, "بازار در آخر هفته بسته است"
-        
-        # ساعات کاری 9 تا 17
-        if 9 <= now.hour < 17:
-            return True, "بازار فعال است"
+        if rsi_value > 70:
+            details["signal_direction"] = "فروش"
+            details["strength"] = "قوی"
+        elif rsi_value < 30:
+            details["signal_direction"] = "خرید"
+            details["strength"] = "قوی"
         else:
-            return False, "بازار در خارج از ساعات کاری است"
+            details["signal_direction"] = "خنثی"
+            details["strength"] = "متوسط"
     
-    @staticmethod
-    def get_next_market_open() -> datetime:
-        """زمان بازگشایی بعدی بازار"""
-        now = datetime.now()
-        
-        # برای کریپتو همیشه باز است
-        return now
-    
-    @staticmethod
-    def add_business_days(start_date: datetime, days: int) -> datetime:
-        """اضافه کردن روزهای کاری"""
-        current_date = start_date
-        added_days = 0
-        
-        while added_days < days:
-            current_date += timedelta(days=1)
-            if not TimeHelper.is_weekend(current_date):
-                added_days += 1
-        
-        return current_date
+    return details
 
+def _extract_macd_details(analysis_text: str) -> Dict[str, Any]:
+    """استخراج جزئیات مخصوص MACD"""
+    details = {}
+    
+    if "تقاطع صعودی" in analysis_text or "بالای سیگنال" in analysis_text:
+        details["signal_direction"] = "خرید"
+        details["strength"] = "قوی"
+    elif "تقاطع نزولی" in analysis_text or "زیر سیگنال" in analysis_text:
+        details["signal_direction"] = "فروش"
+        details["strength"] = "قوی"
+    
+    return details
 
-class DataHelper:
-    """توابع کمکی داده"""
+def _extract_candlestick_details(analysis_text: str) -> Dict[str, Any]:
+    """استخراج جزئیات مخصوص کندل استیک"""
+    details = {}
     
-    @staticmethod
-    def safe_get(dictionary: Dict, key: str, default: Any = None) -> Any:
-        """دریافت ایمن از dictionary"""
+    # الگوهای کندلی صعودی
+    bullish_patterns = ["hammer", "doji", "engulfing bullish", "morning star"]
+    bearish_patterns = ["shooting star", "engulfing bearish", "evening star", "hanging man"]
+    
+    text_lower = analysis_text.lower()
+    
+    for pattern in bullish_patterns:
+        if pattern in text_lower:
+            details["signal_direction"] = "خرید"
+            details["strength"] = "قوی"
+            details["pattern_name"] = pattern
+            break
+    
+    for pattern in bearish_patterns:
+        if pattern in text_lower:
+            details["signal_direction"] = "فروش"
+            details["strength"] = "قوی"
+            details["pattern_name"] = pattern
+            break
+    
+    return details
+
+def _extract_triangle_details(analysis_text: str) -> Dict[str, Any]:
+    """استخراج جزئیات مخصوص الگوی مثلث"""
+    details = {}
+    
+    if "ascending triangle" in analysis_text.lower() or "مثلث صعودی" in analysis_text:
+        details["signal_direction"] = "خرید"
+        details["triangle_type"] = "ascending"
+    elif "descending triangle" in analysis_text.lower() or "مثلث نزولی" in analysis_text:
+        details["signal_direction"] = "فروش"
+        details["triangle_type"] = "descending"
+    elif "symmetrical triangle" in analysis_text.lower() or "مثلث متقارن" in analysis_text:
+        details["signal_direction"] = "انتظار شکست"
+        details["triangle_type"] = "symmetrical"
+    
+    return details
+
+def _extract_wedge_details(analysis_text: str) -> Dict[str, Any]:
+    """استخراج جزئیات مخصوص الگوی گوه"""
+    details = {}
+    
+    if "rising wedge" in analysis_text.lower() or "گوه صعودی" in analysis_text:
+        details["signal_direction"] = "فروش"
+        details["wedge_type"] = "rising"
+    elif "falling wedge" in analysis_text.lower() or "گوه نزولی" in analysis_text:
+        details["signal_direction"] = "خرید"
+        details["wedge_type"] = "falling"
+    
+    return details
+
+def _extract_diamond_details(analysis_text: str) -> Dict[str, Any]:
+    """استخراج جزئیات مخصوص الگوی الماس"""
+    details = {}
+    
+    if "diamond top" in analysis_text.lower() or "الماس بالا" in analysis_text:
+        details["signal_direction"] = "فروش"
+        details["diamond_type"] = "top"
+    elif "diamond bottom" in analysis_text.lower() or "الماس پایین" in analysis_text:
+        details["signal_direction"] = "خرید"
+        details["diamond_type"] = "bottom"
+    
+    return details
+
+def _extract_head_shoulders_details(analysis_text: str) -> Dict[str, Any]:
+    """استخراج جزئیات مخصوص الگوی سر و شانه"""
+    details = {}
+    
+    if "head and shoulders" in analysis_text.lower() or "سر و شانه" in analysis_text:
+        details["signal_direction"] = "فروش"
+        details["pattern_type"] = "head_shoulders"
+    elif "inverse head and shoulders" in analysis_text.lower() or "سر و شانه معکوس" in analysis_text:
+        details["signal_direction"] = "خرید"
+        details["pattern_type"] = "inverse_head_shoulders"
+    
+    return details
+
+def _extract_volume_details(analysis_text: str) -> Dict[str, Any]:
+    """استخراج جزئیات مخصوص تحلیل حجم"""
+    details = {}
+    
+    if "volume spike" in analysis_text.lower() or "افزایش حجم" in analysis_text:
+        details["volume_status"] = "spike"
+        details["strength"] = "قوی"
+    elif "low volume" in analysis_text.lower() or "حجم کم" in analysis_text:
+        details["volume_status"] = "low"
+        details["strength"] = "ضعیف"
+    
+    return details
+
+def _extract_general_details(analysis_text: str) -> Dict[str, Any]:
+    """استخراج جزئیات عمومی از هر نوع تحلیل"""
+    details = {}
+    
+    # تشخیص جهت کلی
+    buy_words = ["خرید", "buy", "long", "صعودی", "بولیش"]
+    sell_words = ["فروش", "sell", "short", "نزولی", "بریش"]
+    neutral_words = ["خنثی", "neutral", "hold", "انتظار"]
+    
+    text_lower = analysis_text.lower()
+    
+    buy_count = sum(1 for word in buy_words if word in text_lower)
+    sell_count = sum(1 for word in sell_words if word in text_lower)
+    neutral_count = sum(1 for word in neutral_words if word in text_lower)
+    
+    if buy_count > sell_count and buy_count > neutral_count:
+        details["signal_direction"] = "خرید"
+    elif sell_count > buy_count and sell_count > neutral_count:
+        details["signal_direction"] = "فروش"
+    else:
+        details["signal_direction"] = "خنثی"
+    
+    # استخراج قیمت‌ها (روش عمومی)
+    prices = re.findall(r'[\d,]+\.?\d*', analysis_text)
+    if prices:
         try:
-            return dictionary.get(key, default)
-        except (AttributeError, TypeError):
-            return default
+            price_values = [float(p.replace(',', '')) for p in prices if p.replace(',', '').replace('.', '').isdigit()]
+            if len(price_values) >= 3:
+                details["entry_price"] = price_values[0]
+                details["stop_loss"] = price_values[1] if len(price_values) > 1 else price_values[0] * 0.98
+                details["take_profit"] = price_values[2] if len(price_values) > 2 else price_values[0] * 1.02
+        except (ValueError, IndexError):
+            pass
     
-    @staticmethod
-    def safe_int(value: Any, default: int = 0) -> int:
-        """تبدیل ایمن به int"""
-        try:
-            return int(value)
-        except (ValueError, TypeError):
-            return default
+    # تشخیص قدرت عمومی
+    if any(word in text_lower for word in ["قوی", "strong", "بسیار", "high"]):
+        details["strength"] = "قوی"
+        details["confidence"] = 80.0
+    elif any(word in text_lower for word in ["ضعیف", "weak", "کم", "low"]):
+        details["strength"] = "ضعیف"
+        details["confidence"] = 40.0
+    else:
+        details["strength"] = "متوسط"
+        details["confidence"] = 60.0
     
-    @staticmethod
-    def safe_float(value: Any, default: float = 0.0) -> float:
-        """تبدیل ایمن به float"""
-        try:
-            return float(value)
-        except (ValueError, TypeError):
-            return default
+    return details
+
+def safe_dict_get(dictionary: Dict[str, Any], 
+                 key_path: str, 
+                 default: Any = None) -> Any:
+    """دریافت امن از دیکشنری با مسیر کلید"""
+    keys = key_path.split('.')
+    current = dictionary
     
-    @staticmethod
-    def safe_bool(value: Any, default: bool = False) -> bool:
-        """تبدیل ایمن به bool"""
-        if isinstance(value, bool):
-            return value
-        if isinstance(value, str):
-            return value.lower() in ('true', '1', 'yes', 'on', 'enabled')
-        if isinstance(value, (int, float)):
-            return bool(value)
+    try:
+        for key in keys:
+            if isinstance(current, dict) and key in current:
+                current = current[key]
+            else:
+                return default
+        return current
+    except (KeyError, TypeError):
         return default
+
+def deep_merge_dicts(dict1: Dict[str, Any], dict2: Dict[str, Any]) -> Dict[str, Any]:
+    """ترکیب عمیق دو دیکشنری"""
+    result = dict1.copy()
     
-    @staticmethod
-    def deep_merge(dict1: Dict, dict2: Dict) -> Dict:
-        """ادغام عمیق دو dictionary"""
-        result = dict1.copy()
-        
-        for key, value in dict2.items():
-            if key in result and isinstance(result[key], dict) and isinstance(value, dict):
-                result[key] = DataHelper.deep_merge(result[key], value)
-            else:
-                result[key] = value
-        
+    for key, value in dict2.items():
+        if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+            result[key] = deep_merge_dicts(result[key], value)
+        else:
+            result[key] = value
+    
+    return result
+
+def clean_html_tags(text: str) -> str:
+    """پاک کردن تگ‌های HTML"""
+    clean = re.compile('<.*?>')
+    return re.sub(clean, '', text)
+
+def escape_markdown(text: str) -> str:
+    """Escape کردن کاراکترهای Markdown"""
+    escape_chars = r'_*[]()~`>#+-=|{}.!'
+    for char in escape_chars:
+        text = text.replace(char, f'\\{char}')
+    return text
+
+def truncate_text(text: str, 
+                 max_length: int = 100, 
+                 suffix: str = "...") -> str:
+    """کوتاه کردن متن"""
+    if len(text) <= max_length:
+        return text
+    
+    return text[:max_length - len(suffix)] + suffix
+
+def chunk_list(lst: List[Any], chunk_size: int) -> List[List[Any]]:
+    """تقسیم لیست به قطعات کوچکتر"""
+    return [lst[i:i + chunk_size] for i in range(0, len(lst), chunk_size)]
+
+def flatten_list(nested_list: List[List[Any]]) -> List[Any]:
+    """تبدیل لیست تودرتو به لیست ساده"""
+    return [item for sublist in nested_list for item in sublist]
+
+def remove_duplicates(lst: List[Any], key_func=None) -> List[Any]:
+    """حذف موارد تکراری از لیست"""
+    if key_func:
+        seen = set()
+        result = []
+        for item in lst:
+            key = key_func(item)
+            if key not in seen:
+                seen.add(key)
+                result.append(item)
         return result
-    
-    @staticmethod
-    def flatten_dict(d: Dict, parent_key: str = '', sep: str = '.') -> Dict:
-        """تخت کردن dictionary تودرتو"""
-        items = []
-        for k, v in d.items():
-            new_key = f"{parent_key}{sep}{k}" if parent_key else k
-            if isinstance(v, dict):
-                items.extend(DataHelper.flatten_dict(v, new_key, sep).items())
-            else:
-                items.append((new_key, v))
-        return dict(items)
-    
-    @staticmethod
-    def group_by(data: List[Dict], key: str) -> Dict[str, List[Dict]]:
-        """گروه‌بندی داده‌ها بر اساس کلید"""
-        result = {}
-        for item in data:
-            group_key = str(DataHelper.safe_get(item, key, 'unknown'))
-            if group_key not in result:
-                result[group_key] = []
-            result[group_key].append(item)
-        return result
+    else:
+        return list(dict.fromkeys(lst))
 
+def calculate_percentage_change(old_value: float, new_value: float) -> float:
+    """محاسبه درصد تغییر"""
+    if old_value == 0:
+        return 0.0
+    return ((new_value - old_value) / old_value) * 100
 
-class FileHelper:
-    """توابع کمکی فایل"""
+def calculate_moving_average(values: List[float], window: int) -> List[float]:
+    """محاسبه میانگین متحرک"""
+    if len(values) < window:
+        return []
     
-    @staticmethod
-    def safe_json_load(file_path: str) -> Optional[Dict]:
-        """بارگذاری ایمن JSON"""
-        try:
-            with open(file_path, 'r', encoding='utf-8') as f:
-                return json.load(f)
-        except Exception as e:
-            logger.error(f"Error loading JSON file {file_path}: {e}")
-            return None
+    result = []
+    for i in range(window - 1, len(values)):
+        avg = sum(values[i - window + 1:i + 1]) / window
+        result.append(avg)
     
-    @staticmethod
-    def safe_json_save(data: Dict, file_path: str) -> bool:
-        """ذخیره ایمن JSON"""
-        try:
-            with open(file_path, 'w', encoding='utf-8') as f:
-                json.dump(data, f, ensure_ascii=False, indent=2)
-            return True
-        except Exception as e:
-            logger.error(f"Error saving JSON file {file_path}: {e}")
-            return False
-    
-    @staticmethod
-    def get_file_size(file_path: str) -> int:
-        """دریافت اندازه فایل"""
-        try:
-            import os
-            return os.path.getsize(file_path)
-        except Exception:
-            return 0
-    
-    @staticmethod
-    def ensure_directory(directory_path: str):
-        """اطمینان از وجود دایرکتوری"""
-        try:
-            import os
-            os.makedirs(directory_path, exist_ok=True)
-        except Exception as e:
-            logger.error(f"Error creating directory {directory_path}: {e}")
+    return result
 
+def retry_on_failure(max_retries: int = 3, 
+                    delay: float = 1.0,
+                    exponential_backoff: bool = True):
+    """دکوراتور برای تلاش مجدد در صورت خطا"""
+    def decorator(func):
+        @wraps(func)
+        async def async_wrapper(*args, **kwargs):
+            for attempt in range(max_retries):
+                try:
+                    return await func(*args, **kwargs)
+                except Exception as e:
+                    if attempt == max_retries - 1:
+                        raise e
+                    
+                    wait_time = delay * (2 ** attempt if exponential_backoff else 1)
+                    await asyncio.sleep(wait_time)
+            
+        @wraps(func)
+        def sync_wrapper(*args, **kwargs):
+            for attempt in range(max_retries):
+                try:
+                    return func(*args, **kwargs)
+                except Exception as e:
+                    if attempt == max_retries - 1:
+                        raise e
+                    
+                    wait_time = delay * (2 ** attempt if exponential_backoff else 1)
+                    time.sleep(wait_time)
+        
+        return async_wrapper if asyncio.iscoroutinefunction(func) else sync_wrapper
+    return decorator
 
-class URLHelper:
-    """توابع کمکی URL"""
+def rate_limit(calls_per_minute: int = 60):
+    """دکوراتور برای محدود کردن نرخ فراخوانی"""
+    min_interval = 60.0 / calls_per_minute
+    last_called = [0.0]
     
-    @staticmethod
-    def is_valid_url(url: str) -> bool:
-        """بررسی اعتبار URL"""
-        try:
-            result = urlparse(url)
-            return all([result.scheme, result.netloc])
-        except Exception:
-            return False
-    
-    @staticmethod
-    def extract_domain(url: str) -> Optional[str]:
-        """استخراج دامنه از URL"""
-        try:
-            return urlparse(url).netloc
-        except Exception:
-            return None
-    
-    @staticmethod
-    def build_query_string(params: Dict[str, Any]) -> str:
-        """ساخت query string"""
-        from urllib.parse import urlencode
-        return urlencode({k: v for k, v in params.items() if v is not None})
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            elapsed = time.time() - last_called[0]
+            left_to_wait = min_interval - elapsed
+            
+            if left_to_wait > 0:
+                time.sleep(left_to_wait)
+            
+            ret = func(*args, **kwargs)
+            last_called[0] = time.time()
+            return ret
+        
+        return wrapper
+    return decorator
 
+def memoize(maxsize: int = 128, ttl: int = 300):
+    """دکوراتور برای cache کردن نتایج"""
+    def decorator(func):
+        cache = {}
+        cache_times = {}
+        
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            # ایجاد کلید cache
+            key = str(args) + str(sorted(kwargs.items()))
+            current_time = time.time()
+            
+            # بررسی وجود در cache و انقضا
+            if key in cache:
+                if current_time - cache_times[key] < ttl:
+                    return cache[key]
+                else:
+                    # حذف آیتم منقضی
+                    del cache[key]
+                    del cache_times[key]
+            
+            # محدود کردن اندازه cache
+            if len(cache) >= maxsize:
+                # حذف قدیمی‌ترین آیتم
+                oldest_key = min(cache_times.keys(), key=lambda k: cache_times[k])
+                del cache[oldest_key]
+                del cache_times[oldest_key]
+            
+            # محاسبه و ذخیره نتیجه
+            result = func(*args, **kwargs)
+            cache[key] = result
+            cache_times[key] = current_time
+            
+            return result
+        
+        # اضافه کردن متد پاک کردن cache
+        wrapper.clear_cache = lambda: cache.clear() or cache_times.clear()
+        wrapper.cache_info = lambda: {
+            'size': len(cache),
+            'maxsize': maxsize,
+            'ttl': ttl,
+            'hits': getattr(wrapper, '_hits', 0),
+            'misses': getattr(wrapper, '_misses', 0)
+        }
+        
+        return wrapper
+    return decorator
 
-class MathHelper:
-    """توابع کمکی ریاضی"""
+class Timer:
+    """کلاس برای اندازه‌گیری زمان"""
     
-    @staticmethod
-    def calculate_percentage_change(old_value: float, new_value: float) -> float:
-        """محاسبه درصد تغییر"""
-        if old_value == 0:
+    def __init__(self):
+        self.start_time = None
+        self.end_time = None
+    
+    def start(self):
+        """شروع تایمر"""
+        self.start_time = time.time()
+        return self
+    
+    def stop(self):
+        """پایان تایمر"""
+        self.end_time = time.time()
+        return self
+    
+    def elapsed(self) -> float:
+        """زمان سپری شده"""
+        if self.start_time is None:
             return 0.0
-        return ((new_value - old_value) / old_value) * 100
+        
+        end = self.end_time if self.end_time else time.time()
+        return end - self.start_time
+    
+    def __enter__(self):
+        return self.start()
+    
+    def __exit__(self, *args):
+        self.stop()
+
+class DataProcessor:
+    """کلاس برای پردازش داده‌ها"""
     
     @staticmethod
-    def calculate_profit_loss(entry_price: float, exit_price: float, quantity: float) -> float:
-        """محاسبه سود/زیان"""
-        return (exit_price - entry_price) * quantity
-    
-    @staticmethod
-    def calculate_win_rate(wins: int, total: int) -> float:
-        """محاسبه نرخ موفقیت"""
-        if total == 0:
-            return 0.0
-        return (wins / total) * 100
-    
-    @staticmethod
-    def calculate_average(values: List[Union[int, float]]) -> float:
-        """محاسبه میانگین"""
-        if not values:
-            return 0.0
-        return sum(values) / len(values)
-    
-    @staticmethod
-    def calculate_moving_average(values: List[float], period: int) -> List[float]:
-        """محاسبه میانگین متحرک"""
-        if len(values) < period:
+    def normalize_data(data: List[float], 
+                      min_val: float = 0.0, 
+                      max_val: float = 1.0) -> List[float]:
+        """نرمال‌سازی داده‌ها"""
+        if not data:
             return []
         
-        result = []
-        for i in range(period - 1, len(values)):
-            avg = sum(values[i - period + 1:i + 1]) / period
-            result.append(avg)
+        data_min = min(data)
+        data_max = max(data)
+        data_range = data_max - data_min
         
-        return result
-    
-    @staticmethod
-    def normalize_value(value: float, min_val: float, max_val: float) -> float:
-        """نرمال‌سازی مقدار بین 0 و 1"""
-        if max_val == min_val:
-            return 0.0
-        return (value - min_val) / (max_val - min_val)
-
-
-class AsyncHelper:
-    """توابع کمکی async"""
-    
-    @staticmethod
-    def retry_async(max_attempts: int = 3, delay: float = 1.0):
-        """دکوریتور تلاش مجدد برای توابع async"""
-        def decorator(func: Callable):
-            @functools.wraps(func)
-            async def wrapper(*args, **kwargs):
-                last_exception = None
-                
-                for attempt in range(max_attempts):
-                    try:
-                        return await func(*args, **kwargs)
-                    except Exception as e:
-                        last_exception = e
-                        if attempt < max_attempts - 1:
-                            await asyncio.sleep(delay * (attempt + 1))
-                        else:
-                            logger.error(f"All {max_attempts} attempts failed for {func.__name__}: {e}")
-                
-                raise last_exception
-            
-            return wrapper
-        return decorator
-    
-    @staticmethod
-    async def run_with_timeout(coro, timeout: float):
-        """اجرای coroutine با timeout"""
-        try:
-            return await asyncio.wait_for(coro, timeout=timeout)
-        except asyncio.TimeoutError:
-            logger.warning(f"Operation timed out after {timeout} seconds")
-            raise
-    
-    @staticmethod
-    async def gather_with_limit(tasks: List, limit: int = 10):
-        """اجرای محدود تسک‌های همزمان"""
-        semaphore = asyncio.Semaphore(limit)
+        if data_range == 0:
+            return [min_val] * len(data)
         
-        async def limited_task(task):
-            async with semaphore:
-                return await task
+        normalized = []
+        for value in data:
+            norm_val = (value - data_min) / data_range
+            scaled_val = norm_val * (max_val - min_val) + min_val
+            normalized.append(scaled_val)
         
-        limited_tasks = [limited_task(task) for task in tasks]
-        return await asyncio.gather(*limited_tasks, return_exceptions=True)
-
-
-class CacheHelper:
-    """توابع کمکی کش"""
+        return normalized
     
     @staticmethod
-    def generate_cache_key(*args, **kwargs) -> str:
-        """تولید کلید کش"""
-        # ترکیب تمام آرگومان‌ها برای ساخت کلید یکتا
-        key_parts = []
+    def calculate_statistics(data: List[float]) -> Dict[str, float]:
+        """محاسبه آمار توصیفی"""
+        if not data:
+            return {}
         
-        for arg in args:
-            key_parts.append(str(arg))
+        sorted_data = sorted(data)
+        n = len(data)
         
-        for k, v in sorted(kwargs.items()):
-            key_parts.append(f"{k}:{v}")
+        mean = sum(data) / n
+        median = sorted_data[n // 2] if n % 2 == 1 else (sorted_data[n // 2 - 1] + sorted_data[n // 2]) / 2
         
-        key_string = "|".join(key_parts)
-        return hashlib.md5(key_string.encode()).hexdigest()
+        variance = sum((x - mean) ** 2 for x in data) / n
+        std_dev = variance ** 0.5
+        
+        return {
+            'count': n,
+            'mean': mean,
+            'median': median,
+            'min': min(data),
+            'max': max(data),
+            'variance': variance,
+            'std_dev': std_dev,
+            'range': max(data) - min(data)
+        }
     
     @staticmethod
-    def is_cache_expired(cache_time: datetime, ttl_seconds: int) -> bool:
-        """بررسی انقضای کش"""
-        return datetime.now() > cache_time + timedelta(seconds=ttl_seconds)
+    def smooth_data(data: List[float], window_size: int = 3) -> List[float]:
+        """هموار کردن داده‌ها"""
+        if len(data) < window_size:
+            return data.copy()
+        
+        smoothed = []
+        half_window = window_size // 2
+        
+        for i in range(len(data)):
+            start = max(0, i - half_window)
+            end = min(len(data), i + half_window + 1)
+            smoothed.append(sum(data[start:end]) / (end - start))
+        
+        return smoothed
 
+def convert_persian_numbers(text: str) -> str:
+    """تبدیل اعداد فارسی به انگلیسی"""
+    persian_digits = '۰۱۲۳۴۵۶۷۸۹'
+    english_digits = '0123456789'
+    
+    for persian, english in zip(persian_digits, english_digits):
+        text = text.replace(persian, english)
+    
+    return text
 
-class ValidationHelper:
-    """توابع کمکی اعتبارسنجی"""
+def convert_english_numbers(text: str) -> str:
+    """تبدیل اعداد انگلیسی به فارسی"""
+    english_digits = '0123456789'
+    persian_digits = '۰۱۲۳۴۵۶۷۸۹'
     
-    @staticmethod
-    def is_valid_telegram_id(telegram_id: Union[int, str]) -> bool:
-        """بررسی اعتبار شناسه تلگرام"""
-        try:
-            telegram_id = int(telegram_id)
-            return 1 <= telegram_id <= 9007199254740991
-        except (ValueError, TypeError):
-            return False
+    for english, persian in zip(english_digits, persian_digits):
+        text = text.replace(english, persian)
     
-    @staticmethod
-    def is_positive_number(value: Union[int, float, str]) -> bool:
-        """بررسی عدد مثبت"""
-        try:
-            return float(value) > 0
-        except (ValueError, TypeError):
-            return False
-    
-    @staticmethod
-    def is_valid_percentage(value: Union[int, float, str]) -> bool:
-        """بررسی درصد معتبر"""
-        try:
-            val = float(value)
-            return 0 <= val <= 100
-        except (ValueError, TypeError):
-            return False
+    return text
 
-
-class DebugHelper:
-    """توابع کمکی دیباگ"""
+def create_progress_bar(current: int, 
+                       total: int, 
+                       length: int = 20,
+                       fill_char: str = "█",
+                       empty_char: str = "░") -> str:
+    """ایجاد نوار پیشرفت"""
+    if total == 0:
+        return empty_char * length
     
-    @staticmethod
-    def log_function_call(func_name: str, args: tuple = None, kwargs: dict = None):
-        """لاگ فراخوانی تابع"""
-        args_str = str(args) if args else "()"
-        kwargs_str = str(kwargs) if kwargs else "{}"
-        logger.debug(f"Function call: {func_name}{args_str} {kwargs_str}")
+    percent = current / total
+    filled_length = int(length * percent)
     
-    @staticmethod
-    def measure_time(func: Callable):
-        """دکوریتور اندازه‌گیری زمان اجرا"""
-        @functools.wraps(func)
-        def wrapper(*args, **kwargs):
-            start_time = datetime.now()
-            result = func(*args, **kwargs)
-            end_time = datetime.now()
-            duration = (end_time - start_time).total_seconds()
-            logger.debug(f"Function {func.__name__} took {duration:.3f} seconds")
-            return result
-        return wrapper
-    
-    @staticmethod
-    async def measure_time_async(func: Callable):
-        """دکوریتور اندازه‌گیری زمان برای توابع async"""
-        @functools.wraps(func)
-        async def wrapper(*args, **kwargs):
-            start_time = datetime.now()
-            result = await func(*args, **kwargs)
-            end_time = datetime.now()
-            duration = (end_time - start_time).total_seconds()
-            logger.debug(f"Async function {func.__name__} took {duration:.3f} seconds")
-            return result
-        return wrapper
-
-
-# Export
-__all__ = [
-    'StringHelper',
-    'CryptoHelper', 
-    'TimeHelper',
-    'DataHelper',
-    'FileHelper',
-    'URLHelper',
-    'MathHelper',
-    'AsyncHelper',
-    'CacheHelper',
-    'ValidationHelper',
-    'DebugHelper'
-]
+    bar = fill_char * filled_length + empty_char * (length - filled_length)
+    return f"{bar} {percent:.1%}"

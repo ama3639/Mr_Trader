@@ -526,18 +526,3 @@ STRATEGY_REQUEST_SCHEMA = {
     'currency': {'required': True, 'validator': Validators.validate_currency},
     'timeframe': {'required': True, 'validator': Validators.validate_timeframe}
 }
-
-
-# Export
-__all__ = [
-    'ValidationError',
-    'TelegramValidator',
-    'CryptoValidator', 
-    'PackageValidator',
-    'PaymentValidator',
-    'UserDataValidator',
-    'StrategyValidator',
-    'SettingsValidator',
-    'GeneralValidator',
-    'ComprehensiveValidator'
-]

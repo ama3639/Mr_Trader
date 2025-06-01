@@ -1,588 +1,596 @@
 """
-هندلرهای ادمین برای MrTrader Bot
+هندلرهای مدیریتی - مدیریت دسترسی‌های ادمین
 """
+
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import ContextTypes, CommandHandler, CallbackQueryHandler, MessageHandler, filters, ConversationHandler
-from telegram.constants import ParseMode
-from typing import List, Dict, Any, Optional
-import asyncio
-import json
+from telegram.ext import ContextTypes, ConversationHandler
 from datetime import datetime, timedelta
+import json
+import os
+from typing import List, Dict, Any, Optional
 
 from core.config import Config
-from utils.logger import logger, log_admin_action
-from managers.user_manager import UserManager
 from managers.admin_manager import AdminManager
-from managers.security_manager import SecurityManager
-from managers.payment_manager import PaymentManager
-from managers.referral_manager import ReferralManager
-from managers.report_manager import ReportManager
+from managers.user_manager import UserManager
 from managers.backup_manager import BackupManager
-from managers.message_manager import MessageManager
+from managers.report_manager import ReportManager
+from managers.security_manager import SecurityManager
+from utils.logger import UserLogger, AdminLogger
 from utils.time_manager import TimeManager
-from utils.formatters import NumberFormatter, DateTimeFormatter, ReportFormatter
-from utils.validators import TelegramValidator, ComprehensiveValidator
+from utils.validators import Validators, ValidationError
 
+# States for conversation handlers
+ADMIN_WAITING_USER_ID = 1
+ADMIN_WAITING_MESSAGE = 2
+ADMIN_WAITING_PACKAGE = 3
+ADMIN_WAITING_DURATION = 4
 
-# States برای ConversationHandler
-(WAITING_USER_ID, WAITING_BROADCAST_MESSAGE, WAITING_ADMIN_COMMAND, 
- WAITING_BACKUP_CONFIRM, WAITING_USER_ACTION) = range(5)
-
-
-class AdminHandler:
-    """هندلر عملیات ادمین"""
+class AdminHandlers:
+    """کلاس هندلرهای مدیریتی"""
     
-    def __init__(self):
-        self.user_manager = UserManager()
-        self.admin_manager = AdminManager()
-        self.security_manager = SecurityManager()
-        self.payment_manager = PaymentManager()
-        self.referral_manager = ReferralManager()
-        self.report_manager = ReportManager()
-        self.backup_manager = BackupManager()
-        self.message_manager = MessageManager()
-        self.time_manager = TimeManager()
-    
-    async def admin_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """کامند /admin - ورود به پنل ادمین"""
+    @staticmethod
+    async def admin_panel(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """نمایش پنل مدیریت"""
+        query = update.callback_query
+        user_id = query.from_user.id
+        
         try:
-            user = update.effective_user
-            
-            # بررسی ادمین بودن
-            if not await self.admin_manager.is_admin(user.id):
-                await update.message.reply_text("❌ شما مجوز دسترسی به این بخش را ندارید.")
+            # بررسی دسترسی ادمین
+            if not AdminManager.is_admin(user_id):
+                await query.answer("⛔ شما دسترسی ادمین ندارید!", show_alert=True)
                 return
             
-            # لاگ ورود ادمین
-            log_admin_action(user.id, "admin_panel_access", "Admin accessed panel")
+            # آمار کلی
+            stats = AdminManager.get_admin_stats()
             
-            # نمایش پنل ادمین
-            await self._show_admin_panel(update, context)
-            
-        except Exception as e:
-            logger.error(f"Error in admin command: {e}")
-            await update.message.reply_text("❌ خطا در دسترسی به پنل ادمین.")
-    
-    async def _show_admin_panel(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """نمایش پنل ادمین اصلی"""
-        try:
-            # دریافت آمار کلی
-            stats = await self._get_admin_stats()
-            
-            panel_message = f"""
-🛠️ <b>پنل مدیریت MrTrader Bot</b>
-
-📊 <b>آمار کلی:</b>
-👥 کاربران کل: {NumberFormatter.format_number_persian(stats['total_users'])}
-🟢 کاربران فعال: {NumberFormatter.format_number_persian(stats['active_users'])}
-🆕 کاربران جدید امروز: {NumberFormatter.format_number_persian(stats['new_users_today'])}
-💰 درآمد ماهانه: ${NumberFormatter.format_number_persian(stats['monthly_revenue'])}
-
-🕐 آخرین بروزرسانی: {self.time_manager.get_current_time_persian()}
-"""
+            admin_text = (
+                f"🔧 **پنل مدیریت MrTrader Bot**\n"
+                f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
+                f"📊 **آمار کلی:**\n"
+                f"👥 کل کاربران: `{stats['total_users']:,}`\n"
+                f"✅ کاربران فعال: `{stats['active_users']:,}`\n"
+                f"💎 کاربران VIP: `{stats['vip_users']:,}`\n"
+                f"📈 درخواست‌های امروز: `{stats['today_requests']:,}`\n"
+                f"💰 درآمد این ماه: `${stats['monthly_revenue']:,.2f}`\n\n"
+                f"🕒 آخرین به‌روزرسانی: `{TimeManager.to_shamsi(datetime.now())}`"
+            )
             
             keyboard = [
                 [
                     InlineKeyboardButton("👥 مدیریت کاربران", callback_data="admin_users"),
-                    InlineKeyboardButton("📊 آمار سیستم", callback_data="admin_stats")
+                    InlineKeyboardButton("📊 گزارش‌ها", callback_data="admin_reports")
                 ],
                 [
-                    InlineKeyboardButton("💰 مدیریت پرداخت", callback_data="admin_payments"),
-                    InlineKeyboardButton("🎁 مدیریت رفرال", callback_data="admin_referrals")
+                    InlineKeyboardButton("💰 مدیریت پکیج‌ها", callback_data="admin_packages"),
+                    InlineKeyboardButton("🔒 امنیت", callback_data="admin_security")
                 ],
                 [
-                    InlineKeyboardButton("📢 ارسال پیام همگانی", callback_data="admin_broadcast"),
-                    InlineKeyboardButton("📋 گزارش‌ها", callback_data="admin_reports")
+                    InlineKeyboardButton("📤 ارسال پیام گروهی", callback_data="admin_broadcast"),
+                    InlineKeyboardButton("🔧 تنظیمات", callback_data="admin_settings")
                 ],
                 [
-                    InlineKeyboardButton("🔒 امنیت", callback_data="admin_security"),
-                    InlineKeyboardButton("💾 پشتیبان‌گیری", callback_data="admin_backup")
+                    InlineKeyboardButton("💾 پشتیبان‌گیری", callback_data="admin_backup"),
+                    InlineKeyboardButton("📋 لاگ‌ها", callback_data="admin_logs")
                 ],
-                [
-                    InlineKeyboardButton("⚙️ تنظیمات سیستم", callback_data="admin_settings"),
-                    InlineKeyboardButton("🔄 بروزرسانی", callback_data="admin_refresh")
-                ]
+                [InlineKeyboardButton("🏠 بازگشت به منوی اصلی", callback_data="main_menu")]
             ]
             
-            reply_markup = InlineKeyboardMarkup(keyboard)
+            await query.edit_message_text(
+                admin_text,
+                reply_markup=InlineKeyboardMarkup(keyboard),
+                parse_mode="Markdown"
+            )
             
-            if update.callback_query:
-                await update.callback_query.edit_message_text(
-                    panel_message,
-                    reply_markup=reply_markup,
-                    parse_mode=ParseMode.HTML
-                )
-            else:
-                await update.message.reply_text(
-                    panel_message,
-                    reply_markup=reply_markup,
-                    parse_mode=ParseMode.HTML
-                )
-                
+            # ثبت لاگ دسترسی ادمین
+            AdminLogger.log_admin_action(user_id, "admin_panel_access", "دسترسی به پنل مدیریت")
+            
         except Exception as e:
-            logger.error(f"Error showing admin panel: {e}")
+            UserLogger.log_error(user_id, f"Error in admin_panel: {e}")
+            await query.edit_message_text(
+                "❌ خطا در نمایش پنل مدیریت. لطفاً بعداً تلاش کنید.",
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("🏠 منوی اصلی", callback_data="main_menu")]
+                ])
+            )
     
-    async def _get_admin_stats(self) -> Dict[str, int]:
-        """دریافت آمار برای پنل ادمین"""
-        try:
-            stats = {
-                'total_users': await self.user_manager.get_total_users_count(),
-                'active_users': await self.user_manager.get_active_users_count(),
-                'new_users_today': await self.user_manager.get_new_users_today_count(),
-                'monthly_revenue': await self.payment_manager.get_monthly_revenue()
-            }
-            return stats
-        except Exception as e:
-            logger.error(f"Error getting admin stats: {e}")
-            return {'total_users': 0, 'active_users': 0, 'new_users_today': 0, 'monthly_revenue': 0}
-    
-    # =========================
-    # مدیریت کاربران
-    # =========================
-    
-    async def handle_user_management(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+    @staticmethod
+    async def admin_users_management(update: Update, context: ContextTypes.DEFAULT_TYPE):
         """مدیریت کاربران"""
+        query = update.callback_query
+        user_id = query.from_user.id
+        
         try:
-            query = update.callback_query
-            await query.answer()
+            if not AdminManager.is_admin(user_id):
+                await query.answer("⛔ دسترسی غیرمجاز!", show_alert=True)
+                return
             
-            message = """
-👥 <b>مدیریت کاربران</b>
-
-یکی از گزینه‌های زیر را انتخاب کنید:
-"""
+            # آمار کاربران
+            user_stats = UserManager.get_user_statistics()
+            
+            users_text = (
+                f"👥 **مدیریت کاربران**\n"
+                f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
+                f"📈 **آمار کاربران:**\n"
+                f"🆔 کل کاربران: `{user_stats['total']:,}`\n"
+                f"🟢 فعال امروز: `{user_stats['active_today']:,}`\n"
+                f"🟡 فعال این هفته: `{user_stats['active_week']:,}`\n"
+                f"🆕 عضو جدید امروز: `{user_stats['new_today']:,}`\n"
+                f"💎 VIP فعال: `{user_stats['vip_active']:,}`\n"
+                f"⏸ معلق شده: `{user_stats['suspended']:,}`\n\n"
+                f"⚡ **اقدامات سریع:**"
+            )
             
             keyboard = [
                 [
                     InlineKeyboardButton("🔍 جستجوی کاربر", callback_data="admin_search_user"),
-                    InlineKeyboardButton("📋 لیست کاربران", callback_data="admin_list_users")
+                    InlineKeyboardButton("👤 اطلاعات کاربر", callback_data="admin_user_info")
                 ],
                 [
-                    InlineKeyboardButton("🚫 کاربران مسدود", callback_data="admin_blocked_users"),
-                    InlineKeyboardButton("⭐ کاربران VIP", callback_data="admin_vip_users")
+                    InlineKeyboardButton("🎁 اعطای پکیج", callback_data="admin_grant_package"),
+                    InlineKeyboardButton("⛔ مسدود کردن", callback_data="admin_ban_user")
                 ],
                 [
-                    InlineKeyboardButton("📊 آمار کاربران", callback_data="admin_user_stats"),
-                    InlineKeyboardButton("🆕 کاربران جدید", callback_data="admin_new_users")
+                    InlineKeyboardButton("📋 لیست VIP ها", callback_data="admin_vip_list"),
+                    InlineKeyboardButton("🔓 رفع مسدودیت", callback_data="admin_unban_user")
                 ],
                 [
-                    InlineKeyboardButton("🔙 بازگشت", callback_data="admin_panel")
-                ]
+                    InlineKeyboardButton("📊 گزارش کاربران", callback_data="admin_users_report"),
+                    InlineKeyboardButton("💸 تخفیف ویژه", callback_data="admin_special_discount")
+                ],
+                [InlineKeyboardButton("⬅️ بازگشت", callback_data="admin_panel")]
             ]
             
             await query.edit_message_text(
-                message,
+                users_text,
                 reply_markup=InlineKeyboardMarkup(keyboard),
-                parse_mode=ParseMode.HTML
+                parse_mode="Markdown"
             )
             
         except Exception as e:
-            logger.error(f"Error in user management: {e}")
+            UserLogger.log_error(user_id, f"Error in admin_users_management: {e}")
+            await query.edit_message_text("❌ خطا در نمایش مدیریت کاربران")
     
-    async def handle_search_user(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """شروع جستجوی کاربر"""
+    @staticmethod
+    async def admin_reports(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """گزارش‌های مدیریتی"""
+        query = update.callback_query
+        user_id = query.from_user.id
+        
         try:
-            query = update.callback_query
-            await query.answer()
-            
-            await query.edit_message_text(
-                "🔍 <b>جستجوی کاربر</b>\n\n"
-                "شناسه تلگرام کاربر را وارد کنید:\n"
-                "مثال: 123456789\n\n"
-                "برای لغو: /cancel",
-                parse_mode=ParseMode.HTML
-            )
-            
-            return WAITING_USER_ID
-            
-        except Exception as e:
-            logger.error(f"Error in search user: {e}")
-            return ConversationHandler.END
-    
-    async def process_user_search(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """پردازش جستجوی کاربر"""
-        try:
-            user_input = update.message.text.strip()
-            
-            # اعتبارسنجی شناسه
-            if not TelegramValidator.validate_telegram_id(user_input):
-                await update.message.reply_text(
-                    "❌ شناسه تلگرام نامعتبر است.\n"
-                    "لطفاً یک عدد صحیح وارد کنید."
-                )
-                return WAITING_USER_ID
-            
-            user_id = int(user_input)
-            
-            # جستجوی کاربر
-            user_data = await self.user_manager.get_user_by_telegram_id(user_id)
-            
-            if not user_data:
-                await update.message.reply_text(
-                    f"❌ کاربری با شناسه {user_id} یافت نشد."
-                )
-                return ConversationHandler.END
-            
-            # نمایش اطلاعات کاربر
-            await self._show_user_details(update, context, user_data)
-            
-            return ConversationHandler.END
-            
-        except Exception as e:
-            logger.error(f"Error processing user search: {e}")
-            await update.message.reply_text("❌ خطا در جستجوی کاربر.")
-            return ConversationHandler.END
-    
-    async def _show_user_details(self, update: Update, context: ContextTypes.DEFAULT_TYPE, user_data: Dict[str, Any]):
-        """نمایش جزئیات کاربر"""
-        try:
-            user_info = f"""
-👤 <b>اطلاعات کاربر</b>
-
-🆔 <b>شناسه:</b> <code>{user_data.get('telegram_id')}</code>
-👤 <b>نام:</b> {user_data.get('first_name', 'نامشخص')}
-📝 <b>نام کاربری:</b> @{user_data.get('username', 'ندارد')}
-📦 <b>پکیج:</b> {user_data.get('package_type', 'رایگان')}
-📅 <b>تاریخ عضویت:</b> {DateTimeFormatter.format_date_persian(user_data.get('registration_date'))}
-🕐 <b>آخرین فعالیت:</b> {DateTimeFormatter.format_datetime_persian(user_data.get('last_activity'))}
-⭐ <b>امتیاز:</b> {NumberFormatter.format_number_persian(user_data.get('user_points', 0))}
-🚫 <b>وضعیت:</b> {'مسدود' if user_data.get('is_blocked') else 'فعال'}
-
-📊 <b>آمار:</b>
-• سیگنال‌های دریافتی: {user_data.get('total_signals_received', 0)}
-• معاملات موفق: {user_data.get('successful_trades', 0)}
-• معاملات ناموفق: {user_data.get('failed_trades', 0)}
-"""
-            
-            keyboard = [
-                [
-                    InlineKeyboardButton("🚫 مسدود کردن" if not user_data.get('is_blocked') else "✅ رفع مسدودی", 
-                                       callback_data=f"admin_toggle_block:{user_data['telegram_id']}"),
-                    InlineKeyboardButton("⭐ تغییر پکیج", callback_data=f"admin_change_package:{user_data['telegram_id']}")
-                ],
-                [
-                    InlineKeyboardButton("💰 اضافه کردن امتیاز", callback_data=f"admin_add_points:{user_data['telegram_id']}"),
-                    InlineKeyboardButton("📊 آمار تفصیلی", callback_data=f"admin_user_details:{user_data['telegram_id']}")
-                ],
-                [
-                    InlineKeyboardButton("💬 ارسال پیام", callback_data=f"admin_message_user:{user_data['telegram_id']}"),
-                    InlineKeyboardButton("🗑️ حذف کاربر", callback_data=f"admin_delete_user:{user_data['telegram_id']}")
-                ],
-                [
-                    InlineKeyboardButton("🔙 بازگشت", callback_data="admin_users")
-                ]
-            ]
-            
-            await update.message.reply_text(
-                user_info,
-                reply_markup=InlineKeyboardMarkup(keyboard),
-                parse_mode=ParseMode.HTML
-            )
-            
-        except Exception as e:
-            logger.error(f"Error showing user details: {e}")
-    
-    # =========================
-    # پیام همگانی
-    # =========================
-    
-    async def handle_broadcast_start(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """شروع ارسال پیام همگانی"""
-        try:
-            query = update.callback_query
-            await query.answer()
-            
-            await query.edit_message_text(
-                "📢 <b>ارسال پیام همگانی</b>\n\n"
-                "پیام خود را بنویسید:\n"
-                "• می‌توانید از HTML formatting استفاده کنید\n"
-                "• تصویر، ویدیو یا فایل هم ضمیمه کنید\n\n"
-                "برای لغو: /cancel",
-                parse_mode=ParseMode.HTML
-            )
-            
-            return WAITING_BROADCAST_MESSAGE
-            
-        except Exception as e:
-            logger.error(f"Error starting broadcast: {e}")
-            return ConversationHandler.END
-    
-    async def process_broadcast_message(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """پردازش پیام همگانی"""
-        try:
-            admin = update.effective_user
-            message_text = update.message.text or update.message.caption or ""
-            
-            if len(message_text.strip()) == 0:
-                await update.message.reply_text(
-                    "❌ پیام نمی‌تواند خالی باشد.\n"
-                    "لطفاً پیام خود را بنویسید."
-                )
-                return WAITING_BROADCAST_MESSAGE
-            
-            # تأیید ارسال
-            confirm_message = f"""
-📢 <b>تأیید ارسال پیام همگانی</b>
-
-<b>پیام شما:</b>
-{message_text[:200]}{'...' if len(message_text) > 200 else ''}
-
-آیا مطمئن هستید که این پیام به همه کاربران ارسال شود؟
-"""
-            
-            keyboard = [
-                [
-                    InlineKeyboardButton("✅ تأیید ارسال", callback_data="admin_confirm_broadcast"),
-                    InlineKeyboardButton("❌ لغو", callback_data="admin_cancel_broadcast")
-                ]
-            ]
-            
-            # ذخیره پیام در context
-            context.user_data['broadcast_message'] = message_text
-            context.user_data['broadcast_media'] = None
-            
-            # اگر پیام شامل رسانه باشد
-            if update.message.photo:
-                context.user_data['broadcast_media'] = {
-                    'type': 'photo',
-                    'file_id': update.message.photo[-1].file_id
-                }
-            elif update.message.video:
-                context.user_data['broadcast_media'] = {
-                    'type': 'video',
-                    'file_id': update.message.video.file_id
-                }
-            elif update.message.document:
-                context.user_data['broadcast_media'] = {
-                    'type': 'document',
-                    'file_id': update.message.document.file_id
-                }
-            
-            await update.message.reply_text(
-                confirm_message,
-                reply_markup=InlineKeyboardMarkup(keyboard),
-                parse_mode=ParseMode.HTML
-            )
-            
-            return ConversationHandler.END
-            
-        except Exception as e:
-            logger.error(f"Error processing broadcast message: {e}")
-            await update.message.reply_text("❌ خطا در پردازش پیام.")
-            return ConversationHandler.END
-    
-    async def handle_broadcast_confirm(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """تأیید و ارسال پیام همگانی"""
-        try:
-            query = update.callback_query
-            await query.answer()
-            
-            admin = query.from_user
-            message_text = context.user_data.get('broadcast_message', '')
-            media_data = context.user_data.get('broadcast_media')
-            
-            if not message_text:
-                await query.edit_message_text("❌ پیام یافت نشد.")
+            if not AdminManager.is_admin(user_id):
+                await query.answer("⛔ دسترسی غیرمجاز!", show_alert=True)
                 return
             
-            # شروع ارسال
-            await query.edit_message_text(
-                "📤 <b>در حال ارسال پیام همگانی...</b>\n\n"
-                "لطفاً صبر کنید...",
-                parse_mode=ParseMode.HTML
+            reports_text = (
+                f"📊 **گزارش‌های مدیریتی**\n"
+                f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
+                f"📈 **گزارش‌های موجود:**\n"
+                f"انتخاب نوع گزارش مورد نظر:"
             )
-            
-            # ارسال پیام همگانی
-            result = await self.message_manager.send_broadcast_message(
-                message_text=message_text,
-                media_data=media_data,
-                admin_id=admin.id
-            )
-            
-            # لاگ عملیات
-            log_admin_action(admin.id, "broadcast_message", f"Sent to {result['sent']} users")
-            
-            # نمایش نتیجه
-            result_message = f"""
-✅ <b>ارسال پیام همگانی تکمیل شد</b>
-
-📊 <b>آمار ارسال:</b>
-✅ موفق: {result['sent']}
-❌ ناموفق: {result['failed']}
-👥 کل کاربران: {result['total']}
-
-⏱️ <b>زمان ارسال:</b> {DateTimeFormatter.format_datetime_persian(datetime.now())}
-"""
-            
-            keyboard = [[InlineKeyboardButton("🔙 بازگشت به پنل", callback_data="admin_panel")]]
-            
-            await query.edit_message_text(
-                result_message,
-                reply_markup=InlineKeyboardMarkup(keyboard),
-                parse_mode=ParseMode.HTML
-            )
-            
-        except Exception as e:
-            logger.error(f"Error confirming broadcast: {e}")
-            await query.edit_message_text("❌ خطا در ارسال پیام همگانی.")
-    
-    # =========================
-    # گزارش‌ها و آمار
-    # =========================
-    
-    async def handle_admin_reports(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """مدیریت گزارش‌ها"""
-        try:
-            query = update.callback_query
-            await query.answer()
-            
-            message = """
-📋 <b>گزارش‌ها و آمار</b>
-
-یکی از گزینه‌های زیر را انتخاب کنید:
-"""
             
             keyboard = [
                 [
-                    InlineKeyboardButton("📊 گزارش روزانه", callback_data="admin_daily_report"),
-                    InlineKeyboardButton("📈 گزارش هفتگی", callback_data="admin_weekly_report")
+                    InlineKeyboardButton("📈 گزارش فروش", callback_data="admin_sales_report"),
+                    InlineKeyboardButton("👥 گزارش کاربران", callback_data="admin_users_report")
                 ],
                 [
-                    InlineKeyboardButton("💰 گزارش مالی", callback_data="admin_financial_report"),
-                    InlineKeyboardButton("👥 آمار کاربران", callback_data="admin_detailed_user_stats")
+                    InlineKeyboardButton("📊 آمار استراتژی‌ها", callback_data="admin_strategies_report"),
+                    InlineKeyboardButton("💰 گزارش درآمد", callback_data="admin_revenue_report")
                 ],
                 [
-                    InlineKeyboardButton("📊 آمار سیگنال‌ها", callback_data="admin_signal_stats"),
-                    InlineKeyboardButton("🎁 آمار رفرال", callback_data="admin_referral_stats")
+                    InlineKeyboardButton("🔄 گزارش فعالیت", callback_data="admin_activity_report"),
+                    InlineKeyboardButton("⚠️ گزارش خطاها", callback_data="admin_errors_report")
                 ],
                 [
-                    InlineKeyboardButton("🔙 بازگشت", callback_data="admin_panel")
-                ]
+                    InlineKeyboardButton("📅 گزارش روزانه", callback_data="admin_daily_report"),
+                    InlineKeyboardButton("📊 گزارش ماهانه", callback_data="admin_monthly_report")
+                ],
+                [InlineKeyboardButton("⬅️ بازگشت", callback_data="admin_panel")]
             ]
             
             await query.edit_message_text(
-                message,
+                reports_text,
                 reply_markup=InlineKeyboardMarkup(keyboard),
-                parse_mode=ParseMode.HTML
+                parse_mode="Markdown"
             )
             
         except Exception as e:
-            logger.error(f"Error in admin reports: {e}")
+            UserLogger.log_error(user_id, f"Error in admin_reports: {e}")
     
-    async def handle_daily_report(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """گزارش روزانه"""
+    @staticmethod
+    async def admin_broadcast_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """شروع ارسال پیام گروهی"""
+        query = update.callback_query
+        user_id = query.from_user.id
+        
         try:
-            query = update.callback_query
-            await query.answer()
+            if not AdminManager.is_admin(user_id):
+                await query.answer("⛔ دسترسی غیرمجاز!", show_alert=True)
+                return
             
-            # دریافت داده‌های گزارش
-            report_data = await self.report_manager.generate_daily_report()
+            broadcast_text = (
+                f"📤 **ارسال پیام گروهی**\n"
+                f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
+                f"📝 لطفاً متن پیام خود را ارسال کنید:\n\n"
+                f"⚠️ **توجه:**\n"
+                f"• پیام برای همه کاربران ارسال خواهد شد\n"
+                f"• از markdown استفاده کنید\n"
+                f"• دقت کنید پیام مناسب باشد\n\n"
+                f"برای لغو، روی دکمه لغو کلیک کنید."
+            )
             
-            # فرمت‌بندی گزارش
-            report_text = ReportFormatter.format_daily_report(report_data)
-            
-            keyboard = [[InlineKeyboardButton("🔙 بازگشت", callback_data="admin_reports")]]
+            keyboard = [
+                [InlineKeyboardButton("❌ لغو", callback_data="admin_panel")]
+            ]
             
             await query.edit_message_text(
-                report_text,
+                broadcast_text,
                 reply_markup=InlineKeyboardMarkup(keyboard),
-                parse_mode=ParseMode.HTML
+                parse_mode="Markdown"
             )
             
+            # ذخیره وضعیت در context
+            context.user_data['admin_action'] = 'broadcast'
+            
+            return ADMIN_WAITING_MESSAGE
+            
         except Exception as e:
-            logger.error(f"Error generating daily report: {e}")
-            await query.edit_message_text("❌ خطا در تولید گزارش روزانه.")
+            UserLogger.log_error(user_id, f"Error in admin_broadcast_start: {e}")
     
-    # =========================
-    # بکاپ و تنظیمات
-    # =========================
-    
-    async def handle_backup_management(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """مدیریت بکاپ"""
+    @staticmethod
+    async def admin_grant_package_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """شروع اعطای پکیج"""
+        query = update.callback_query
+        user_id = query.from_user.id
+        
         try:
-            query = update.callback_query
-            await query.answer()
+            if not AdminManager.is_admin(user_id):
+                await query.answer("⛔ دسترسی غیرمجاز!", show_alert=True)
+                return
             
-            # دریافت آخرین بکاپ
-            last_backup = await self.backup_manager.get_last_backup_info()
-            last_backup_str = DateTimeFormatter.format_datetime_persian(last_backup) if last_backup else "هرگز"
+            grant_text = (
+                f"🎁 **اعطای پکیج رایگان**\n"
+                f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
+                f"👤 لطفاً شناسه کاربر (User ID) را ارسال کنید:\n\n"
+                f"مثال: `123456789`\n\n"
+                f"⚠️ شناسه باید دقیق باشد."
+            )
             
-            message = f"""
-💾 <b>مدیریت پشتیبان‌گیری</b>
-
-📅 <b>آخرین بکاپ:</b> {last_backup_str}
-💿 <b>فضای استفاده شده:</b> {self.backup_manager.get_backup_size_info()}
-
-یکی از گزینه‌های زیر را انتخاب کنید:
-"""
+            keyboard = [
+                [InlineKeyboardButton("❌ لغو", callback_data="admin_users")]
+            ]
+            
+            await query.edit_message_text(
+                grant_text,
+                reply_markup=InlineKeyboardMarkup(keyboard),
+                parse_mode="Markdown"
+            )
+            
+            context.user_data['admin_action'] = 'grant_package'
+            
+            return ADMIN_WAITING_USER_ID
+            
+        except Exception as e:
+            UserLogger.log_error(user_id, f"Error in admin_grant_package_start: {e}")
+    
+    @staticmethod
+    async def handle_admin_user_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """پردازش شناسه کاربر"""
+        message = update.message
+        admin_id = message.from_user.id
+        
+        try:
+            if not AdminManager.is_admin(admin_id):
+                await message.reply_text("⛔ دسترسی غیرمجاز!")
+                return ConversationHandler.END
+            
+            # اعتبارسنجی شناسه کاربر
+            try:
+                target_user_id = Validators.validate_user_id(message.text)
+            except ValidationError as e:
+                await message.reply_text(f"❌ {e.message}\nلطفاً شناسه معتبر ارسال کنید.")
+                return ADMIN_WAITING_USER_ID
+            
+            # بررسی وجود کاربر
+            if not UserManager.user_exists(target_user_id):
+                await message.reply_text(
+                    f"❌ کاربر با شناسه `{target_user_id}` یافت نشد.\n"
+                    f"لطفاً شناسه صحیح ارسال کنید.",
+                    parse_mode="Markdown"
+                )
+                return ADMIN_WAITING_USER_ID
+            
+            # دریافت اطلاعات کاربر
+            user_info = UserManager.get_user(target_user_id)
+            
+            if context.user_data.get('admin_action') == 'grant_package':
+                # ذخیره شناسه کاربر و نمایش انتخاب پکیج
+                context.user_data['target_user_id'] = target_user_id
+                
+                package_text = (
+                    f"🎁 **اعطای پکیج به کاربر**\n"
+                    f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
+                    f"👤 **کاربر انتخابی:**\n"
+                    f"🆔 شناسه: `{target_user_id}`\n"
+                    f"👤 نام: `{user_info.get('full_name', 'نامشخص')}`\n"
+                    f"📦 پکیج فعلی: `{user_info.get('current_package', 'Free')}`\n\n"
+                    f"📦 **انتخاب پکیج جدید:**"
+                )
+                
+                keyboard = [
+                    [
+                        InlineKeyboardButton("🥉 Basic", callback_data="admin_pkg_basic"),
+                        InlineKeyboardButton("🥈 Premium", callback_data="admin_pkg_premium")
+                    ],
+                    [
+                        InlineKeyboardButton("🥇 VIP", callback_data="admin_pkg_vip"),
+                        InlineKeyboardButton("👻 Ghost", callback_data="admin_pkg_ghost")
+                    ],
+                    [InlineKeyboardButton("❌ لغو", callback_data="admin_users")]
+                ]
+                
+                await message.reply_text(
+                    package_text,
+                    reply_markup=InlineKeyboardMarkup(keyboard),
+                    parse_mode="Markdown"
+                )
+                
+                return ADMIN_WAITING_PACKAGE
+            
+        except Exception as e:
+            UserLogger.log_error(admin_id, f"Error in handle_admin_user_id: {e}")
+            await message.reply_text("❌ خطا در پردازش. لطفاً دوباره تلاش کنید.")
+            return ConversationHandler.END
+    
+    @staticmethod
+    async def handle_admin_package_selection(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """پردازش انتخاب پکیج"""
+        query = update.callback_query
+        admin_id = query.from_user.id
+        
+        try:
+            if not AdminManager.is_admin(admin_id):
+                await query.answer("⛔ دسترسی غیرمجاز!", show_alert=True)
+                return ConversationHandler.END
+            
+            # استخراج نوع پکیج
+            package_type = query.data.replace('admin_pkg_', '')
+            target_user_id = context.user_data.get('target_user_id')
+            
+            if not target_user_id:
+                await query.edit_message_text("❌ خطا: شناسه کاربر یافت نشد")
+                return ConversationHandler.END
+            
+            # ذخیره نوع پکیج و نمایش انتخاب مدت
+            context.user_data['selected_package'] = package_type
+            
+            duration_text = (
+                f"⏱ **انتخاب مدت پکیج**\n"
+                f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
+                f"📦 پکیج: `{package_type.upper()}`\n"
+                f"👤 کاربر: `{target_user_id}`\n\n"
+                f"⏰ **مدت زمان پکیج:**"
+            )
             
             keyboard = [
                 [
-                    InlineKeyboardButton("🔄 بکاپ فوری", callback_data="admin_create_backup"),
-                    InlineKeyboardButton("📋 لیست بکاپ‌ها", callback_data="admin_list_backups")
+                    InlineKeyboardButton("📅 1 ماه", callback_data="admin_dur_monthly"),
+                    InlineKeyboardButton("📅 3 ماه", callback_data="admin_dur_quarterly")
                 ],
                 [
-                    InlineKeyboardButton("⚙️ تنظیمات بکاپ", callback_data="admin_backup_settings"),
-                    InlineKeyboardButton("🗑️ پاک‌سازی", callback_data="admin_cleanup_backups")
+                    InlineKeyboardButton("📅 1 سال", callback_data="admin_dur_yearly"),
+                    InlineKeyboardButton("♾ مادام‌العمر", callback_data="admin_dur_lifetime")
                 ],
-                [
-                    InlineKeyboardButton("🔙 بازگشت", callback_data="admin_panel")
-                ]
+                [InlineKeyboardButton("❌ لغو", callback_data="admin_users")]
             ]
             
             await query.edit_message_text(
-                message,
+                duration_text,
                 reply_markup=InlineKeyboardMarkup(keyboard),
-                parse_mode=ParseMode.HTML
+                parse_mode="Markdown"
+            )
+            
+            return ADMIN_WAITING_DURATION
+            
+        except Exception as e:
+            UserLogger.log_error(admin_id, f"Error in handle_admin_package_selection: {e}")
+            await query.edit_message_text("❌ خطا در انتخاب پکیج")
+            return ConversationHandler.END
+    
+    @staticmethod
+    async def handle_admin_duration_selection(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """پردازش انتخاب مدت پکیج"""
+        query = update.callback_query
+        admin_id = query.from_user.id
+        
+        try:
+            if not AdminManager.is_admin(admin_id):
+                await query.answer("⛔ دسترسی غیرمجاز!", show_alert=True)
+                return ConversationHandler.END
+            
+            # استخراج اطلاعات
+            duration = query.data.replace('admin_dur_', '')
+            target_user_id = context.user_data.get('target_user_id')
+            package_type = context.user_data.get('selected_package')
+            
+            if not all([target_user_id, package_type, duration]):
+                await query.edit_message_text("❌ خطا: اطلاعات ناقص")
+                return ConversationHandler.END
+            
+            # اعطای پکیج
+            success = AdminManager.grant_package_to_user(
+                admin_id=admin_id,
+                target_user_id=target_user_id,
+                package_type=package_type,
+                duration=duration
+            )
+            
+            if success:
+                # ارسال اطلاعیه به کاربر
+                try:
+                    package_names = {
+                        'basic': 'پایه',
+                        'premium': 'ویژه', 
+                        'vip': 'VIP',
+                        'ghost': 'شبح'
+                    }
+                    
+                    duration_names = {
+                        'monthly': '1 ماهه',
+                        'quarterly': '3 ماهه',
+                        'yearly': '1 ساله',
+                        'lifetime': 'مادام‌العمر'
+                    }
+                    
+                    notification_text = (
+                        f"🎉 **تبریک! پکیج رایگان دریافت کردید**\n"
+                        f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
+                        f"📦 **پکیج اعطایی:** {package_names.get(package_type, package_type)}\n"
+                        f"⏰ **مدت زمان:** {duration_names.get(duration, duration)}\n"
+                        f"🕒 **زمان فعال‌سازی:** {TimeManager.to_shamsi(datetime.now())}\n\n"
+                        f"✨ از امکانات جدید لذت ببرید!"
+                    )
+                    
+                    await context.bot.send_message(
+                        chat_id=target_user_id,
+                        text=notification_text,
+                        parse_mode="Markdown"
+                    )
+                except Exception:
+                    pass  # اگر ارسال به کاربر ممکن نباشد
+                
+                # پیام موفقیت برای ادمین
+                success_text = (
+                    f"✅ **پکیج با موفقیت اعطا شد**\n"
+                    f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
+                    f"👤 کاربر: `{target_user_id}`\n"
+                    f"📦 پکیج: `{package_type.upper()}`\n"
+                    f"⏰ مدت: `{duration}`\n"
+                    f"🕒 زمان: `{TimeManager.to_shamsi(datetime.now())}`\n\n"
+                    f"📤 اطلاعیه به کاربر ارسال شد."
+                )
+                
+                keyboard = [
+                    [InlineKeyboardButton("🎁 اعطای پکیج دیگر", callback_data="admin_grant_package")],
+                    [InlineKeyboardButton("⬅️ بازگشت", callback_data="admin_users")]
+                ]
+                
+            else:
+                success_text = (
+                    f"❌ **خطا در اعطای پکیج**\n\n"
+                    f"متأسفانه در فرآیند اعطای پکیج مشکلی پیش آمد.\n"
+                    f"لطفاً دوباره تلاش کنید."
+                )
+                
+                keyboard = [
+                    [InlineKeyboardButton("🔄 تلاش مجدد", callback_data="admin_grant_package")],
+                    [InlineKeyboardButton("⬅️ بازگشت", callback_data="admin_users")]
+                ]
+            
+            await query.edit_message_text(
+                success_text,
+                reply_markup=InlineKeyboardMarkup(keyboard),
+                parse_mode="Markdown"
+            )
+            
+            # پاک کردن داده‌های موقت
+            context.user_data.pop('admin_action', None)
+            context.user_data.pop('target_user_id', None)
+            context.user_data.pop('selected_package', None)
+            
+            return ConversationHandler.END
+            
+        except Exception as e:
+            UserLogger.log_error(admin_id, f"Error in handle_admin_duration_selection: {e}")
+            await query.edit_message_text("❌ خطا در تکمیل فرآیند")
+            return ConversationHandler.END
+    
+    @staticmethod
+    async def admin_backup_management(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """مدیریت پشتیبان‌گیری"""
+        query = update.callback_query
+        user_id = query.from_user.id
+        
+        try:
+            if not AdminManager.is_admin(user_id):
+                await query.answer("⛔ دسترسی غیرمجاز!", show_alert=True)
+                return
+            
+            # اطلاعات آخرین پشتیبان‌گیری
+            last_backup = BackupManager.get_last_backup_info()
+            
+            backup_text = (
+                f"💾 **مدیریت پشتیبان‌گیری**\n"
+                f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
+                f"📅 **آخرین پشتیبان‌گیری:**\n"
+                f"🕒 زمان: `{last_backup.get('date', 'هرگز')}`\n"
+                f"📦 اندازه: `{last_backup.get('size', 'نامشخص')}`\n"
+                f"✅ وضعیت: `{last_backup.get('status', 'نامشخص')}`\n\n"
+                f"🔧 **عملیات پشتیبان‌گیری:**"
+            )
+            
+            keyboard = [
+                [
+                    InlineKeyboardButton("💾 پشتیبان‌گیری فوری", callback_data="admin_backup_now"),
+                    InlineKeyboardButton("📋 لیست پشتیبان‌ها", callback_data="admin_backup_list")
+                ],
+                [
+                    InlineKeyboardButton("⚙️ تنظیمات", callback_data="admin_backup_settings"),
+                    InlineKeyboardButton("🔄 بازیابی", callback_data="admin_restore")
+                ],
+                [InlineKeyboardButton("⬅️ بازگشت", callback_data="admin_panel")]
+            ]
+            
+            await query.edit_message_text(
+                backup_text,
+                reply_markup=InlineKeyboardMarkup(keyboard),
+                parse_mode="Markdown"
             )
             
         except Exception as e:
-            logger.error(f"Error in backup management: {e}")
+            UserLogger.log_error(user_id, f"Error in admin_backup_management: {e}")
     
-    async def cancel_operation(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """لغو عملیات"""
-        await update.message.reply_text(
-            "❌ عملیات لغو شد.\n\n"
-            "برای بازگشت به پنل ادمین: /admin"
-        )
+    @staticmethod
+    async def cancel_admin_action(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """لغو عملیات ادمین"""
+        query = update.callback_query
+        
+        # پاک کردن داده‌های موقت
+        context.user_data.pop('admin_action', None)
+        context.user_data.pop('target_user_id', None)
+        context.user_data.pop('selected_package', None)
+        
+        await query.answer("عملیات لغو شد")
         return ConversationHandler.END
+
+# ایجاد conversation handler برای عملیات ادمین
+def build_admin_conversation_handler():
+    """ایجاد conversation handler برای عملیات مدیریتی"""
+    from telegram.ext import ConversationHandler, CallbackQueryHandler, MessageHandler, filters
     
-    def get_handlers(self) -> List:
-        """دریافت لیست هندلرها"""
-        return [
-            # کامند ادمین
-            CommandHandler("admin", self.admin_command),
-            
-            # ConversationHandler برای جستجوی کاربر
-            ConversationHandler(
-                entry_points=[CallbackQueryHandler(self.handle_search_user, pattern="^admin_search_user$")],
-                states={
-                    WAITING_USER_ID: [MessageHandler(filters.TEXT & ~filters.COMMAND, self.process_user_search)],
-                },
-                fallbacks=[CommandHandler("cancel", self.cancel_operation)],
-            ),
-            
-            # ConversationHandler برای پیام همگانی
-            ConversationHandler(
-                entry_points=[CallbackQueryHandler(self.handle_broadcast_start, pattern="^admin_broadcast$")],
-                states={
-                    WAITING_BROADCAST_MESSAGE: [MessageHandler(
-                        filters.TEXT | filters.PHOTO | filters.VIDEO | filters.DOCUMENT, 
-                        self.process_broadcast_message
-                    )],
-                },
-                fallbacks=[CommandHandler("cancel", self.cancel_operation)],
-            ),
-            
-            # Callback handlers
-            CallbackQueryHandler(self._show_admin_panel, pattern="^admin_panel$"),
-            CallbackQueryHandler(self.handle_user_management, pattern="^admin_users$"),
-            CallbackQueryHandler(self.handle_admin_reports, pattern="^admin_reports$"),
-            CallbackQueryHandler(self.handle_daily_report, pattern="^admin_daily_report$"),
-            CallbackQueryHandler(self.handle_backup_management, pattern="^admin_backup$"),
-            CallbackQueryHandler(self.handle_broadcast_confirm, pattern="^admin_confirm_broadcast$"),
-        ]
-
-
-# Export
-__all__ = ['AdminHandler']
+    return ConversationHandler(
+        entry_points=[
+            CallbackQueryHandler(AdminHandlers.admin_broadcast_start, pattern="^admin_broadcast$"),
+            CallbackQueryHandler(AdminHandlers.admin_grant_package_start, pattern="^admin_grant_package$"),
+        ],
+        states={
+            ADMIN_WAITING_USER_ID: [
+                MessageHandler(filters.TEXT & ~filters.COMMAND, AdminHandlers.handle_admin_user_id)
+            ],
+            ADMIN_WAITING_MESSAGE: [
+                MessageHandler(filters.TEXT & ~filters.COMMAND, AdminHandlers.handle_broadcast_message)
+            ],
+            ADMIN_WAITING_PACKAGE: [
+                CallbackQueryHandler(AdminHandlers.handle_admin_package_selection, pattern="^admin_pkg_")
+            ],
+            ADMIN_WAITING_DURATION: [
+                CallbackQueryHandler(AdminHandlers.handle_admin_duration_selection, pattern="^admin_dur_")
+            ]
+        },
+        fallbacks=[
+            CallbackQueryHandler(AdminHandlers.cancel_admin_action, pattern="^admin_(panel|users)$"),
+            CallbackQueryHandler(AdminHandlers.cancel_admin_action, pattern="^main_menu$")
+        ],
+        name="admin_operations",
+        persistent=True
+    )

@@ -76,6 +76,24 @@ class TimeManager:
         return TimeManager.to_shamsi(datetime.now(), include_time=False)
     
     @staticmethod
+    def get_current_time_persian() -> str:
+        """دریافت زمان فعلی به فرمت فارسی (برای سازگاری با main.py)
+        
+        Returns:
+            str: زمان فعلی به فرمت شمسی
+        """
+        return TimeManager.get_current_shamsi()
+    
+    @staticmethod
+    def get_current_timestamp() -> float:
+        """دریافت timestamp فعلی
+        
+        Returns:
+            float: timestamp فعلی
+        """
+        return datetime.now().timestamp()
+    
+    @staticmethod
     def add_shamsi_days(shamsi_str: str, days: int) -> Optional[str]:
         """اضافه کردن روز به تاریخ شمسی
         
@@ -318,6 +336,7 @@ class TimeManager:
 to_shamsi = TimeManager.to_shamsi
 from_shamsi = TimeManager.from_shamsi
 get_current_shamsi = TimeManager.get_current_shamsi
+get_current_time_persian = TimeManager.get_current_time_persian  # متد جدید
 is_expired = TimeManager.is_expired
 create_expiry_date = TimeManager.create_expiry_date
 
@@ -326,6 +345,7 @@ __all__ = [
     'to_shamsi',
     'from_shamsi', 
     'get_current_shamsi',
+    'get_current_time_persian',  # متد جدید اضافه شده
     'is_expired',
     'create_expiry_date'
 ]

@@ -254,11 +254,94 @@ class DatabaseManager:
             logger.error(f"Database query error: {e}")
             return None
     
+    def fetch_one(self, query: str, params: tuple = ()) -> Optional[Dict]:
+        """دریافت یک رکورد از دیتابیس (برای سازگاری با main.py)
+        
+        Args:
+            query: کوئری SQL
+            params: پارامترهای کوئری
+            
+        Returns:
+            یک رکورد یا None
+        """
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                if params:
+                    cursor.execute(query, params)
+                else:
+                    cursor.execute(query)
+                row = cursor.fetchone()
+                return dict(row) if row else None
+        except sqlite3.Error as e:
+            logger.error(f"Database fetch_one error: {e}")
+            return None
+        except Exception as e:
+            logger.error(f"Unexpected error in fetch_one: {e}")
+            return None
+    
+    def fetch_all(self, query: str, params: tuple = ()) -> List[Dict]:
+        """دریافت همه رکوردها از دیتابیس
+        
+        Args:
+            query: کوئری SQL
+            params: پارامترهای کوئری
+            
+        Returns:
+            لیست رکوردها
+        """
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                if params:
+                    cursor.execute(query, params)
+                else:
+                    cursor.execute(query)
+                rows = cursor.fetchall()
+                return [dict(row) for row in rows]
+        except sqlite3.Error as e:
+            logger.error(f"Database fetch_all error: {e}")
+            return []
+        except Exception as e:
+            logger.error(f"Unexpected error in fetch_all: {e}")
+            return []
+    
+    def execute(self, query: str, params: tuple = ()) -> bool:
+        """اجرای کوئری بدون بازگشت نتیجه
+        
+        Args:
+            query: کوئری SQL
+            params: پارامترهای کوئری
+            
+        Returns:
+            True در صورت موفقیت
+        """
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                if params:
+                    cursor.execute(query, params)
+                else:
+                    cursor.execute(query)
+                conn.commit()
+                return True
+        except sqlite3.Error as e:
+            logger.error(f"Database execute error: {e}")
+            return False
+        except Exception as e:
+            logger.error(f"Unexpected error in execute: {e}")
+            return False
+    
+    def close_connection(self):
+        """بستن اتصال دیتابیس (برای سازگاری با main.py)"""
+        # در این implementation اتصالات خودکار بسته می‌شوند
+        # این متد فقط برای سازگاری با main.py اضافه شده
+        logger.info("Database connections closed")
+    
     def get_user_by_telegram_id(self, telegram_id: int) -> Optional[Dict]:
         """دریافت کاربر با آیدی تلگرام"""
         query = "SELECT * FROM users WHERE telegram_id = ?"
-        result = self.execute_query(query, (telegram_id,), fetch=True)
-        return result[0] if result else None
+        return self.fetch_one(query, (telegram_id,))
     
     def create_user(self, telegram_id: int, username: str = None, first_name: str = None, 
                    last_name: str = None, referral_code: str = None) -> bool:
@@ -300,19 +383,19 @@ class DatabaseManager:
             ORDER BY timestamp DESC 
             LIMIT ?
         """
-        return self.execute_query(query, (telegram_id, limit), fetch=True) or []
+        return self.fetch_all(query, (telegram_id, limit))
     
     def is_admin(self, telegram_id: int) -> bool:
         """بررسی ادمین بودن کاربر"""
         query = "SELECT id FROM admins WHERE telegram_id = ? AND is_active = 1"
-        result = self.execute_query(query, (telegram_id,), fetch=True)
+        result = self.fetch_one(query, (telegram_id,))
         return bool(result)
     
     def get_admin_level(self, telegram_id: int) -> int:
         """دریافت سطح دسترسی ادمین"""
         query = "SELECT level FROM admins WHERE telegram_id = ? AND is_active = 1"
-        result = self.execute_query(query, (telegram_id,), fetch=True)
-        return result[0]['level'] if result else 0
+        result = self.fetch_one(query, (telegram_id,))
+        return result['level'] if result else 0
     
     def add_admin(self, telegram_id: int, level: int = 1, added_by: int = None) -> bool:
         """افزودن ادمین جدید"""
@@ -336,8 +419,7 @@ class DatabaseManager:
     def get_payment_by_code(self, payment_code: str) -> Optional[Dict]:
         """دریافت پرداخت با کد پیگیری"""
         query = "SELECT * FROM payments WHERE payment_code = ?"
-        result = self.execute_query(query, (payment_code,), fetch=True)
-        return result[0] if result else None
+        return self.fetch_one(query, (payment_code,))
     
     def update_payment_status(self, payment_code: str, status: str, processed_by: int = None,
                              transaction_id: str = None, notes: str = None) -> bool:
@@ -361,7 +443,7 @@ class DatabaseManager:
             ORDER BY p.created_date DESC
             LIMIT ?
         """
-        return self.execute_query(query, (limit,), fetch=True) or []
+        return self.fetch_all(query, (limit,))
     
     def create_signal(self, symbol: str, base_currency: str, timeframe: str,
                      signal_type: str, direction: str, entry_price: float = None,
@@ -399,7 +481,7 @@ class DatabaseManager:
             """
             params = (limit,)
         
-        return self.execute_query(query, params, fetch=True) or []
+        return self.fetch_all(query, params)
     
     def create_support_ticket(self, telegram_id: int, ticket_id: str, subject: str,
                              message: str, priority: str = 'normal') -> bool:
@@ -418,7 +500,7 @@ class DatabaseManager:
             WHERE telegram_id = ? 
             ORDER BY created_date DESC
         """
-        return self.execute_query(query, (telegram_id,), fetch=True) or []
+        return self.fetch_all(query, (telegram_id,))
     
     def get_open_tickets(self, limit: int = 100) -> List[Dict]:
         """دریافت تیکت‌های باز"""
@@ -430,7 +512,7 @@ class DatabaseManager:
             ORDER BY st.created_date ASC
             LIMIT ?
         """
-        return self.execute_query(query, (limit,), fetch=True) or []
+        return self.fetch_all(query, (limit,))
     
     def set_cache(self, key: str, value: str, expires_minutes: int = 60) -> bool:
         """تنظیم کش"""
@@ -448,8 +530,8 @@ class DatabaseManager:
             SELECT value FROM cache 
             WHERE key = ? AND (expires_at IS NULL OR expires_at > datetime('now'))
         """
-        result = self.execute_query(query, (key,), fetch=True)
-        return result[0]['value'] if result else None
+        result = self.fetch_one(query, (key,))
+        return result['value'] if result else None
     
     def clear_expired_cache(self) -> int:
         """پاکسازی کش منقضی شده"""
@@ -461,27 +543,27 @@ class DatabaseManager:
         stats = {}
         
         # تعداد کاربران
-        result = self.execute_query("SELECT COUNT(*) as count FROM users", fetch=True)
-        stats['total_users'] = result[0]['count'] if result else 0
+        result = self.fetch_one("SELECT COUNT(*) as count FROM users")
+        stats['total_users'] = result['count'] if result else 0
         
         # کاربران فعال امروز
-        result = self.execute_query("""
+        result = self.fetch_one("""
             SELECT COUNT(*) as count FROM users 
             WHERE date(last_activity) = date('now')
-        """, fetch=True)
-        stats['active_today'] = result[0]['count'] if result else 0
+        """)
+        stats['active_today'] = result['count'] if result else 0
         
         # پرداخت‌های در انتظار
-        result = self.execute_query("""
+        result = self.fetch_one("""
             SELECT COUNT(*) as count FROM payments WHERE status = 'pending'
-        """, fetch=True)
-        stats['pending_payments'] = result[0]['count'] if result else 0
+        """)
+        stats['pending_payments'] = result['count'] if result else 0
         
         # تیکت‌های باز
-        result = self.execute_query("""
+        result = self.fetch_one("""
             SELECT COUNT(*) as count FROM support_tickets WHERE status = 'open'
-        """, fetch=True)
-        stats['open_tickets'] = result[0]['count'] if result else 0
+        """)
+        stats['open_tickets'] = result['count'] if result else 0
         
         return stats
     

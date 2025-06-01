@@ -1,10 +1,10 @@
 """
-مدیریت تنظیمات و بارگذاری فایل‌های پیکربندی
+مدیریت تنظیمات و پیکربندی API ها
 """
 
 import json
 import os
-from typing import Dict, Any, Optional, List
+from typing import Dict, List, Optional, Any
 from pathlib import Path
 
 from core.config import Config
@@ -15,292 +15,377 @@ class SettingsManager:
     """مدیریت تنظیمات سیستم و API ها"""
     
     def __init__(self):
-        self._api_config: Dict[str, Any] = {}
-        self._environment_config: Dict[str, Any] = {}
-        self._loaded = False
-        self._config_file_path = Config.CONFIG_DIR / "api_servers_config.json"
-        self._environment = Config.ENVIRONMENT.lower()
-        
-        # بارگذاری تنظیمات
-        self.load_configs()
+        self.config_file = Config.CONFIG_DIR / "api_servers_config.json"
+        self._config_cache = None
+        self._last_modified = None
+        self._load_config()
     
-    def load_configs(self):
-        """بارگذاری تمام فایل‌های تنظیمات"""
+    def _load_config(self) -> Dict[str, Any]:
+        """بارگیری تنظیمات از فایل"""
         try:
-            # بارگذاری تنظیمات اصلی API
-            self._load_main_api_config()
+            if not self.config_file.exists():
+                logger.error(f"Config file not found: {self.config_file}")
+                return {}
             
-            # بارگذاری تنظیمات محیط
-            self._load_environment_config()
+            # بررسی تغییر فایل
+            current_modified = self.config_file.stat().st_mtime
+            if self._last_modified != current_modified:
+                with open(self.config_file, 'r', encoding='utf-8') as f:
+                    self._config_cache = json.load(f)
+                self._last_modified = current_modified
+                logger.info("API configuration reloaded")
             
-            self._loaded = True
-            logger.info("All configurations loaded successfully")
+            return self._config_cache or {}
             
         except Exception as e:
-            logger.error(f"Error loading configurations: {e}")
-            self._loaded = False
-    
-    def _load_main_api_config(self):
-        """بارگذاری فایل تنظیمات اصلی API"""
-        try:
-            if not self._config_file_path.exists():
-                logger.error(f"API config file not found: {self._config_file_path}")
-                return
-            
-            with open(self._config_file_path, 'r', encoding='utf-8') as file:
-                self._api_config = json.load(file)
-                
-            logger.info("Main API configuration loaded")
-            
-        except json.JSONDecodeError as e:
-            logger.error(f"Invalid JSON in API config file: {e}")
-        except Exception as e:
-            logger.error(f"Error loading API config: {e}")
-    
-    def _load_environment_config(self):
-        """بارگذاری تنظیمات محیط (development/production)"""
-        try:
-            env_file = Config.CONFIG_DIR / f"{self._environment}.json"
-            
-            if not env_file.exists():
-                logger.warning(f"Environment config file not found: {env_file}")
-                return
-            
-            with open(env_file, 'r', encoding='utf-8') as file:
-                self._environment_config = json.load(file)
-                
-            logger.info(f"Environment configuration loaded: {self._environment}")
-            
-        except json.JSONDecodeError as e:
-            logger.error(f"Invalid JSON in environment config file: {e}")
-        except Exception as e:
-            logger.error(f"Error loading environment config: {e}")
-    
-    def get_strategy_url(self, strategy_name: str) -> Optional[str]:
-        """دریافت URL استراتژی"""
-        try:
-            # ابتدا از تنظیمات محیط چک کن
-            if self._environment_config:
-                env_strategies = self._environment_config.get("api_servers", {}).get("strategies", {})
-                if strategy_name in env_strategies:
-                    return env_strategies[strategy_name].get("url")
-            
-            # سپس از تنظیمات اصلی
-            strategies = self._api_config.get("api_servers", {}).get("strategies", {})
-            if strategy_name in strategies:
-                return strategies[strategy_name].get("url")
-            
-            logger.warning(f"Strategy URL not found: {strategy_name}")
-            return None
-            
-        except Exception as e:
-            logger.error(f"Error getting strategy URL: {e}")
-            return None
-    
-    def get_strategy_config(self, strategy_name: str) -> Dict[str, Any]:
-        """دریافت تنظیمات کامل استراتژی"""
-        try:
-            # ابتدا از تنظیمات محیط
-            if self._environment_config:
-                env_strategies = self._environment_config.get("api_servers", {}).get("strategies", {})
-                if strategy_name in env_strategies:
-                    env_config = env_strategies[strategy_name]
-                    # ترکیب با تنظیمات اصلی
-                    main_config = self._api_config.get("api_servers", {}).get("strategies", {}).get(strategy_name, {})
-                    return {**main_config, **env_config}
-            
-            # تنظیمات اصلی
-            strategies = self._api_config.get("api_servers", {}).get("strategies", {})
-            return strategies.get(strategy_name, {})
-            
-        except Exception as e:
-            logger.error(f"Error getting strategy config: {e}")
+            logger.error(f"Error loading config: {e}")
             return {}
     
-    def get_strategy_timeout(self, strategy_name: str) -> int:
+    def get_config(self) -> Dict[str, Any]:
+        """دریافت کل تنظیمات"""
+        return self._load_config()
+    
+    def get_api_servers_config(self) -> Dict[str, Any]:
+        """دریافت تنظیمات سرورهای API"""
+        config = self.get_config()
+        return config.get("api_servers", {})
+    
+    def get_strategies_config(self) -> Dict[str, Any]:
+        """دریافت تنظیمات استراتژی‌ها"""
+        api_config = self.get_api_servers_config()
+        return api_config.get("strategies", {})
+    
+    def get_strategy_config(self, strategy: str) -> Optional[Dict[str, Any]]:
+        """دریافت تنظیمات یک استراتژی خاص"""
+        strategies = self.get_strategies_config()
+        return strategies.get(strategy)
+    
+    def get_strategy_url(self, strategy: str) -> Optional[str]:
+        """دریافت URL استراتژی"""
+        strategy_config = self.get_strategy_config(strategy)
+        if strategy_config:
+            return strategy_config.get("url")
+        return None
+    
+    def get_strategy_health_url(self, strategy: str) -> Optional[str]:
+        """دریافت URL سلامت استراتژی"""
+        strategy_config = self.get_strategy_config(strategy)
+        if strategy_config:
+            return strategy_config.get("health_url")
+        return None
+    
+    def get_strategy_timeout(self, strategy: str) -> int:
         """دریافت timeout استراتژی"""
-        config = self.get_strategy_config(strategy_name)
-        return config.get("timeout", Config.REQUEST_TIMEOUT)
+        strategy_config = self.get_strategy_config(strategy)
+        if strategy_config:
+            return strategy_config.get("timeout", 30)
+        return 30
     
-    def get_strategy_retry_count(self, strategy_name: str) -> int:
-        """دریافت تعداد retry استراتژی"""
-        config = self.get_strategy_config(strategy_name)
-        return config.get("retry_count", Config.MAX_RETRIES)
+    def get_strategy_retry_count(self, strategy: str) -> int:
+        """دریافت تعداد تلاش مجدد"""
+        strategy_config = self.get_strategy_config(strategy)
+        if strategy_config:
+            return strategy_config.get("retry_count", 3)
+        return 3
     
-    def get_strategy_cache_duration(self, strategy_name: str) -> int:
+    def get_strategy_cache_duration(self, strategy: str) -> int:
         """دریافت مدت کش استراتژی"""
-        config = self.get_strategy_config(strategy_name)
-        return config.get("cache_duration", Config.SIGNAL_CACHE_DURATION)
+        strategy_config = self.get_strategy_config(strategy)
+        if strategy_config:
+            return strategy_config.get("cache_duration", 60)
+        return 60
     
-    def get_strategy_package_levels(self, strategy_name: str) -> List[str]:
+    def get_strategy_package_levels(self, strategy: str) -> List[str]:
         """دریافت سطوح پکیج مجاز برای استراتژی"""
-        config = self.get_strategy_config(strategy_name)
-        return config.get("package_levels", [])
+        strategy_config = self.get_strategy_config(strategy)
+        if strategy_config:
+            return strategy_config.get("package_levels", [])
+        return []
     
-    def is_strategy_allowed_for_package(self, strategy_name: str, package_name: str) -> bool:
+    def is_strategy_allowed_for_package(self, strategy: str, package: str) -> bool:
         """بررسی مجاز بودن استراتژی برای پکیج"""
-        try:
-            # بررسی از طریق package_hierarchy
-            package_hierarchy = self._api_config.get("api_servers", {}).get("package_hierarchy", {})
-            if package_name in package_hierarchy:
-                allowed_strategies = package_hierarchy[package_name].get("strategies", [])
-                return strategy_name in allowed_strategies
-            
-            # بررسی از طریق package_levels استراتژی
-            strategy_levels = self.get_strategy_package_levels(strategy_name)
-            return package_name in strategy_levels
-            
-        except Exception as e:
-            logger.error(f"Error checking strategy access: {e}")
-            return False
-    
-    def get_package_strategies(self, package_name: str) -> List[str]:
-        """دریافت استراتژی‌های مجاز برای پکیج"""
-        try:
-            package_hierarchy = self._api_config.get("api_servers", {}).get("package_hierarchy", {})
-            if package_name in package_hierarchy:
-                return package_hierarchy[package_name].get("strategies", [])
-            return []
-            
-        except Exception as e:
-            logger.error(f"Error getting package strategies: {e}")
-            return []
-    
-    def get_package_level(self, package_name: str) -> int:
-        """دریافت سطح پکیج"""
-        try:
-            package_hierarchy = self._api_config.get("api_servers", {}).get("package_hierarchy", {})
-            if package_name in package_hierarchy:
-                return package_hierarchy[package_name].get("level", 0)
-            return 0
-            
-        except Exception as e:
-            logger.error(f"Error getting package level: {e}")
-            return 0
+        allowed_packages = self.get_strategy_package_levels(strategy)
+        return package in allowed_packages
     
     def get_all_strategies(self) -> List[str]:
-        """دریافت لیست تمام استراتژی‌ها"""
-        try:
-            strategies = self._api_config.get("api_servers", {}).get("strategies", {})
-            return list(strategies.keys())
-            
-        except Exception as e:
-            logger.error(f"Error getting all strategies: {e}")
-            return []
+        """دریافت لیست همه استراتژی‌ها"""
+        strategies = self.get_strategies_config()
+        return list(strategies.keys())
+    
+    def get_package_strategies(self, package: str) -> List[str]:
+        """دریافت استراتژی‌های یک پکیج"""
+        config = self.get_config()
+        package_hierarchy = config.get("api_servers", {}).get("package_hierarchy", {})
+        
+        if package in package_hierarchy:
+            return package_hierarchy[package].get("strategies", [])
+        
+        # اگر در hierarchy نبود، از تنظیمات استراتژی‌ها استخراج کن
+        strategies = []
+        for strategy, strategy_config in self.get_strategies_config().items():
+            if package in strategy_config.get("package_levels", []):
+                strategies.append(strategy)
+        
+        return strategies
     
     def get_all_packages(self) -> List[str]:
-        """دریافت لیست تمام پکیج‌ها"""
-        try:
-            package_hierarchy = self._api_config.get("api_servers", {}).get("package_hierarchy", {})
-            return list(package_hierarchy.keys())
-            
-        except Exception as e:
-            logger.error(f"Error getting all packages: {e}")
-            return []
+        """دریافت لیست همه پکیج‌ها"""
+        config = self.get_config()
+        package_hierarchy = config.get("api_servers", {}).get("package_hierarchy", {})
+        return list(package_hierarchy.keys())
+    
+    def get_package_level(self, package: str) -> int:
+        """دریافت سطح پکیج"""
+        config = self.get_config()
+        package_hierarchy = config.get("api_servers", {}).get("package_hierarchy", {})
+        
+        if package in package_hierarchy:
+            return package_hierarchy[package].get("level", 0)
+        
+        # سطح پیش‌فرض
+        level_map = {
+            "free": 0,
+            "basic": 1,
+            "premium": 2,
+            "vip": 3,
+            "ghost": 4
+        }
+        return level_map.get(package, 0)
     
     def get_live_price_config(self) -> Dict[str, Any]:
         """دریافت تنظیمات قیمت زنده"""
-        try:
-            # ابتدا از تنظیمات محیط
-            if self._environment_config:
-                env_live_price = self._environment_config.get("live_price", {})
-                if env_live_price:
-                    main_live_price = self._api_config.get("live_price", {})
-                    return {**main_live_price, **env_live_price}
-            
-            # تنظیمات اصلی
-            return self._api_config.get("live_price", {})
-            
-        except Exception as e:
-            logger.error(f"Error getting live price config: {e}")
-            return {}
+        config = self.get_config()
+        return config.get("live_price", {})
+    
+    def get_live_price_url(self, exchange: str = "binance") -> Optional[str]:
+        """دریافت URL قیمت زنده"""
+        live_price_config = self.get_live_price_config()
+        exchange_config = live_price_config.get(exchange, {})
+        return exchange_config.get("url")
     
     def get_cache_settings(self) -> Dict[str, Any]:
         """دریافت تنظیمات کش"""
-        try:
-            # ابتدا از تنظیمات محیط
-            if self._environment_config:
-                env_cache = self._environment_config.get("cache_settings", {})
-                if env_cache:
-                    main_cache = self._api_config.get("cache_settings", {})
-                    return {**main_cache, **env_cache}
-            
-            # تنظیمات اصلی
-            return self._api_config.get("cache_settings", {})
-            
-        except Exception as e:
-            logger.error(f"Error getting cache settings: {e}")
-            return {}
+        config = self.get_config()
+        return config.get("cache_settings", {
+            "default_duration": 60,
+            "min_request_interval": 60,
+            "max_cache_size": 1000
+        })
     
-    def is_strategy_healthy(self, strategy_name: str) -> bool:
-        """بررسی سلامت استراتژی (health check)"""
+    def is_strategy_healthy(self, strategy: str) -> bool:
+        """بررسی سلامت استراتژی (فعلاً بر اساس وجود URL)"""
+        strategy_url = self.get_strategy_url(strategy)
+        return strategy_url is not None
+    
+    def update_strategy_config(self, strategy: str, config_updates: Dict[str, Any]) -> bool:
+        """بروزرسانی تنظیمات یک استراتژی"""
         try:
-            config = self.get_strategy_config(strategy_name)
-            health_url = config.get("health_url")
+            config = self.get_config()
             
-            if not health_url:
-                return True  # اگر health URL نداشته باشد، فرض بر سلامت است
+            if "api_servers" not in config:
+                config["api_servers"] = {}
+            if "strategies" not in config["api_servers"]:
+                config["api_servers"]["strategies"] = {}
             
-            # اینجا می‌توان درخواست HTTP به health endpoint ارسال کرد
-            # فعلاً فقط وجود URL را چک می‌کنیم
-            return bool(health_url)
+            # بروزرسانی تنظیمات
+            if strategy not in config["api_servers"]["strategies"]:
+                config["api_servers"]["strategies"][strategy] = {}
+            
+            config["api_servers"]["strategies"][strategy].update(config_updates)
+            
+            # ذخیره در فایل
+            with open(self.config_file, 'w', encoding='utf-8') as f:
+                json.dump(config, f, indent=2, ensure_ascii=False)
+            
+            # بروزرسانی کش
+            self._config_cache = config
+            self._last_modified = self.config_file.stat().st_mtime
+            
+            logger.info(f"Strategy {strategy} config updated")
+            return True
             
         except Exception as e:
-            logger.error(f"Error checking strategy health: {e}")
+            logger.error(f"Error updating strategy config: {e}")
             return False
     
-    def reload_configs(self):
-        """بارگذاری مجدد تنظیمات"""
-        logger.info("Reloading configurations...")
-        self.load_configs()
-    
-    def is_loaded(self) -> bool:
-        """بررسی بارگذاری موفق تنظیمات"""
-        return self._loaded
-    
-    def get_config_info(self) -> Dict[str, Any]:
-        """دریافت اطلاعات کلی تنظیمات"""
+    def add_new_strategy(self, strategy: str, strategy_config: Dict[str, Any]) -> bool:
+        """اضافه کردن استراتژی جدید"""
         try:
-            strategies_count = len(self.get_all_strategies())
-            packages_count = len(self.get_all_packages())
+            # تنظیمات پیش‌فرض
+            default_config = {
+                "name": strategy.replace("_", " ").title(),
+                "url": f"http://localhost:8000/analyze_{strategy}/",
+                "health_url": f"http://localhost:8000/health/",
+                "timeout": 30,
+                "retry_count": 3,
+                "package_levels": ["basic", "premium", "vip", "ghost"],
+                "cache_duration": 60
+            }
+            
+            # ترکیب با تنظیمات ارسالی
+            default_config.update(strategy_config)
+            
+            return self.update_strategy_config(strategy, default_config)
+            
+        except Exception as e:
+            logger.error(f"Error adding new strategy: {e}")
+            return False
+    
+    def remove_strategy(self, strategy: str) -> bool:
+        """حذف استراتژی"""
+        try:
+            config = self.get_config()
+            
+            if ("api_servers" in config and 
+                "strategies" in config["api_servers"] and 
+                strategy in config["api_servers"]["strategies"]):
+                
+                del config["api_servers"]["strategies"][strategy]
+                
+                # حذف از package hierarchy
+                package_hierarchy = config["api_servers"].get("package_hierarchy", {})
+                for package, package_config in package_hierarchy.items():
+                    strategies = package_config.get("strategies", [])
+                    if strategy in strategies:
+                        strategies.remove(strategy)
+                
+                # ذخیره در فایل
+                with open(self.config_file, 'w', encoding='utf-8') as f:
+                    json.dump(config, f, indent=2, ensure_ascii=False)
+                
+                # بروزرسانی کش
+                self._config_cache = config
+                self._last_modified = self.config_file.stat().st_mtime
+                
+                logger.info(f"Strategy {strategy} removed")
+                return True
+            
+            return False
+            
+        except Exception as e:
+            logger.error(f"Error removing strategy: {e}")
+            return False
+    
+    def update_base_url(self, new_base_url: str) -> bool:
+        """بروزرسانی URL پایه سرورها"""
+        try:
+            config = self.get_config()
+            
+            if "api_servers" not in config:
+                config["api_servers"] = {}
+            
+            old_base_url = config["api_servers"].get("base_url", "http://localhost")
+            config["api_servers"]["base_url"] = new_base_url
+            
+            # بروزرسانی URL های همه استراتژی‌ها
+            strategies = config["api_servers"].get("strategies", {})
+            for strategy, strategy_config in strategies.items():
+                if "url" in strategy_config:
+                    strategy_config["url"] = strategy_config["url"].replace(old_base_url, new_base_url)
+                if "health_url" in strategy_config:
+                    strategy_config["health_url"] = strategy_config["health_url"].replace(old_base_url, new_base_url)
+            
+            # ذخیره در فایل
+            with open(self.config_file, 'w', encoding='utf-8') as f:
+                json.dump(config, f, indent=2, ensure_ascii=False)
+            
+            # بروزرسانی کش
+            self._config_cache = config
+            self._last_modified = self.config_file.stat().st_mtime
+            
+            logger.info(f"Base URL updated from {old_base_url} to {new_base_url}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error updating base URL: {e}")
+            return False
+    
+    def get_strategy_statistics(self) -> Dict[str, Any]:
+        """آمار استراتژی‌ها"""
+        try:
+            strategies = self.get_strategies_config()
+            packages = self.get_all_packages()
+            
+            stats = {
+                "total_strategies": len(strategies),
+                "total_packages": len(packages),
+                "strategies_by_package": {},
+                "healthy_strategies": 0,
+                "unhealthy_strategies": 0
+            }
+            
+            # آمار بر اساس پکیج
+            for package in packages:
+                package_strategies = self.get_package_strategies(package)
+                stats["strategies_by_package"][package] = len(package_strategies)
+            
+            # آمار سلامت
+            for strategy in strategies:
+                if self.is_strategy_healthy(strategy):
+                    stats["healthy_strategies"] += 1
+                else:
+                    stats["unhealthy_strategies"] += 1
+            
+            return stats
+            
+        except Exception as e:
+            logger.error(f"Error getting strategy statistics: {e}")
+            return {}
+    
+    def validate_config(self) -> Dict[str, List[str]]:
+        """اعتبارسنجی تنظیمات"""
+        errors = []
+        warnings = []
+        
+        try:
+            config = self.get_config()
+            
+            if not config:
+                errors.append("Config file is empty or invalid")
+                return {"errors": errors, "warnings": warnings}
+            
+            # بررسی ساختار اصلی
+            if "api_servers" not in config:
+                errors.append("api_servers section missing")
+            else:
+                api_config = config["api_servers"]
+                
+                # بررسی base_url
+                if "base_url" not in api_config:
+                    warnings.append("base_url not defined")
+                
+                # بررسی strategies
+                if "strategies" not in api_config:
+                    errors.append("strategies section missing")
+                else:
+                    strategies = api_config["strategies"]
+                    
+                    for strategy, strategy_config in strategies.items():
+                        # بررسی فیلدهای ضروری
+                        required_fields = ["name", "url"]
+                        for field in required_fields:
+                            if field not in strategy_config:
+                                errors.append(f"Strategy {strategy}: missing {field}")
+                        
+                        # بررسی URL
+                        url = strategy_config.get("url", "")
+                        if url and not (url.startswith("http://") or url.startswith("https://")):
+                            warnings.append(f"Strategy {strategy}: invalid URL format")
+                
+                # بررسی package_hierarchy
+                if "package_hierarchy" not in api_config:
+                    warnings.append("package_hierarchy section missing")
             
             return {
-                "loaded": self._loaded,
-                "environment": self._environment,
-                "strategies_count": strategies_count,
-                "packages_count": packages_count,
-                "config_file": str(self._config_file_path),
-                "api_config_loaded": bool(self._api_config),
-                "environment_config_loaded": bool(self._environment_config)
+                "errors": errors,
+                "warnings": warnings,
+                "is_valid": len(errors) == 0
             }
             
         except Exception as e:
-            logger.error(f"Error getting config info: {e}")
-            return {"loaded": False, "error": str(e)}
-    
-    def get_full_config(self) -> Dict[str, Any]:
-        """دریافت کامل تنظیمات (برای سازگاری با کد قدیمی)"""
-        return self._api_config
-    
-    async def get_message(self, message_type: str) -> Optional[str]:
-        """دریافت پیام سیستم"""
-        try:
-            return Config.MESSAGES.get(message_type)
-        except Exception as e:
-            logger.error(f"Error getting message {message_type}: {e}")
-            return None
-    
-    async def set_message(self, message_type: str, message: str) -> bool:
-        """تنظیم پیام سیستم"""
-        try:
-            # در پیاده‌سازی کامل، در دیتابیس ذخیره شود
-            # فعلاً فقط لاگ می‌کنیم
-            logger.info(f"Message {message_type} updated")
-            return True
-        except Exception as e:
-            logger.error(f"Error setting message {message_type}: {e}")
-            return False
+            errors.append(f"Config validation error: {e}")
+            return {"errors": errors, "warnings": warnings}
 
 
-# ایجاد نمونه سراسری
+# نمونه سراسری
 settings_manager = SettingsManager()

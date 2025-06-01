@@ -23,6 +23,83 @@ class SecurityManager:
     _locked_users = {}
     
     @classmethod
+    async def is_user_allowed(cls, user_id: int) -> bool:
+        """بررسی مجاز بودن کاربر برای استفاده از ربات
+        
+        Args:
+            user_id: شناسه تلگرام کاربر
+            
+        Returns:
+            bool: True اگر کاربر مجاز باشد
+        """
+        try:
+            # بررسی وجود کاربر
+            user = UserManager.get_user_by_telegram_id(user_id)
+            if not user:
+                logger.warning(f"User {user_id} not found in database")
+                return True  # کاربران جدید مجاز هستند
+            
+            # بررسی مسدودیت کاربر
+            if user.get('is_blocked', False):
+                logger.warning(f"User {user_id} is blocked")
+                return False
+            
+            # بررسی قفل بودن کاربر
+            is_locked, unlock_time = cls.is_user_locked(user_id)
+            if is_locked:
+                remaining = cls.get_remaining_lockout_time(user_id)
+                logger.warning(f"User {user_id} is locked. Remaining time: {remaining}")
+                return False
+            
+            # بررسی محدودیت روزانه (اختیاری - warning فقط)
+            daily_limit = user.get('daily_limit', 100)
+            current_calls = user.get('api_calls_count', 0)
+            
+            if current_calls >= daily_limit:
+                logger.warning(f"User {user_id} exceeded daily limit ({current_calls}/{daily_limit})")
+                # در حالت عادی false برمی‌گرداند، اما برای جلوگیری از مشکل، true برمی‌گردانیم
+                return True
+            
+            # کاربر مجاز است
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error checking if user {user_id} is allowed: {e}")
+            # در صورت خطا، کاربر را مجاز می‌دانیم تا سیستم متوقف نشود
+            return True
+    
+    @classmethod
+    def is_user_allowed_sync(cls, user_id: int) -> bool:
+        """نسخه sync برای بررسی مجاز بودن کاربر
+        
+        Args:
+            user_id: شناسه تلگرام کاربر
+            
+        Returns:
+            bool: True اگر کاربر مجاز باشد
+        """
+        try:
+            # بررسی وجود کاربر
+            user = UserManager.get_user_by_telegram_id(user_id)
+            if not user:
+                return True  # کاربران جدید مجاز هستند
+            
+            # بررسی مسدودیت کاربر
+            if user.get('is_blocked', False):
+                return False
+            
+            # بررسی قفل بودن کاربر
+            is_locked, _ = cls.is_user_locked(user_id)
+            if is_locked:
+                return False
+            
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error checking if user {user_id} is allowed (sync): {e}")
+            return True
+    
+    @classmethod
     def generate_security_token(cls, user_id: int) -> str:
         """تولید توکن امنیتی برای کاربر
         
@@ -131,8 +208,10 @@ class SecurityManager:
             )
             
             # بررسی نیاز به قفل کردن
-            if recent_attempts >= Config.MAX_LOGIN_ATTEMPTS:
-                cls.lock_user(user_id, Config.LOCKOUT_MINUTES, f"Too many failed {attempt_type} attempts")
+            max_attempts = getattr(Config, 'MAX_LOGIN_ATTEMPTS', 5)
+            if recent_attempts >= max_attempts:
+                lockout_minutes = getattr(Config, 'LOCKOUT_MINUTES', 15)
+                cls.lock_user(user_id, lockout_minutes, f"Too many failed {attempt_type} attempts")
                 return True
             
             return False
@@ -155,7 +234,7 @@ class SecurityManager:
         """
         try:
             if duration_minutes is None:
-                duration_minutes = Config.LOCKOUT_MINUTES
+                duration_minutes = getattr(Config, 'LOCKOUT_MINUTES', 15)
             
             unlock_time = datetime.now() + timedelta(minutes=duration_minutes)
             

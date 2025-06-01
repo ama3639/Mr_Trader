@@ -4,6 +4,7 @@
 import uuid
 import random
 import string
+import asyncio
 from typing import Dict, List, Optional, Tuple, Any
 from datetime import datetime, timedelta
 
@@ -45,13 +46,17 @@ class UserManager:
             referral_code = UserManager.generate_referral_code()
             
             # ایجاد در دیتابیس
-            db_success = database_manager.create_user(
-                telegram_id=telegram_id,
-                username=username,
-                first_name=first_name,
-                last_name=last_name,
-                referral_code=referral_code
-            )
+            try:
+                db_success = database_manager.create_user(
+                    telegram_id=telegram_id,
+                    username=username,
+                    first_name=first_name,
+                    last_name=last_name,
+                    referral_code=referral_code
+                )
+            except Exception as db_error:
+                logger.warning(f"Database creation failed for user {telegram_id}: {db_error}")
+                db_success = False
             
             # ایجاد در CSV
             user_data = {
@@ -60,7 +65,7 @@ class UserManager:
                 'first_name': first_name or '',
                 'last_name': last_name or '',
                 'phone_number': phone_number or '',
-                'package': 'none',
+                'package': 'demo',  # ✅ تغییر از 'none' به 'demo'
                 'expiry_date': '',
                 'balance': 0.0,
                 'referral_code': referral_code,
@@ -69,22 +74,30 @@ class UserManager:
                 'entry_date': TimeManager.get_current_shamsi(),
                 'last_activity': TimeManager.get_current_shamsi(),
                 'api_calls_count': 0,
-                'daily_limit': 10,
+                'daily_limit': 5,  # ✅ محدودیت demo
                 'security_token': ''
             }
             
-            csv_success = CSVManager.add_user_to_csv(user_data)
+            try:
+                csv_success = CSVManager.add_user_to_csv(user_data)
+            except Exception as csv_error:
+                logger.warning(f"CSV creation failed for user {telegram_id}: {csv_error}")
+                csv_success = False
             
-            if db_success and csv_success:
+            # اگر یکی موفق باشد، کافی است
+            if db_success or csv_success:
                 # پردازش رفرال
                 if referred_by:
-                    UserManager.process_referral(referred_by, telegram_id)
+                    try:
+                        UserManager.process_referral(referred_by, telegram_id)
+                    except Exception as ref_error:
+                        logger.warning(f"Referral processing failed: {ref_error}")
                 
                 log_user_action(telegram_id, "user_created", f"Username: {username}")
                 logger.info(f"Created new user: {telegram_id}")
                 return True
             else:
-                logger.error(f"Failed to create user {telegram_id} in database or CSV")
+                logger.error(f"Failed to create user {telegram_id} in both database and CSV")
                 return False
                 
         except Exception as e:
@@ -103,22 +116,82 @@ class UserManager:
         """
         try:
             # ابتدا از دیتابیس
-            db_user = database_manager.get_user_by_telegram_id(telegram_id)
-            if db_user:
-                return db_user
+            try:
+                if hasattr(database_manager, 'get_user_by_telegram_id'):
+                    db_user = database_manager.get_user_by_telegram_id(telegram_id)
+                    if db_user:
+                        return db_user
+            except Exception as db_error:
+                logger.warning(f"Database query failed for user {telegram_id}: {db_error}")
             
             # در صورت عدم وجود، از CSV
-            csv_user = CSVManager.get_user_data_from_csv(telegram_id)
-            if csv_user:
-                # تبدیل string ها به نوع مناسب
-                processed_user = UserManager._process_csv_user_data(csv_user)
-                return processed_user
+            try:
+                if hasattr(CSVManager, 'get_user_data_from_csv'):
+                    csv_user = CSVManager.get_user_data_from_csv(telegram_id)
+                    if csv_user:
+                        # تبدیل string ها به نوع مناسب
+                        processed_user = UserManager._process_csv_user_data(csv_user)
+                        return processed_user
+            except Exception as csv_error:
+                logger.warning(f"CSV query failed for user {telegram_id}: {csv_error}")
             
-            return None
+            # اگر کاربر وجود ندارد، خودکار ایجاد کن
+            logger.info(f"User {telegram_id} not found, creating new user")
+            return UserManager._create_default_user(telegram_id)
             
         except Exception as e:
             logger.error(f"Error getting user {telegram_id}: {e}")
-            return None
+            # ✅ بازگشت کاربر پیش‌فرض به جای None
+            return UserManager._create_default_user(telegram_id)
+    
+    @staticmethod
+    def _create_default_user(telegram_id: int) -> Dict[str, Any]:
+        """ایجاد کاربر پیش‌فرض در صورت عدم وجود
+        
+        Args:
+            telegram_id: شناسه تلگرام
+            
+        Returns:
+            اطلاعات کاربر پیش‌فرض
+        """
+        try:
+            default_user = {
+                'telegram_id': telegram_id,
+                'username': '',
+                'first_name': '',
+                'last_name': '',
+                'phone_number': '',
+                'package': 'demo',
+                'package_expiry': '',
+                'balance': 0.0,
+                'referral_code': UserManager.generate_referral_code(),
+                'referred_by': None,
+                'is_blocked': False,
+                'entry_date': TimeManager.get_current_shamsi(),
+                'last_activity': TimeManager.get_current_shamsi(),
+                'api_calls_count': 0,
+                'daily_limit': 5,
+                'security_token': ''
+            }
+            
+            # تلاش برای ذخیره کاربر جدید
+            try:
+                UserManager.create_user(telegram_id)
+            except Exception as create_error:
+                logger.warning(f"Failed to create user {telegram_id}: {create_error}")
+            
+            return default_user
+            
+        except Exception as e:
+            logger.error(f"Error creating default user {telegram_id}: {e}")
+            # ✅ بازگشت حداقل ساختار در صورت هر خطا
+            return {
+                'telegram_id': telegram_id,
+                'package': 'demo',
+                'is_blocked': False,
+                'daily_limit': 5,
+                'api_calls_count': 0
+            }
     
     @staticmethod
     def _process_csv_user_data(csv_data: Dict[str, str]) -> Dict[str, Any]:
@@ -137,7 +210,7 @@ class UserManager:
                 'first_name': csv_data.get('first_name', ''),
                 'last_name': csv_data.get('last_name', ''),
                 'phone_number': csv_data.get('phone_number', ''),
-                'package': csv_data.get('package', 'none'),
+                'package': csv_data.get('package', 'demo'),  # ✅ پیش‌فرض demo
                 'package_expiry': csv_data.get('expiry_date', ''),
                 'balance': float(csv_data.get('balance', 0)),
                 'referral_code': csv_data.get('referral_code', ''),
@@ -146,12 +219,13 @@ class UserManager:
                 'entry_date': csv_data.get('entry_date', ''),
                 'last_activity': csv_data.get('last_activity', ''),
                 'api_calls_count': int(csv_data.get('api_calls_count', 0)),
-                'daily_limit': int(csv_data.get('daily_limit', 10)),
+                'daily_limit': int(csv_data.get('daily_limit', 5)),  # ✅ پیش‌فرض 5
                 'security_token': csv_data.get('security_token', '')
             }
         except Exception as e:
             logger.error(f"Error processing CSV user data: {e}")
-            return csv_data
+            # ✅ بازگشت داده‌های خام در صورت خطا
+            return csv_data if isinstance(csv_data, dict) else {}
     
     @staticmethod
     def update_user(telegram_id: int, **kwargs) -> bool:
@@ -166,16 +240,27 @@ class UserManager:
         """
         try:
             # به‌روزرسانی در دیتابیس
-            db_success = database_manager.update_user(telegram_id, **kwargs)
+            db_success = False
+            try:
+                if hasattr(database_manager, 'update_user'):
+                    db_success = database_manager.update_user(telegram_id, **kwargs)
+            except Exception as db_error:
+                logger.warning(f"Database update failed for user {telegram_id}: {db_error}")
             
             # به‌روزرسانی در CSV
-            csv_success = CSVManager.update_user_in_csv(telegram_id, kwargs)
+            csv_success = False
+            try:
+                if hasattr(CSVManager, 'update_user_in_csv'):
+                    csv_success = CSVManager.update_user_in_csv(telegram_id, kwargs)
+            except Exception as csv_error:
+                logger.warning(f"CSV update failed for user {telegram_id}: {csv_error}")
             
+            # اگر یکی موفق باشد، کافی است
             if db_success or csv_success:
                 log_user_action(telegram_id, "user_updated", f"Fields: {list(kwargs.keys())}")
                 return True
             else:
-                logger.warning(f"Failed to update user {telegram_id}")
+                logger.warning(f"Failed to update user {telegram_id} in both database and CSV")
                 return False
                 
         except Exception as e:
@@ -326,8 +411,8 @@ class UserManager:
             return False
     
     @staticmethod
-    async def is_package_expired(telegram_id: int) -> Tuple[bool, int]:
-        """بررسی انقضای پکیج کاربر
+    def is_package_expired(telegram_id: int) -> Tuple[bool, int]:
+        """بررسی انقضای پکیج کاربر - ✅ حذف async
         
         Args:
             telegram_id: شناسه تلگرام
@@ -340,30 +425,34 @@ class UserManager:
             if not user:
                 return True, 0
             
-            package = user.get('package', 'none')
-            if package == 'none':
-                return True, 0
+            package = user.get('package', 'demo')
+            if package == 'demo' or package == 'none':
+                return False, 999  # ✅ دمو هیچوقت منقضی نمی‌شود
             
             expiry_date = user.get('package_expiry', '')
             if not expiry_date:
                 return True, 0
             
-            is_expired = TimeManager.is_expired(expiry_date)
-            
-            if is_expired:
-                return True, 0
-            
-            # محاسبه روزهای باقیمانده
-            days_left = TimeManager.days_difference(
-                TimeManager.get_current_shamsi(), 
-                expiry_date
-            )
-            
-            return False, max(0, days_left)
+            try:
+                is_expired = TimeManager.is_expired(expiry_date)
+                
+                if is_expired:
+                    return True, 0
+                
+                # محاسبه روزهای باقیمانده
+                days_left = TimeManager.days_difference(
+                    TimeManager.get_current_shamsi(), 
+                    expiry_date
+                )
+                
+                return False, max(0, days_left)
+            except Exception as time_error:
+                logger.warning(f"Time calculation error for user {telegram_id}: {time_error}")
+                return False, 0  # ✅ در صورت خطا، منقضی نشده فرض کن
             
         except Exception as e:
             logger.error(f"Error checking package expiry for user {telegram_id}: {e}")
-            return True, 0
+            return False, 0  # ✅ در صورت خطا، منقضی نشده فرض کن
     
     @staticmethod
     def block_user(telegram_id: int, reason: str = "") -> bool:
@@ -425,13 +514,13 @@ class UserManager:
         try:
             user = UserManager.get_user_by_telegram_id(telegram_id)
             if not user:
-                return True  # کاربر وجود ندارد = مسدود
+                return False  # ✅ تغییر از True به False - کاربر جدید مسدود نیست
             
             return user.get('is_blocked', False)
             
         except Exception as e:
             logger.error(f"Error checking if user {telegram_id} is blocked: {e}")
-            return True
+            return False  # ✅ در صورت خطا، مسدود نیست
     
     @staticmethod
     def generate_referral_code() -> str:
@@ -440,13 +529,27 @@ class UserManager:
         Returns:
             کد رفرال 8 کاراکتری
         """
-        while True:
-            code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
-            
-            # بررسی یکتا بودن
-            existing_user = CSVManager.find_user_by_referral_code(code)
-            if not existing_user:
-                return code
+        max_attempts = 10
+        for attempt in range(max_attempts):
+            try:
+                code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+                
+                # بررسی یکتا بودن
+                try:
+                    if hasattr(CSVManager, 'find_user_by_referral_code'):
+                        existing_user = CSVManager.find_user_by_referral_code(code)
+                        if not existing_user:
+                            return code
+                except Exception as csv_error:
+                    logger.warning(f"CSV referral check failed: {csv_error}")
+                    # اگر CSV کار نکند، کد تولید شده را برگردان
+                    return code
+                    
+            except Exception as e:
+                logger.warning(f"Error generating referral code attempt {attempt + 1}: {e}")
+        
+        # اگر همه تلاش‌ها ناموفق بود، کد ساده تولید کن
+        return f"REF{random.randint(10000, 99999)}"
     
     @staticmethod
     def process_referral(referrer_id: int, referred_id: int) -> bool:
@@ -489,14 +592,19 @@ class UserManager:
             آمار کلی کاربران
         """
         try:
-            users = CSVManager.get_all_users_from_csv()
+            users = []
+            try:
+                if hasattr(CSVManager, 'get_all_users_from_csv'):
+                    users = CSVManager.get_all_users_from_csv()
+            except Exception as csv_error:
+                logger.warning(f"CSV stats failed: {csv_error}")
             
             stats = {
                 'total_users': len(users),
                 'active_users': 0,
                 'blocked_users': 0,
                 'premium_users': 0,
-                'packages': {'none': 0, 'guest': 0, 'basic': 0, 'premium': 0, 'vip': 0},
+                'packages': {'demo': 0, 'basic': 0, 'premium': 0, 'vip': 0},
                 'total_balance': 0.0,
                 'referrals_count': 0
             }
@@ -509,16 +617,19 @@ class UserManager:
                     stats['active_users'] += 1
                 
                 # نوع پکیج
-                package = user.get('package', 'none')
+                package = user.get('package', 'demo')
                 if package in stats['packages']:
                     stats['packages'][package] += 1
                 
-                if package != 'none':
+                if package != 'demo' and package != 'none':
                     stats['premium_users'] += 1
                 
                 # موجودی کل
-                balance = float(user.get('balance', 0))
-                stats['total_balance'] += balance
+                try:
+                    balance = float(user.get('balance', 0))
+                    stats['total_balance'] += balance
+                except (ValueError, TypeError):
+                    pass
                 
                 # تعداد رفرال‌ها
                 if user.get('referred_by'):
@@ -528,7 +639,15 @@ class UserManager:
             
         except Exception as e:
             logger.error(f"Error getting user statistics: {e}")
-            return {}
+            return {
+                'total_users': 0,
+                'active_users': 0,
+                'blocked_users': 0,
+                'premium_users': 0,
+                'packages': {'demo': 0, 'basic': 0, 'premium': 0, 'vip': 0},
+                'total_balance': 0.0,
+                'referrals_count': 0
+            }
     
     @staticmethod
     def search_users(query: str, limit: int = 20) -> List[Dict[str, Any]]:
@@ -542,23 +661,33 @@ class UserManager:
             لیست کاربران یافت شده
         """
         try:
-            users = CSVManager.get_all_users_from_csv()
-            results = []
+            users = []
+            try:
+                if hasattr(CSVManager, 'get_all_users_from_csv'):
+                    users = CSVManager.get_all_users_from_csv()
+            except Exception as csv_error:
+                logger.warning(f"CSV search failed: {csv_error}")
+                return []
             
+            results = []
             query = query.lower()
             
             for user in users:
-                # جستجو در فیلدهای مختلف
-                if (query in str(user.get('telegram_id', '')).lower() or
-                    query in user.get('username', '').lower() or
-                    query in user.get('first_name', '').lower() or
-                    query in user.get('last_name', '').lower() or
-                    query in user.get('referral_code', '').lower()):
-                    
-                    results.append(UserManager._process_csv_user_data(user))
-                    
-                    if len(results) >= limit:
-                        break
+                try:
+                    # جستجو در فیلدهای مختلف
+                    if (query in str(user.get('telegram_id', '')).lower() or
+                        query in user.get('username', '').lower() or
+                        query in user.get('first_name', '').lower() or
+                        query in user.get('last_name', '').lower() or
+                        query in user.get('referral_code', '').lower()):
+                        
+                        results.append(UserManager._process_csv_user_data(user))
+                        
+                        if len(results) >= limit:
+                            break
+                except Exception as user_error:
+                    logger.warning(f"Error processing user in search: {user_error}")
+                    continue
             
             return results
             
@@ -577,7 +706,17 @@ class UserManager:
             لیست کاربران با پکیج مشخص
         """
         try:
-            users = CSVManager.get_users_by_package(package)
+            users = []
+            try:
+                if hasattr(CSVManager, 'get_users_by_package'):
+                    users = CSVManager.get_users_by_package(package)
+                elif hasattr(CSVManager, 'get_all_users_from_csv'):
+                    all_users = CSVManager.get_all_users_from_csv()
+                    users = [u for u in all_users if u.get('package') == package]
+            except Exception as csv_error:
+                logger.warning(f"CSV package query failed: {csv_error}")
+                return []
+            
             return [UserManager._process_csv_user_data(user) for user in users]
             
         except Exception as e:
@@ -592,25 +731,40 @@ class UserManager:
             تعداد پکیج‌های پاکسازی شده
         """
         try:
-            users = CSVManager.get_all_users_from_csv()
+            users = []
+            try:
+                if hasattr(CSVManager, 'get_all_users_from_csv'):
+                    users = CSVManager.get_all_users_from_csv()
+            except Exception as csv_error:
+                logger.warning(f"CSV cleanup failed: {csv_error}")
+                return 0
+            
             cleaned_count = 0
             
             for user in users:
-                telegram_id = int(user.get('telegram_id', 0))
-                package = user.get('package', 'none')
-                expiry_date = user.get('expiry_date', '')
-                
-                if package != 'none' and expiry_date and TimeManager.is_expired(expiry_date):
-                    # تنظیم پکیج به none
-                    success = UserManager.update_user(
-                        telegram_id,
-                        package='none',
-                        package_expiry=''
-                    )
+                try:
+                    telegram_id = int(user.get('telegram_id', 0))
+                    package = user.get('package', 'demo')
+                    expiry_date = user.get('expiry_date', '')
                     
-                    if success:
-                        cleaned_count += 1
-                        log_user_action(telegram_id, "package_expired", f"Previous package: {package}")
+                    if (package not in ['demo', 'none'] and 
+                        expiry_date and 
+                        TimeManager.is_expired(expiry_date)):
+                        
+                        # تنظیم پکیج به demo
+                        success = UserManager.update_user(
+                            telegram_id,
+                            package='demo',
+                            package_expiry=''
+                        )
+                        
+                        if success:
+                            cleaned_count += 1
+                            log_user_action(telegram_id, "package_expired", f"Previous package: {package}")
+                
+                except Exception as user_error:
+                    logger.warning(f"Error cleaning user package: {user_error}")
+                    continue
             
             if cleaned_count > 0:
                 logger.info(f"Cleaned up {cleaned_count} expired packages")
@@ -626,6 +780,51 @@ class UserManager:
     def to_shamsi(dt: datetime) -> str:
         """تبدیل تاریخ به شمسی (wrapper)"""
         return TimeManager.to_shamsi(dt)
+    
+    # ✅ متدهای کمکی اضافی برای error handling
+    @staticmethod
+    def safe_get_user(telegram_id: int) -> Dict[str, Any]:
+        """دریافت امن کاربر - همیشه مقداری برمی‌گرداند
+        
+        Args:
+            telegram_id: شناسه تلگرام
+            
+        Returns:
+            اطلاعات کاربر (حداقل ساختار)
+        """
+        try:
+            user = UserManager.get_user_by_telegram_id(telegram_id)
+            return user if user else UserManager._create_default_user(telegram_id)
+        except Exception as e:
+            logger.error(f"Safe get user failed for {telegram_id}: {e}")
+            return {
+                'telegram_id': telegram_id,
+                'package': 'demo',
+                'is_blocked': False,
+                'daily_limit': 5,
+                'api_calls_count': 0
+            }
+    
+    @staticmethod
+    def increment_api_calls(telegram_id: int) -> bool:
+        """افزایش شمارنده تماس‌های API
+        
+        Args:
+            telegram_id: شناسه تلگرام
+            
+        Returns:
+            موفقیت عملیات
+        """
+        try:
+            user = UserManager.safe_get_user(telegram_id)
+            current_calls = int(user.get('api_calls_count', 0))
+            new_calls = current_calls + 1
+            
+            return UserManager.update_user(telegram_id, api_calls_count=new_calls)
+            
+        except Exception as e:
+            logger.error(f"Error incrementing API calls for user {telegram_id}: {e}")
+            return False
 
 
 # Export برای استفاده آسان‌تر

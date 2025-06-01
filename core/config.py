@@ -15,8 +15,17 @@ class Config:
     DATA_DIR = BASE_DIR / "data"
     LOGS_DIR = BASE_DIR / "logs"
     BACKUPS_DIR = BASE_DIR / "backups"
+    BACKUP_DIRECTORY = BASE_DIR / "backups"  # ✅ اضافه شده برای رفع خطا
     REPORTS_DIR = BASE_DIR / "reports"
     CONFIG_DIR = BASE_DIR / "config"
+    
+    # ✅ مسیرهای فایل‌های CSV (اضافه شده برای رفع خطا)
+    USER_CSV_FILE = str(DATA_DIR / "users.csv")
+    ADMIN_CSV_FILE = str(DATA_DIR / "admins.csv")
+    TRANSACTIONS_CSV_FILE = str(DATA_DIR / "transactions.csv")
+    PACKAGES_CSV_FILE = str(DATA_DIR / "packages.csv")
+    REFERRALS_CSV_FILE = str(DATA_DIR / "referrals.csv")
+    USAGE_CSV_FILE = str(DATA_DIR / "usage_stats.csv")
     
     # تنظیمات پایگاه داده
     DATABASE_FILE = str(DATA_DIR / "mrtrader.db")
@@ -48,6 +57,7 @@ class Config:
     # تنظیمات rate limiting
     RATE_LIMIT_ENABLED = True
     MAX_REQUESTS_PER_MINUTE = 10
+    BASIC_MAX_REQUESTS_PER_MINUTE = 10
     PREMIUM_MAX_REQUESTS_PER_MINUTE = 20
     VIP_MAX_REQUESTS_PER_MINUTE = 30
     GHOST_MAX_REQUESTS_PER_MINUTE = 50
@@ -67,56 +77,200 @@ class Config:
         "ghost": 30          # روز
     }
     
-    # سطح‌بندی پکیج‌ها و دسترسی‌ها
+    # سطح‌بندی پکیج‌ها و دسترسی‌ها (بروزرسانی شده مطابق مستندات جدید)
     PACKAGE_HIERARCHY = {
+        "demo": {
+            "level": 0,
+            "max_requests_per_minute": 1,
+            "daily_limit": 5,
+            "strategies": ["demo_price_action", "demo_rsi"]
+        },
         "basic": {
             "level": 1,
-            "max_requests_per_minute": 10,
-            "strategies": ["price_action"]
+            "max_requests_per_minute": 5,
+            "daily_limit": 50,
+            "strategies": [
+                "demo_price_action", "demo_rsi",  # دمو ها همیشه در دسترس
+                "cci_analysis", "ema_analysis", "ichimoku", "macd", 
+                "price_action_pandas_ta", "rsi", "williams_r_analysis",
+                "project_price_live_binance", "ichimoku_low_signal"
+            ]
         },
         "premium": {
             "level": 2,
-            "max_requests_per_minute": 20,
-            "strategies": ["price_action", "martingale", "cup_handle"]
+            "max_requests_per_minute": 10,
+            "daily_limit": 200,
+            "strategies": [
+                # همه استراتژی‌های basic
+                "demo_price_action", "demo_rsi", "cci_analysis", "ema_analysis", 
+                "ichimoku", "macd", "price_action_pandas_ta", "rsi", "williams_r_analysis",
+                "project_price_live_binance", "ichimoku_low_signal",
+                # استراتژی‌های premium اضافی
+                "a_candlestick", "bollinger_bands", "stochastic", "macd_divergence",
+                "b_pivot", "c_trend_lines", "fibonacci_strategy", "double_top_pattern",
+                "triangle_pattern", "wedge_pattern", "momentum", "martingale_low",
+                "heikin_ashi", "stoch_rsi", "williams_alligator", "parabolic_sar",
+                "support_resistance"
+            ]
         },
         "vip": {
             "level": 3,
-            "max_requests_per_minute": 30,
-            "strategies": ["price_action", "martingale", "cup_handle", "ichimoku", "fibonacci"]
-        },
-        "ghost": {
-            "level": 4,
-            "max_requests_per_minute": 50,
-            "strategies": ["price_action", "martingale", "cup_handle", "ichimoku", "fibonacci", "komo_plus"]
+            "max_requests_per_minute": 20,
+            "daily_limit": 500,
+            "strategies": [
+                # همه استراتژی‌های premium
+                "demo_price_action", "demo_rsi", "cci_analysis", "ema_analysis", 
+                "ichimoku", "macd", "price_action_pandas_ta", "rsi", "williams_r_analysis",
+                "project_price_live_binance", "ichimoku_low_signal", "a_candlestick", 
+                "bollinger_bands", "stochastic", "macd_divergence", "b_pivot", 
+                "c_trend_lines", "fibonacci_strategy", "double_top_pattern",
+                "triangle_pattern", "wedge_pattern", "momentum", "martingale_low",
+                "heikin_ashi", "stoch_rsi", "williams_alligator", "parabolic_sar",
+                "support_resistance",
+                # استراتژی‌های vip اضافی
+                "atr", "sma_advanced", "volume_profile", "vwap", "diamond_pattern",
+                "crt", "p3", "rtm", "multi_resistance"
+            ]
         }
     }
     
-    # تنظیمات استراتژی‌ها
+    # برای backward compatibility
+    PACKAGE_HIERARCHY["free"] = PACKAGE_HIERARCHY["demo"]
+    
+    # تنظیمات استراتژی‌ها - نام‌های فارسی (بروزرسانی شده)
     STRATEGY_NAMES = {
-        "price_action": "تحلیل پرایس اکشن",
-        "martingale": "استراتژی مارتینگل",
-        "cup_handle": "الگوی کاپ اند هندل",
-        "ichimoku": "ابر ایچیموکو",
-        "fibonacci": "فیبوناچی ریتریسمنت",
-        "komo_plus": "استراتژی کومو پلاس"
+        # استراتژی‌های دمو
+        "demo_price_action": "🎯 دمو پرایس اکشن",
+        "demo_rsi": "📈 دمو RSI",
+        
+        # استراتژی‌های BASIC Package
+        "cci_analysis": "📊 تحلیل CCI",
+        "ema_analysis": "📈 تحلیل EMA", 
+        "ichimoku": "☁️ ابر ایچیموکو",
+        "macd": "🌊 تحلیل MACD",
+        "price_action_pandas_ta": "🎯 پرایس اکشن TA",
+        "rsi": "📊 تحلیل RSI",
+        "williams_r_analysis": "📉 تحلیل Williams R",
+        "project_price_live_binance": "🔴 قیمت زنده بایننس",
+        "ichimoku_low_signal": "☁️ ایچیموکو سیگنال پایین",
+        
+        # استراتژی‌های PREMIUM Package
+        "a_candlestick": "🕯️ تحلیل کندل استیک",
+        "bollinger_bands": "📊 باندهای بولینگر",
+        "stochastic": "📈 تحلیل استوکاستیک",
+        "macd_divergence": "🌊 واگرایی MACD",
+        "b_pivot": "🎯 نقاط محوری",
+        "c_trend_lines": "📐 خطوط روند",
+        "fibonacci_strategy": "🌀 استراتژی فیبوناچی",
+        "double_top_pattern": "⛰️ الگوی دو قله",
+        "triangle_pattern": "📐 الگوی مثلث",
+        "wedge_pattern": "📊 الگوی گوه",
+        "momentum": "🚀 تحلیل مومنتوم",
+        "martingale_low": "🎰 مارتینگل پایین",
+        "heikin_ashi": "🕯️ کندل هایکن آشی",
+        "stoch_rsi": "📊 استوکاستیک RSI",
+        "williams_alligator": "🐊 تمساح ویلیامز",
+        "parabolic_sar": "📈 سار پارابولیک",
+        "support_resistance": "🛡️ حمایت و مقاومت",
+        
+        # استراتژی‌های VIP Package
+        "atr": "📊 تحلیل ATR",
+        "sma_advanced": "📈 SMA پیشرفته",
+        "volume_profile": "📊 پروفایل حجم",
+        "vwap": "💎 تحلیل VWAP",
+        "diamond_pattern": "💎 الگوی الماس",
+        "crt": "🎯 تحلیل CRT",
+        "p3": "🎯 سیستم P3",
+        "rtm": "🔄 تحلیل RTM",
+        "multi_resistance": "🛡️ مقاومت چندگانه"
     }
     
+    # توضیحات تفصیلی استراتژی‌ها (بروزرسانی شده)
     STRATEGY_DESCRIPTIONS = {
-        "price_action": "تحلیل حرکت قیمت و شناسایی الگوهای کندلی",
-        "martingale": "استراتژی مدیریت ریسک مارتینگل با ریسک کم",
-        "cup_handle": "شناسایی الگوی برگشتی کاپ اند هندل",
-        "ichimoku": "تحلیل کامل با سیستم ابر ایچیموکو",
-        "fibonacci": "سطوح حمایت و مقاومت فیبوناچی",
-        "komo_plus": "استراتژی پیشرفته کومو پلاس"
+        # استراتژی‌های دمو
+        "demo_price_action": "نسخه دمو تحلیل حرکت قیمت - محدود به 5 تحلیل در روز",
+        "demo_rsi": "نسخه دمو شاخص قدرت نسبی - محدود به 5 تحلیل در روز",
+        
+        # استراتژی‌های BASIC Package
+        "cci_analysis": "شاخص کانال کالا برای تشخیص نقاط اشباع خرید و فروش",
+        "ema_analysis": "میانگین متحرک نمایی برای تشخیص روند و نقاط ورود",
+        "ichimoku": "سیستم جامع تحلیل ژاپنی با ابر ایچیموکو",
+        "macd": "واگرایی همگرایی میانگین متحرک برای تشخیص تغییر روند",
+        "price_action_pandas_ta": "تحلیل حرکت قیمت با کتابخانه pandas و اندیکاتورهای تکنیکال",
+        "rsi": "شاخص قدرت نسبی برای شناسایی شرایط اشباع",
+        "williams_r_analysis": "اندیکاتور Williams %R برای تشخیص نقاط برگشت",
+        "project_price_live_binance": "دریافت قیمت‌های زنده و تحلیل آنی از صرافی بایننس",
+        "ichimoku_low_signal": "سیگنال‌های کم ریسک و محافظه‌کارانه ایچیموکو",
+        
+        # استراتژی‌های PREMIUM Package
+        "a_candlestick": "تشخیص و تحلیل الگوهای کندل استیک ژاپنی",
+        "bollinger_bands": "باندهای بولینگر برای تحلیل نوسانات و نقاط ورود",
+        "stochastic": "نوسان‌گر استوکاستیک برای تشخیص اشباع و نقاط برگشت",
+        "macd_divergence": "تشخیص واگرایی‌های MACD برای پیش‌بینی تغییر روند",
+        "b_pivot": "محاسبه و تحلیل نقاط محوری حمایت و مقاومت",
+        "c_trend_lines": "ترسیم و تحلیل خطوط روند و کانال‌های قیمتی",
+        "fibonacci_strategy": "استفاده از سطوح فیبوناچی ریتریسمنت برای نقاط ورود",
+        "double_top_pattern": "تشخیص الگوهای دو قله و دو کف برای پیش‌بینی برگشت روند",
+        "triangle_pattern": "تشخیص انواع الگوهای مثلث صعودی، نزولی و متقارن",
+        "wedge_pattern": "تحلیل الگوهای گوه صعودی و نزولی",
+        "momentum": "تحلیل قدرت و مومنتوم حرکت قیمت",
+        "martingale_low": "استراتژی مارتینگل با ریسک پایین و مدیریت سرمایه",
+        "heikin_ashi": "تحلیل با کندل‌های هایکن آشی برای تشخیص روند",
+        "stoch_rsi": "ترکیب استوکاستیک و RSI برای دقت بیشتر",
+        "williams_alligator": "سیستم تمساح ویلیامز برای تشخیص روند",
+        "parabolic_sar": "سیستم سار پارابولیک برای تعیین نقاط توقف",
+        "support_resistance": "تشخیص خودکار سطوح حمایت و مقاومت",
+        
+        # استراتژی‌های VIP Package
+        "atr": "میانگین دامنه واقعی برای محاسبه نوسانات و تنظیم stop loss",
+        "sma_advanced": "میانگین متحرک ساده با تحلیل‌های پیشرفته و چندتایم‌فریمه",
+        "volume_profile": "تحلیل پروفایل حجم معاملات برای شناسایی نواحی مهم",
+        "vwap": "میانگین موزون حجمی برای شناسایی قیمت منصفانه",
+        "diamond_pattern": "تشخیص الگوی نادر و قوی الماس",
+        "crt": "سیستم تحلیل CRT پیشرفته برای شناسایی روندها",
+        "p3": "سیستم تحلیل P3 برای پیش‌بینی نقاط عطف",
+        "rtm": "سیستم RTM پیشرفته برای تحلیل ریسک و بازده",
+        "multi_resistance": "تحلیل چند سطحی حمایت و مقاومت با دقت بالا"
+    }
+    
+    # دسته‌بندی استراتژی‌ها بر اساس نوع (بروزرسانی شده)
+    STRATEGY_CATEGORIES = {
+        "demo": ["demo_price_action", "demo_rsi"],
+        "technical_indicators": [
+            "cci_analysis", "ema_analysis", "macd", "rsi", "williams_r_analysis",
+            "bollinger_bands", "stochastic", "atr", "sma_advanced", "vwap",
+            "stoch_rsi", "williams_alligator", "parabolic_sar"
+        ],
+        "pattern_recognition": [
+            "double_top_pattern", "triangle_pattern", "wedge_pattern", "diamond_pattern"
+        ],
+        "price_action": [
+            "price_action_pandas_ta", "a_candlestick", "heikin_ashi"
+        ],
+        "trend_analysis": [
+            "ichimoku", "ichimoku_low_signal", "c_trend_lines",
+            "fibonacci_strategy", "b_pivot", "support_resistance"
+        ],
+        "volume_analysis": [
+            "volume_profile", "project_price_live_binance"
+        ],
+        "advanced_systems": [
+            "momentum", "martingale_low", "crt", "p3", "rtm", "multi_resistance"
+        ],
+        "divergence_analysis": [
+            "macd_divergence"
+        ]
     }
     
     # تنظیمات ارزها و جفت ارزها
     SUPPORTED_SYMBOLS = [
         "BTC", "ETH", "BNB", "ADA", "XRP", "DOT", "LINK", "LTC", 
-        "UNI", "AAVE", "SUSHI", "COMP", "MKR", "YFI", "SNX", "CRV"
+        "UNI", "AAVE", "SUSHI", "COMP", "MKR", "YFI", "SNX", "CRV",
+        "SOL", "AVAX", "MATIC", "ALGO", "ATOM", "LUNA", "NEAR", "FTM",
+        "SHIB", "DOGE", "ICP", "VET", "THETA", "FIL", "TRX", "EOS"
     ]
     
-    SUPPORTED_CURRENCIES = ["USDT", "BUSD", "USD", "EUR"]
+    SUPPORTED_CURRENCIES = ["USDT", "BUSD", "USD", "EUR", "BTC", "ETH", "BNB", "USDC"]
     
     SUPPORTED_TIMEFRAMES = [
         "1m", "3m", "5m", "15m", "30m", "1h", 
@@ -141,21 +295,60 @@ class Config:
         "1M": "1 ماه"
     }
     
+    # محدودیت‌های تایم‌فریم بر اساس پکیج (بروزرسانی شده)
+    PACKAGE_TIMEFRAME_LIMITS = {
+        "demo": ["1h", "4h", "1d"],
+        "basic": ["15m", "30m", "1h", "4h", "1d", "1w"],
+        "premium": ["5m", "15m", "30m", "1h", "4h", "1d", "1w"],
+        "vip": ["1m", "3m", "5m", "15m", "30m", "1h", "2h", "4h", "6h", "8h", "12h", "1d", "3d", "1w", "1M"]
+    }
+    
+    # برای backward compatibility
+    PACKAGE_TIMEFRAME_LIMITS["free"] = PACKAGE_TIMEFRAME_LIMITS["demo"]
+    
     # تنظیمات رفرال
     REFERRAL_ENABLED = True
     REFERRAL_COMMISSION_PERCENT = 10  # درصد
     MIN_REFERRAL_PAYOUT = 50000      # تومان
+    WELCOME_BONUS = 1000             # امتیاز
+    FREE_TRIAL_DAYS = 3              # روز
     
     # تنظیمات بکاپ
     AUTO_BACKUP_ENABLED = True
     BACKUP_INTERVAL_HOURS = 24
     MAX_BACKUP_FILES = 7
     
-    # پیام‌های سیستم
+    # ✅ تنظیمات CSV (اضافه شده)
+    CSV_SETTINGS = {
+        "encoding": "utf-8-sig",
+        "delimiter": ",",
+        "quotechar": '"',
+        "create_backup": True,
+        "backup_on_write": True,
+        "headers": {
+            "users": [
+                "telegram_id", "username", "first_name", "last_name", "phone_number",
+                "package", "expiry_date", "balance", "referral_code", "referred_by",
+                "is_blocked", "entry_date", "last_activity", "api_calls_count",
+                "daily_limit", "security_token"
+            ],
+            "admins": [
+                "telegram_id", "username", "first_name", "last_name", "role",
+                "permissions", "entry_date", "last_activity", "is_active"
+            ],
+            "transactions": [
+                "id", "user_id", "transaction_type", "amount", "currency",
+                "status", "payment_method", "gateway_ref", "date", "description"
+            ]
+        }
+    }
+    
+    # پیام‌های سیستم (بروزرسانی شده)
     MESSAGES = {
         "welcome": (
             "🤖 **به ربات MrTrader خوش آمدید!**\n\n"
             "من یک ربات هوشمند برای تحلیل بازار ارزهای دیجیتال هستم.\n"
+            "35 استراتژی پیشرفته در اختیار شما قرار دارم.\n\n"
             "برای شروع، از منوی زیر استفاده کنید:"
         ),
         "unauthorized": (
@@ -168,9 +361,9 @@ class Config:
         ),
         "package_required": (
             "📦 برای استفاده از این استراتژی، نیاز به خرید پکیج دارید:\n"
-            "💎 Premium: {premium_price:,} تومان\n"
-            "👑 VIP: {vip_price:,} تومان\n"
-            "👻 Ghost: {ghost_price:,} تومان"
+            "🥉 Basic: {basic_price:,} تومان (9 استراتژی)\n"
+            "🥈 Premium: {premium_price:,} تومان (26 استراتژی)\n"
+            "👑 VIP: {vip_price:,} تومان (35 استراتژی)"
         ),
         "error_occurred": (
             "❌ خطایی رخ داده است.\n"
@@ -181,7 +374,7 @@ class Config:
             "لطفاً کمی صبر کنید و سپس دوباره تلاش کنید."
         ),
         "cached_result": (
-            "📊 نتیجه از کش (آخرین بروزرسانی: {time})"
+            "💾 نتیجه از کش (آخرین بروزرسانی: {time})"
         ),
         "fresh_result": (
             "🔄 تحلیل جدید انجام شد"
@@ -189,6 +382,26 @@ class Config:
         "maintenance": (
             "🔧 سیستم در حال تعمیر و نگهداری است.\n"
             "لطفاً کمی بعد مراجعه کنید."
+        ),
+        "demo_limit": (
+            "🆓 محدودیت دمو: {used}/{limit} تحلیل استفاده شده.\n"
+            "برای دسترسی نامحدود، پکیج خود را ارتقا دهید."
+        ),
+        "api_error": (
+            "⚠️ خطا در دریافت داده‌ها از سرور.\n"
+            "لطفاً کمی بعد دوباره تلاش کنید."
+        ),
+        "invalid_input": (
+            "❌ داده‌های ورودی نامعتبر است.\n"
+            "لطفاً پارامترهای صحیح را انتخاب کنید."
+        ),
+        "csv_error": (
+            "❌ خطا در دسترسی به فایل CSV.\n"
+            "لطفاً با پشتیبانی تماس بگیرید."
+        ),
+        "user_not_found": (
+            "❌ کاربر یافت نشد.\n"
+            "لطفاً ابتدا دستور /start را ارسال کنید."
         )
     }
     
@@ -197,19 +410,49 @@ class Config:
     MAX_RETRIES = 3
     RETRY_DELAY = 2  # ثانیه
     
+    # تنظیمات محدودیت دمو
+    DEMO_DAILY_LIMIT = 5
+    DEMO_MONTHLY_LIMIT = 50
+    
     @classmethod
     def ensure_directories_exist(cls):
-        """ایجاد پوشه‌های مورد نیاز"""
+        """ایجاد پوشه‌ها و فایل‌های مورد نیاز"""
         directories = [
             cls.DATA_DIR,
             cls.LOGS_DIR,
             cls.BACKUPS_DIR,
+            cls.BACKUP_DIRECTORY,  # ✅ اضافه شده
             cls.REPORTS_DIR,
             cls.CONFIG_DIR
         ]
         
         for directory in directories:
             directory.mkdir(parents=True, exist_ok=True)
+        
+        # ✅ ایجاد فایل‌های CSV در صورت عدم وجود
+        cls.ensure_csv_files_exist()
+    
+    @classmethod
+    def ensure_csv_files_exist(cls):
+        """ایجاد فایل‌های CSV با header های مناسب در صورت عدم وجود"""
+        csv_files = {
+            cls.USER_CSV_FILE: cls.CSV_SETTINGS["headers"]["users"],
+            cls.ADMIN_CSV_FILE: cls.CSV_SETTINGS["headers"]["admins"], 
+            cls.TRANSACTIONS_CSV_FILE: cls.CSV_SETTINGS["headers"]["transactions"]
+        }
+        
+        import csv
+        
+        for file_path, headers in csv_files.items():
+            file_obj = Path(file_path)
+            if not file_obj.exists():
+                try:
+                    with open(file_path, 'w', newline='', encoding=cls.CSV_SETTINGS["encoding"]) as f:
+                        writer = csv.writer(f, delimiter=cls.CSV_SETTINGS["delimiter"])
+                        writer.writerow(headers)
+                    print(f"✅ Created CSV file: {file_path}")
+                except Exception as e:
+                    print(f"❌ Error creating CSV file {file_path}: {e}")
     
     @classmethod
     def validate_config(cls) -> Dict[str, List[str]]:
@@ -227,7 +470,7 @@ class Config:
         if not cls.SECRET_KEY or cls.SECRET_KEY == "your-secret-key-here":
             warnings.append("SECRET_KEY should be changed from default")
         
-        # بررسی پوشه‌ها
+        # بررسی پوشه‌ها و فایل‌ها
         try:
             cls.ensure_directories_exist()
         except Exception as e:
@@ -237,6 +480,12 @@ class Config:
         config_file = cls.CONFIG_DIR / "api_servers_config.json"
         if not config_file.exists():
             warnings.append("API servers config file not found")
+        
+        # ✅ بررسی فایل‌های CSV
+        csv_files = [cls.USER_CSV_FILE, cls.ADMIN_CSV_FILE, cls.TRANSACTIONS_CSV_FILE]
+        for csv_file in csv_files:
+            if not Path(csv_file).exists():
+                warnings.append(f"CSV file not found: {csv_file}")
         
         return {
             "errors": errors,
@@ -296,11 +545,65 @@ class Config:
         return cls.TIMEFRAME_NAMES.get(timeframe, timeframe)
     
     @classmethod
+    def get_strategy_category(cls, strategy: str) -> str:
+        """دریافت دسته‌بندی استراتژی"""
+        for category, strategies in cls.STRATEGY_CATEGORIES.items():
+            if strategy in strategies:
+                return category
+        return "general"
+    
+    @classmethod
+    def get_package_timeframes(cls, package_name: str) -> List[str]:
+        """دریافت تایم‌فریم‌های مجاز برای پکیج"""
+        return cls.PACKAGE_TIMEFRAME_LIMITS.get(package_name, cls.SUPPORTED_TIMEFRAMES)
+    
+    @classmethod
+    def is_timeframe_allowed_for_package(cls, timeframe: str, package_name: str) -> bool:
+        """بررسی مجاز بودن تایم‌فریم برای پکیج"""
+        allowed_timeframes = cls.get_package_timeframes(package_name)
+        return timeframe in allowed_timeframes
+    
+    @classmethod
+    def get_all_strategies(cls) -> List[str]:
+        """دریافت لیست همه استراتژی‌ها"""
+        all_strategies = set()
+        for package_strategies in cls.PACKAGE_HIERARCHY.values():
+            all_strategies.update(package_strategies.get("strategies", []))
+        return sorted(list(all_strategies))
+    
+    @classmethod
+    def get_strategy_package_level(cls, strategy: str) -> str:
+        """دریافت کمترین سطح پکیج مورد نیاز برای استراتژی"""
+        # ترتیب اولویت از پایین‌ترین سطح
+        package_order = ["demo", "basic", "premium", "vip"]
+        
+        for package_name in package_order:
+            if strategy in cls.get_package_strategies(package_name):
+                return package_name
+        
+        return "premium"  # پیش‌فرض
+    
+    @classmethod
+    def get_demo_strategies(cls) -> List[str]:
+        """دریافت استراتژی‌های دمو"""
+        return cls.PACKAGE_HIERARCHY.get("demo", {}).get("strategies", [])
+    
+    @classmethod
+    def is_demo_strategy(cls, strategy: str) -> bool:
+        """بررسی دمو بودن استراتژی"""
+        return strategy in cls.get_demo_strategies()
+    
+    @classmethod
+    def get_package_daily_limit(cls, package_name: str) -> int:
+        """دریافت محدودیت روزانه پکیج"""
+        return cls.PACKAGE_HIERARCHY.get(package_name, {}).get("daily_limit", 5)
+    
+    @classmethod
     def load_from_env(cls):
         """بارگذاری تنظیمات از متغیرهای محیطی"""
         # این متد می‌تواند برای بارگذاری تنظیمات اضافی استفاده شود
         pass
 
 
-# ایجاد پوشه‌های مورد نیاز هنگام import
+# ایجاد پوشه‌ها و فایل‌های مورد نیاز هنگام import
 Config.ensure_directories_exist()

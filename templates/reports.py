@@ -1,488 +1,501 @@
 """
-قالب‌های گزارش برای MrTrader Bot
+قالب‌های گزارش - تولید گزارش‌های تخصصی
 """
+
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timedelta
-from utils.formatters import NumberFormatter, DateTimeFormatter, TableFormatter
-
+from utils.time_manager import TimeManager
+from utils.helpers import format_currency, format_percentage, format_number
 
 class ReportTemplates:
-    """قالب‌های گزارش عمومی"""
+    """کلاس قالب‌های گزارش"""
     
     @staticmethod
-    def daily_summary_report(data: Dict[str, Any]) -> str:
+    def technical_analysis_report(analysis_data: Dict[str, Any]) -> str:
+        """گزارش تحلیل تکنیکال کامل"""
+        symbol = analysis_data.get('symbol', 'N/A')
+        currency = analysis_data.get('currency', 'N/A')
+        timeframe = analysis_data.get('timeframe', 'N/A')
+        strategy = analysis_data.get('strategy', 'N/A')
+        current_price = analysis_data.get('current_price', 0)
+        signal_details = analysis_data.get('signal_details', {})
+        
+        # تاریخ و زمان فارسی
+        persian_datetime = TimeManager.to_shamsi(datetime.now())
+        
+        report = f"""📊 گزارش تحلیل تکنیکال MrTrader Bot
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🏷️ نماد: {symbol}/{currency}
+📈 استراتژی: {strategy.upper()}
+⏱️ تایم‌فریم: {timeframe}
+🕒 تاریخ تحلیل: {persian_datetime}
+💰 قیمت فعلی: {current_price:,.2f} {currency}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 خلاصه سیگنال:
+• جهت: {signal_details.get('signal_direction', 'N/A').upper()}
+• قدرت: {signal_details.get('strength', 'N/A')}
+• اعتماد: {signal_details.get('confidence', 50):.0f}%
+
+💰 سطوح کلیدی:
+• نقطه ورود: {signal_details.get('entry_price', 0):,.2f}
+• حد ضرر: {signal_details.get('stop_loss', 0):,.2f}
+• هدف قیمتی: {signal_details.get('take_profit', 0):,.2f}
+
+📊 حمایت و مقاومت:
+• حمایت اولیه: {signal_details.get('support', 0):,.2f}
+• مقاومت اولیه: {signal_details.get('resistance', 0):,.2f}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📈 تحلیل تفصیلی:
+
+{analysis_data.get('detailed_analysis', 'تحلیل تفصیلی در دسترس نیست.')}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚠️ هشدارها و نکات:
+• این تحلیل صرفاً جنبه آموزشی دارد
+• همیشه تحقیقات شخصی انجام دهید
+• مدیریت ریسک را رعایت کنید
+• از حد ضرر استفاده کنید
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🏢 تولید شده توسط: MrTrader Bot
+🌐 وب‌سایت: https://mrtrader.bot
+📧 پشتیبانی: support@mrtrader.bot
+
+© 2024 MrTrader Bot. تمامی حقوق محفوظ است.
+"""
+        return report
+    
+    @staticmethod
+    def portfolio_analysis_report(portfolio_data: Dict[str, Any]) -> str:
+        """گزارش تحلیل پرتفو"""
+        positions = portfolio_data.get('positions', [])
+        total_value = portfolio_data.get('total_value', 0)
+        total_pnl = portfolio_data.get('total_pnl', 0)
+        total_pnl_percent = portfolio_data.get('total_pnl_percent', 0)
+        
+        report = f"""💼 گزارش تحلیل پرتفو
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📅 تاریخ گزارش: {TimeManager.to_shamsi(datetime.now())}
+
+📊 خلاصه پرتفو:
+• ارزش کل: ${total_value:,.2f}
+• سود/زیان کل: ${total_pnl:,.2f} ({total_pnl_percent:+.2f}%)
+• تعداد موقعیت‌ها: {len(positions)}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📈 جزئیات موقعیت‌ها:
+"""
+        
+        for i, position in enumerate(positions, 1):
+            symbol = position.get('symbol', 'N/A')
+            quantity = position.get('quantity', 0)
+            entry_price = position.get('entry_price', 0)
+            current_price = position.get('current_price', 0)
+            pnl = position.get('pnl', 0)
+            pnl_percent = position.get('pnl_percent', 0)
+            
+            report += f"""
+{i}. {symbol}:
+   • مقدار: {quantity:,.4f}
+   • قیمت ورود: ${entry_price:,.2f}
+   • قیمت فعلی: ${current_price:,.2f}
+   • سود/زیان: ${pnl:,.2f} ({pnl_percent:+.2f}%)
+"""
+        
+        report += f"""
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 آمار عملکرد:
+• بهترین موقعیت: {portfolio_data.get('best_position', 'N/A')}
+• بدترین موقعیت: {portfolio_data.get('worst_position', 'N/A')}
+• میانگین بازدهی: {portfolio_data.get('avg_return', 0):.2f}%
+
+🏢 تولید شده توسط: MrTrader Bot
+"""
+        return report
+    
+    @staticmethod
+    def daily_summary_report(daily_data: Dict[str, Any]) -> str:
         """گزارش خلاصه روزانه"""
-        date_str = DateTimeFormatter.format_date_persian(datetime.now())
+        date = daily_data.get('date', datetime.now().date())
+        total_analyses = daily_data.get('total_analyses', 0)
+        successful_analyses = daily_data.get('successful_analyses', 0)
+        top_symbols = daily_data.get('top_symbols', [])
+        top_strategies = daily_data.get('top_strategies', [])
         
-        return f"""
-📊 <b>گزارش خلاصه روزانه</b>
-📅 تاریخ: {date_str}
+        success_rate = (successful_analyses / total_analyses * 100) if total_analyses > 0 else 0
+        
+        report = f"""📅 گزارش خلاصه روزانه
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-👥 <b>کاربران:</b>
-• کل کاربران: {NumberFormatter.format_number_persian(data.get('total_users', 0))}
-• کاربران فعال: {NumberFormatter.format_number_persian(data.get('active_users', 0))}
-• کاربران جدید: {NumberFormatter.format_number_persian(data.get('new_users', 0))}
+📅 تاریخ: {TimeManager.to_shamsi(datetime.combine(date, datetime.min.time()))}
 
-📈 <b>سیگنال‌ها:</b>
-• تعداد سیگنال: {NumberFormatter.format_number_persian(data.get('total_signals', 0))}
-• نرخ موفقیت: {NumberFormatter.format_percentage(data.get('success_rate', 0))}
+📊 آمار کلی:
+• کل تحلیل‌ها: {total_analyses:,}
+• تحلیل‌های موفق: {successful_analyses:,}
+• نرخ موفقیت: {success_rate:.1f}%
 
-💰 <b>مالی:</b>
-• درآمد روزانه: ${NumberFormatter.format_number_persian(data.get('daily_revenue', 0))}
-• تراکنش‌های موفق: {NumberFormatter.format_number_persian(data.get('successful_transactions', 0))}
-
-🔍 <b>محبوب‌ترین نمادها:</b>
-{ReportTemplates._format_top_symbols(data.get('top_symbols', []))}
+🔥 محبوب‌ترین نمادها:
 """
-    
-    @staticmethod
-    def weekly_report(data: Dict[str, Any]) -> str:
-        """گزارش هفتگی"""
-        week_start = datetime.now() - timedelta(days=7)
-        week_start_str = DateTimeFormatter.format_date_persian(week_start)
-        week_end_str = DateTimeFormatter.format_date_persian(datetime.now())
         
-        return f"""
-📊 <b>گزارش هفتگی</b>
-📅 بازه: {week_start_str} تا {week_end_str}
-
-📈 <b>رشد کاربران:</b>
-• کاربران جدید: {NumberFormatter.format_number_persian(data.get('new_users_week', 0))}
-• نرخ رشد: {NumberFormatter.format_percentage(data.get('growth_rate', 0))}
-• نرخ بازگشت: {NumberFormatter.format_percentage(data.get('retention_rate', 0))}
-
-💹 <b>عملکرد سیگنال‌ها:</b>
-• کل سیگنال‌ها: {NumberFormatter.format_number_persian(data.get('total_signals_week', 0))}
-• سیگنال‌های موفق: {NumberFormatter.format_number_persian(data.get('successful_signals', 0))}
-• میانگین اطمینان: {NumberFormatter.format_percentage(data.get('avg_confidence', 0))}
-
-💰 <b>آمار مالی:</b>
-• درآمد هفتگی: ${NumberFormatter.format_number_persian(data.get('weekly_revenue', 0))}
-• میانگین روزانه: ${NumberFormatter.format_number_persian(data.get('avg_daily_revenue', 0))}
-• رشد درآمد: {NumberFormatter.format_percentage(data.get('revenue_growth', 0))}
-
-🎯 <b>پکیج‌های پرفروش:</b>
-{ReportTemplates._format_top_packages(data.get('top_packages', []))}
+        for i, symbol_data in enumerate(top_symbols[:5], 1):
+            symbol = symbol_data.get('symbol', 'N/A')
+            count = symbol_data.get('count', 0)
+            report += f"{i}. {symbol}: {count:,} تحلیل\n"
+        
+        report += f"""
+⭐ محبوب‌ترین استراتژی‌ها:
 """
-    
-    @staticmethod
-    def monthly_report(data: Dict[str, Any]) -> str:
-        """گزارش ماهانه"""
-        month_start = datetime.now().replace(day=1)
-        month_start_str = DateTimeFormatter.format_date_persian(month_start)
-        month_end_str = DateTimeFormatter.format_date_persian(datetime.now())
         
-        return f"""
-📊 <b>گزارش ماهانه</b>
-📅 بازه: {month_start_str} تا {month_end_str}
+        for i, strategy_data in enumerate(top_strategies[:5], 1):
+            strategy = strategy_data.get('strategy', 'N/A')
+            count = strategy_data.get('count', 0)
+            report += f"{i}. {strategy}: {count:,} تحلیل\n"
+        
+        report += f"""
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-👥 <b>آمار کاربران:</b>
-• کل کاربران: {NumberFormatter.format_number_persian(data.get('total_users_month', 0))}
-• کاربران فعال: {NumberFormatter.format_number_persian(data.get('active_users_month', 0))}
-• کاربران جدید: {NumberFormatter.format_number_persian(data.get('new_users_month', 0))}
-• نرخ چرن: {NumberFormatter.format_percentage(data.get('churn_rate', 0))}
+💡 نکات روز:
+{daily_data.get('daily_insights', 'بدون نکته خاص برای امروز.')}
 
-📊 <b>توزیع پکیج‌ها:</b>
-• رایگان: {NumberFormatter.format_percentage(data.get('free_users_percent', 0))}
-• ابتدایی: {NumberFormatter.format_percentage(data.get('basic_users_percent', 0))}
-• پریمیوم: {NumberFormatter.format_percentage(data.get('premium_users_percent', 0))}
-• VIP: {NumberFormatter.format_percentage(data.get('vip_users_percent', 0))}
-
-💰 <b>عملکرد مالی:</b>
-• درآمد ماهانه: ${NumberFormatter.format_number_persian(data.get('monthly_revenue', 0))}
-• ARR: ${NumberFormatter.format_number_persian(data.get('arr', 0))}
-• ARPU: ${NumberFormatter.format_number_persian(data.get('arpu', 0))}
-• LTV: ${NumberFormatter.format_number_persian(data.get('ltv', 0))}
-
-🏆 <b>بهترین عملکردها:</b>
-{ReportTemplates._format_best_performances(data.get('best_performances', {}))}
+🏢 تولید شده توسط: MrTrader Bot
 """
+        return report
     
     @staticmethod
-    def _format_top_symbols(symbols: List[Dict[str, Any]]) -> str:
-        """فرمت‌بندی نمادهای برتر"""
-        if not symbols:
-            return "• داده‌ای موجود نیست"
+    def user_activity_report(user_data: Dict[str, Any]) -> str:
+        """گزارش فعالیت کاربر"""
+        user_id = user_data.get('user_id', 'N/A')
+        username = user_data.get('username', 'N/A')
+        period = user_data.get('period', '30 روز گذشته')
         
-        result = ""
-        for i, symbol in enumerate(symbols[:5], 1):
-            name = symbol.get('symbol', 'نامشخص')
-            count = symbol.get('count', 0)
-            result += f"• {i}. {name}: {NumberFormatter.format_number_persian(count)} بار\n"
-        
-        return result.rstrip()
-    
-    @staticmethod
-    def _format_top_packages(packages: List[Dict[str, Any]]) -> str:
-        """فرمت‌بندی پکیج‌های برتر"""
-        if not packages:
-            return "• داده‌ای موجود نیست"
-        
-        result = ""
-        for i, package in enumerate(packages[:3], 1):
-            name = package.get('name_persian', 'نامشخص')
-            sales = package.get('sales', 0)
-            revenue = package.get('revenue', 0)
-            result += f"• {i}. {name}: {NumberFormatter.format_number_persian(sales)} فروش (${NumberFormatter.format_number_persian(revenue)})\n"
-        
-        return result.rstrip()
-    
-    @staticmethod
-    def _format_best_performances(performances: Dict[str, Any]) -> str:
-        """فرمت‌بندی بهترین عملکردها"""
-        if not performances:
-            return "• داده‌ای موجود نیست"
-        
-        result = ""
-        if performances.get('best_signal'):
-            signal = performances['best_signal']
-            result += f"• بهترین سیگنال: {signal.get('symbol')} ({NumberFormatter.format_percentage(signal.get('accuracy', 0))} دقت)\n"
-        
-        if performances.get('most_active_user'):
-            user = performances['most_active_user']
-            result += f"• فعال‌ترین کاربر: {user.get('name', 'نامشخص')} ({NumberFormatter.format_number_persian(user.get('signals_count', 0))} سیگنال)\n"
-        
-        if performances.get('highest_profit'):
-            profit = performances['highest_profit']
-            result += f"• بیشترین سود: {NumberFormatter.format_percentage(profit.get('percentage', 0))} ({profit.get('symbol', 'نامشخص')})\n"
-        
-        return result.rstrip() if result else "• داده‌ای موجود نیست"
+        report = f"""👤 گزارش فعالیت کاربر
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+👤 کاربر: {username} (ID: {user_id})
+📅 دوره: {period}
+🕒 تاریخ گزارش: {TimeManager.to_shamsi(datetime.now())}
 
-class AdminReportTemplates:
-    """قالب‌های گزارش ادمین"""
-    
-    @staticmethod
-    def system_health_report(data: Dict[str, Any]) -> str:
-        """گزارش سلامت سیستم"""
-        current_time = DateTimeFormatter.format_datetime_persian(datetime.now())
-        
-        # تعیین وضعیت سلامت
-        health_status = data.get('health_status', 'unknown')
-        health_emoji = {
-            'excellent': '🟢',
-            'good': '🟡', 
-            'warning': '🟠',
-            'critical': '🔴',
-            'unknown': '⚪'
-        }.get(health_status, '⚪')
-        
-        return f"""
-🖥️ <b>گزارش سلامت سیستم</b>
-🕐 زمان گزارش: {current_time}
+📊 آمار فعالیت:
+• کل درخواست‌ها: {user_data.get('total_requests', 0):,}
+• درخواست‌های موفق: {user_data.get('successful_requests', 0):,}
+• نرخ موفقیت: {user_data.get('success_rate', 0):.1f}%
+• میانگین روزانه: {user_data.get('daily_average', 0):.1f}
 
-{health_emoji} <b>وضعیت کلی:</b> {health_status.title()}
-
-💾 <b>منابع سیستم:</b>
-• CPU: {NumberFormatter.format_percentage(data.get('cpu_usage', 0))}
-• RAM: {NumberFormatter.format_percentage(data.get('memory_usage', 0))}
-• دیسک: {NumberFormatter.format_percentage(data.get('disk_usage', 0))}
-
-🌐 <b>اتصالات:</b>
-• دیتابیس: {AdminReportTemplates._status_emoji(data.get('database_status'))} {data.get('database_status', 'نامشخص')}
-• API خارجی: {AdminReportTemplates._status_emoji(data.get('api_status'))} {data.get('api_status', 'نامشخص')}
-• اینترنت: {AdminReportTemplates._status_emoji(data.get('internet_status'))} {data.get('internet_status', 'نامشخص')}
-
-📊 <b>عملکرد:</b>
-• میانگین پاسخ: {data.get('avg_response_time', 0):.2f}ms
-• درخواست‌های فعال: {NumberFormatter.format_number_persian(data.get('active_requests', 0))}
-• خطاهای 24 ساعت: {NumberFormatter.format_number_persian(data.get('errors_24h', 0))}
-
-🔄 <b>بکاپ:</b>
-• آخرین بکاپ: {DateTimeFormatter.format_datetime_persian(data.get('last_backup'))}
-• حجم بکاپ: {AdminReportTemplates._format_file_size(data.get('backup_size', 0))}
-• وضعیت: {AdminReportTemplates._status_emoji(data.get('backup_status'))} {data.get('backup_status', 'نامشخص')}
+📈 استراتژی‌های استفاده شده:
 """
-    
-    @staticmethod
-    def user_activity_report(data: Dict[str, Any]) -> str:
-        """گزارش فعالیت کاربران"""
-        return f"""
-👥 <b>گزارش فعالیت کاربران</b>
-
-📈 <b>آمار کلی:</b>
-• کل کاربران: {NumberFormatter.format_number_persian(data.get('total_users', 0))}
-• کاربران فعال امروز: {NumberFormatter.format_number_persian(data.get('active_today', 0))}
-• کاربران فعال این هفته: {NumberFormatter.format_number_persian(data.get('active_week', 0))}
-• کاربران فعال این ماه: {NumberFormatter.format_number_persian(data.get('active_month', 0))}
-
-🆕 <b>کاربران جدید:</b>
-• امروز: {NumberFormatter.format_number_persian(data.get('new_today', 0))}
-• این هفته: {NumberFormatter.format_number_persian(data.get('new_week', 0))}
-• این ماه: {NumberFormatter.format_number_persian(data.get('new_month', 0))}
-
-📊 <b>توزیع استفاده:</b>
-• متوسط سیگنال/کاربر: {data.get('avg_signals_per_user', 0):.1f}
-• متوسط ورود/روز: {data.get('avg_logins_per_day', 0):.1f}
-• زمان متوسط استفاده: {data.get('avg_session_time', 0):.1f} دقیقه
-
-🚫 <b>کاربران غیرفعال:</b>
-• مسدود شده: {NumberFormatter.format_number_persian(data.get('blocked_users', 0))}
-• بیش از 30 روز غیرفعال: {NumberFormatter.format_number_persian(data.get('inactive_30d', 0))}
-
-{AdminReportTemplates._format_top_active_users(data.get('top_active_users', []))}
+        
+        strategies = user_data.get('strategies_used', [])
+        for strategy_data in strategies:
+            strategy = strategy_data.get('strategy', 'N/A')
+            count = strategy_data.get('count', 0)
+            report += f"• {strategy}: {count:,} بار\n"
+        
+        report += f"""
+🪙 نمادهای تحلیل شده:
 """
-    
-    @staticmethod
-    def financial_report(data: Dict[str, Any]) -> str:
-        """گزارش مالی"""
-        return f"""
-💰 <b>گزارش مالی</b>
+        
+        symbols = user_data.get('symbols_analyzed', [])
+        for symbol_data in symbols[:10]:  # نمایش 10 نماد برتر
+            symbol = symbol_data.get('symbol', 'N/A')
+            count = symbol_data.get('count', 0)
+            report += f"• {symbol}: {count:,} بار\n"
+        
+        report += f"""
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-📊 <b>درآمد:</b>
-• امروز: ${NumberFormatter.format_number_persian(data.get('revenue_today', 0))}
-• این هفته: ${NumberFormatter.format_number_persian(data.get('revenue_week', 0))}
-• این ماه: ${NumberFormatter.format_number_persian(data.get('revenue_month', 0))}
-• این سال: ${NumberFormatter.format_number_persian(data.get('revenue_year', 0))}
+⏰ الگوی استفاده:
+• ساعت فعالیت بیشتر: {user_data.get('peak_hour', 'N/A')}
+• روز فعالیت بیشتر: {user_data.get('peak_day', 'N/A')}
+• آخرین فعالیت: {user_data.get('last_activity', 'N/A')}
 
-💳 <b>تراکنش‌ها:</b>
-• موفق امروز: {NumberFormatter.format_number_persian(data.get('successful_transactions_today', 0))}
-• ناموفق امروز: {NumberFormatter.format_number_persian(data.get('failed_transactions_today', 0))}
-• نرخ موفقیت: {NumberFormatter.format_percentage(data.get('success_rate', 0))}
-• میانگین مبلغ: ${NumberFormatter.format_number_persian(data.get('avg_transaction_amount', 0))}
-
-📦 <b>فروش پکیج‌ها:</b>
-• ابتدایی: {NumberFormatter.format_number_persian(data.get('basic_sales', 0))} (${NumberFormatter.format_number_persian(data.get('basic_revenue', 0))})
-• پریمیوم: {NumberFormatter.format_number_persian(data.get('premium_sales', 0))} (${NumberFormatter.format_number_persian(data.get('premium_revenue', 0))})
-• VIP: {NumberFormatter.format_number_persian(data.get('vip_sales', 0))} (${NumberFormatter.format_number_persian(data.get('vip_revenue', 0))})
-
-💸 <b>تخفیفات و رفرال:</b>
-• کل تخفیفات: ${NumberFormatter.format_number_persian(data.get('total_discounts', 0))}
-• پاداش رفرال: ${NumberFormatter.format_number_persian(data.get('referral_rewards', 0))}
-• درآمد خالص: ${NumberFormatter.format_number_persian(data.get('net_revenue', 0))}
-
-📈 <b>پیش‌بینی:</b>
-• درآمد پیش‌بینی ماه: ${NumberFormatter.format_number_persian(data.get('projected_monthly_revenue', 0))}
-• رشد ماه به ماه: {NumberFormatter.format_percentage(data.get('mom_growth', 0))}
+🏢 تولید شده توسط: MrTrader Bot
 """
+        return report
     
     @staticmethod
-    def security_report(data: Dict[str, Any]) -> str:
-        """گزارش امنیت"""
-        return f"""
-🔒 <b>گزارش امنیت</b>
+    def market_overview_report(market_data: Dict[str, Any]) -> str:
+        """گزارش کلی بازار"""
+        date = market_data.get('date', datetime.now())
+        total_market_cap = market_data.get('total_market_cap', 0)
+        btc_dominance = market_data.get('btc_dominance', 0)
+        fear_greed_index = market_data.get('fear_greed_index', 50)
+        
+        report = f"""🌍 گزارش کلی بازار ارزهای دیجیتال
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-⚠️ <b>تهدیدات شناسایی شده:</b>
-• تلاش‌های ورود مشکوک: {NumberFormatter.format_number_persian(data.get('suspicious_logins', 0))}
-• IP های مسدود شده: {NumberFormatter.format_number_persian(data.get('blocked_ips', 0))}
-• کاربران مسدود شده: {NumberFormatter.format_number_persian(data.get('blocked_users', 0))}
+📅 تاریخ: {TimeManager.to_shamsi(date)}
 
-🚨 <b>حملات امنیتی:</b>
-• Rate limiting triggers: {NumberFormatter.format_number_persian(data.get('rate_limit_triggers', 0))}
-• تلاش‌های SQL injection: {NumberFormatter.format_number_persian(data.get('sql_injection_attempts', 0))}
-• تلاش‌های XSS: {NumberFormatter.format_number_persian(data.get('xss_attempts', 0))}
+📊 آمار کلی بازار:
+• کل ارزش بازار: ${total_market_cap:,.0f} تریلیون
+• تسلط بیت‌کوین: {btc_dominance:.1f}%
+• شاخص ترس و طمع: {fear_greed_index}/100
 
-🔐 <b>وضعیت امنیت:</b>
-• SSL: {AdminReportTemplates._status_emoji(data.get('ssl_status'))} {data.get('ssl_status', 'نامشخص')}
-• Firewall: {AdminReportTemplates._status_emoji(data.get('firewall_status'))} {data.get('firewall_status', 'نامشخص')}
-• آخرین به‌روزرسانی امنیتی: {DateTimeFormatter.format_date_persian(data.get('last_security_update'))}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-📊 <b>احراز هویت:</b>
-• ورودهای موفق: {NumberFormatter.format_number_persian(data.get('successful_logins', 0))}
-• ورودهای ناموفق: {NumberFormatter.format_number_persian(data.get('failed_logins', 0))}
-• نرخ موفقیت: {NumberFormatter.format_percentage(data.get('login_success_rate', 0))}
-
-{AdminReportTemplates._format_security_alerts(data.get('recent_alerts', []))}
+🔝 برترین ارزها (بر اساس ارزش بازار):
 """
+        
+        top_coins = market_data.get('top_coins', [])
+        for i, coin in enumerate(top_coins[:10], 1):
+            name = coin.get('name', 'N/A')
+            symbol = coin.get('symbol', 'N/A')
+            price = coin.get('price', 0)
+            change_24h = coin.get('change_24h', 0)
+            change_emoji = "🟢" if change_24h >= 0 else "🔴"
+            
+            report += f"""{i:2d}. {name} ({symbol}):
+     قیمت: ${price:,.2f}
+     تغییر 24h: {change_emoji} {change_24h:+.2f}%
+
+"""
+        
+        report += f"""━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 تحلیل روند:
+{market_data.get('trend_analysis', 'تحلیل روند در دسترس نیست.')}
+
+🔮 چشم‌انداز:
+{market_data.get('market_outlook', 'چشم‌انداز بازار در دسترس نیست.')}
+
+🏢 تولید شده توسط: MrTrader Bot
+🕒 آخرین به‌روزرسانی: {TimeManager.to_shamsi(datetime.now())}
+"""
+        return report
     
     @staticmethod
-    def _status_emoji(status: str) -> str:
-        """ایموجی وضعیت"""
-        status_map = {
-            'online': '🟢',
-            'offline': '🔴',
-            'warning': '🟡',
-            'error': '❌',
-            'ok': '✅',
-            'active': '🟢',
-            'inactive': '🔴'
-        }
-        return status_map.get(status, '⚪')
+    def performance_report(performance_data: Dict[str, Any]) -> str:
+        """گزارش عملکرد سیستم"""
+        period = performance_data.get('period', '30 روز گذشته')
+        
+        report = f"""⚡ گزارش عملکرد سیستم
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📅 دوره: {period}
+🕒 تاریخ گزارش: {TimeManager.to_shamsi(datetime.now())}
+
+📊 آمار کلی:
+• کل درخواست‌ها: {performance_data.get('total_requests', 0):,}
+• درخواست‌های موفق: {performance_data.get('successful_requests', 0):,}
+• نرخ موفقیت: {performance_data.get('success_rate', 0):.2f}%
+• میانگین زمان پاسخ: {performance_data.get('avg_response_time', 0):.2f} ثانیه
+
+👥 آمار کاربران:
+• کل کاربران: {performance_data.get('total_users', 0):,}
+• کاربران فعال: {performance_data.get('active_users', 0):,}
+• کاربران جدید: {performance_data.get('new_users', 0):,}
+
+💰 آمار مالی:
+• کل درآمد: ${performance_data.get('total_revenue', 0):,.2f}
+• درآمد این ماه: ${performance_data.get('monthly_revenue', 0):,.2f}
+• میانگین درآمد روزانه: ${performance_data.get('daily_avg_revenue', 0):,.2f}
+
+📈 محبوب‌ترین استراتژی‌ها:
+"""
+        
+        top_strategies = performance_data.get('top_strategies', [])
+        for i, strategy_data in enumerate(top_strategies[:5], 1):
+            strategy = strategy_data.get('name', 'N/A')
+            usage = strategy_data.get('usage_count', 0)
+            success_rate = strategy_data.get('success_rate', 0)
+            report += f"{i}. {strategy}: {usage:,} استفاده ({success_rate:.1f}% موفقیت)\n"
+        
+        report += f"""
+🔧 سلامت سیستم:
+• آپتایم: {performance_data.get('uptime', '99.9%')}
+• استفاده از CPU: {performance_data.get('cpu_usage', 'N/A')}
+• استفاده از حافظه: {performance_data.get('memory_usage', 'N/A')}
+• فضای دیسک: {performance_data.get('disk_usage', 'N/A')}
+
+⚠️ خطاهای رایج:
+"""
+        
+        common_errors = performance_data.get('common_errors', [])
+        for error_data in common_errors[:5]:
+            error_type = error_data.get('type', 'N/A')
+            count = error_data.get('count', 0)
+            report += f"• {error_type}: {count:,} مورد\n"
+        
+        report += f"""
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📈 روند رشد:
+• رشد کاربران: {performance_data.get('user_growth', 0):+.1f}%
+• رشد درآمد: {performance_data.get('revenue_growth', 0):+.1f}%
+• رشد استفاده: {performance_data.get('usage_growth', 0):+.1f}%
+
+🏢 تولید شده توسط: MrTrader Bot
+"""
+        return report
+
+class AdminReports:
+    """گزارش‌های مخصوص ادمین"""
     
     @staticmethod
-    def _format_file_size(size_bytes: int) -> str:
-        """فرمت‌بندی اندازه فایل"""
-        if size_bytes >= 1024**3:
-            return f"{size_bytes / (1024**3):.2f} GB"
-        elif size_bytes >= 1024**2:
-            return f"{size_bytes / (1024**2):.2f} MB"
-        elif size_bytes >= 1024:
-            return f"{size_bytes / 1024:.2f} KB"
+    def admin_dashboard_report(admin_data: Dict[str, Any]) -> str:
+        """گزارش داشبورد مدیریتی"""
+        report = f"""🔧 داشبورد مدیریتی MrTrader Bot
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📅 تاریخ: {TimeManager.to_shamsi(datetime.now())}
+🕒 آخرین به‌روزرسانی: {admin_data.get('last_update', 'نامشخص')}
+
+📊 آمار امروز:
+• کاربران آنلاین: {admin_data.get('online_users', 0):,}
+• درخواست‌های امروز: {admin_data.get('today_requests', 0):,}
+• درآمد امروز: ${admin_data.get('today_revenue', 0):,.2f}
+• خطاهای امروز: {admin_data.get('today_errors', 0):,}
+
+🚨 هشدارها:
+"""
+        
+        alerts = admin_data.get('alerts', [])
+        if alerts:
+            for alert in alerts:
+                level = alert.get('level', 'info')
+                message = alert.get('message', 'N/A')
+                emoji = {"error": "🔴", "warning": "🟡", "info": "🔵"}.get(level, "ℹ️")
+                report += f"{emoji} {message}\n"
         else:
-            return f"{size_bytes} bytes"
-    
-    @staticmethod
-    def _format_top_active_users(users: List[Dict[str, Any]]) -> str:
-        """فرمت‌بندی کاربران فعال"""
-        if not users:
-            return "\n🏆 <b>فعال‌ترین کاربران:</b>\n• داده‌ای موجود نیست"
+            report += "✅ بدون هشدار\n"
         
-        result = "\n🏆 <b>فعال‌ترین کاربران:</b>\n"
-        for i, user in enumerate(users[:5], 1):
-            name = user.get('name', 'نامشخص')
-            activity_count = user.get('activity_count', 0)
-            result += f"• {i}. {name}: {NumberFormatter.format_number_persian(activity_count)} فعالیت\n"
-        
-        return result.rstrip()
-    
-    @staticmethod
-    def _format_security_alerts(alerts: List[Dict[str, Any]]) -> str:
-        """فرمت‌بندی هشدارهای امنیتی"""
-        if not alerts:
-            return "\n🚨 <b>هشدارهای اخیر:</b>\n• هیچ هشداری وجود ندارد"
-        
-        result = "\n🚨 <b>هشدارهای اخیر:</b>\n"
-        for alert in alerts[:3]:
-            time_str = DateTimeFormatter.format_datetime_persian(alert.get('timestamp'))
-            message = alert.get('message', 'نامشخص')
-            severity = alert.get('severity', 'info')
-            severity_emoji = {'high': '🔴', 'medium': '🟡', 'low': '🟢'}.get(severity, '⚪')
-            result += f"• {severity_emoji} {time_str}: {message}\n"
-        
-        return result.rstrip()
+        report += f"""
+💾 وضعیت سیستم:
+• سرور: {admin_data.get('server_status', 'نامشخص')}
+• دیتابیس: {admin_data.get('database_status', 'نامشخص')}
+• API خارجی: {admin_data.get('external_api_status', 'نامشخص')}
+• آخرین بکاپ: {admin_data.get('last_backup', 'نامشخص')}
 
-
-class UserReportTemplates:
-    """قالب‌های گزارش کاربر"""
-    
-    @staticmethod
-    def user_performance_report(data: Dict[str, Any]) -> str:
-        """گزارش عملکرد کاربر"""
-        return f"""
-📊 <b>گزارش عملکرد شما</b>
-
-📈 <b>آمار کلی:</b>
-• سیگنال‌های دریافتی: {NumberFormatter.format_number_persian(data.get('signals_received', 0))}
-• معاملات انجام شده: {NumberFormatter.format_number_persian(data.get('trades_executed', 0))}
-• نرخ موفقیت: {NumberFormatter.format_percentage(data.get('success_rate', 0))}
-• میانگین سود: {NumberFormatter.format_percentage(data.get('avg_profit', 0))}
-
-💰 <b>عملکرد مالی:</b>
-• کل سود: {NumberFormatter.format_price(data.get('total_profit', 0))}
-• کل زیان: {NumberFormatter.format_price(data.get('total_loss', 0))}
-• سود خالص: {NumberFormatter.format_price(data.get('net_profit', 0))}
-• بهترین معامله: {NumberFormatter.format_percentage(data.get('best_trade', 0))}
-• بدترین معامله: {NumberFormatter.format_percentage(data.get('worst_trade', 0))}
-
-📊 <b>تحلیل ریسک:</b>
-• سطح ریسک فعلی: {data.get('current_risk_level', 'متوسط')}
-• حداکثر ضرر: {NumberFormatter.format_percentage(data.get('max_drawdown', 0))}
-• نسبت شارپ: {data.get('sharpe_ratio', 0):.2f}
-
-🎯 <b>نمادهای برتر:</b>
-{UserReportTemplates._format_user_top_symbols(data.get('top_symbols', []))}
-
-🏆 <b>دستاوردها:</b>
-{UserReportTemplates._format_user_achievements(data.get('achievements', []))}
+🔧 اقدامات اخیر:
 """
+        
+        recent_actions = admin_data.get('recent_actions', [])
+        for action in recent_actions[:5]:
+            timestamp = action.get('timestamp', 'نامشخص')
+            description = action.get('description', 'N/A')
+            admin_user = action.get('admin_user', 'سیستم')
+            report += f"• {timestamp}: {description} (توسط {admin_user})\n"
+        
+        return report
     
     @staticmethod
-    def user_activity_summary(data: Dict[str, Any]) -> str:
-        """خلاصه فعالیت کاربر"""
-        return f"""
-📱 <b>خلاصه فعالیت شما</b>
+    def financial_report(financial_data: Dict[str, Any]) -> str:
+        """گزارش مالی"""
+        period = financial_data.get('period', 'ماه جاری')
+        
+        report = f"""💰 گزارش مالی
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-⏰ <b>زمان استفاده:</b>
-• کل زمان: {data.get('total_time_hours', 0):.1f} ساعت
-• میانگین روزانه: {data.get('avg_daily_time', 0):.1f} دقیقه
-• آخرین ورود: {DateTimeFormatter.format_datetime_persian(data.get('last_login'))}
-• تعداد جلسات: {NumberFormatter.format_number_persian(data.get('total_sessions', 0))}
+📅 دوره: {period}
+🕒 تاریخ گزارش: {TimeManager.to_shamsi(datetime.now())}
 
-📊 <b>استفاده از امکانات:</b>
-• تحلیل‌های درخواستی: {NumberFormatter.format_number_persian(data.get('analyses_requested', 0))}
-• هشدارهای تنظیم شده: {NumberFormatter.format_number_persian(data.get('alerts_set', 0))}
-• گزارش‌های مشاهده شده: {NumberFormatter.format_number_persian(data.get('reports_viewed', 0))}
+💵 درآمد:
+• کل درآمد: ${financial_data.get('total_revenue', 0):,.2f}
+• درآمد از پکیج‌ها: ${financial_data.get('package_revenue', 0):,.2f}
+• درآمد از ارتقاء: ${financial_data.get('upgrade_revenue', 0):,.2f}
+• درآمد از رفرال: ${financial_data.get('referral_revenue', 0):,.2f}
 
-🎁 <b>امتیازات:</b>
-• امتیاز فعلی: {NumberFormatter.format_number_persian(data.get('current_points', 0))}
-• کل امتیاز کسب شده: {NumberFormatter.format_number_persian(data.get('total_points_earned', 0))}
-• امتیاز مصرف شده: {NumberFormatter.format_number_persian(data.get('points_spent', 0))}
-
-📈 <b>وضعیت پکیج:</b>
-• پکیج فعلی: {data.get('current_package', 'رایگان')}
-• تاریخ انقضا: {DateTimeFormatter.format_date_persian(data.get('expiry_date'))}
-• روزهای باقیمانده: {data.get('days_remaining', 0)}
+📊 فروش پکیج‌ها:
 """
-    
-    @staticmethod
-    def user_referral_report(data: Dict[str, Any]) -> str:
-        """گزارش رفرال کاربر"""
-        return f"""
-🎁 <b>گزارش رفرال شما</b>
+        
+        package_sales = financial_data.get('package_sales', [])
+        for package_data in package_sales:
+            package_name = package_data.get('name', 'N/A')
+            sales_count = package_data.get('sales_count', 0)
+            revenue = package_data.get('revenue', 0)
+            report += f"• {package_name}: {sales_count:,} فروش (${revenue:,.2f})\n"
+        
+        report += f"""
+📈 روند فروش:
+• رشد ماهانه: {financial_data.get('monthly_growth', 0):+.1f}%
+• بهترین روز فروش: {financial_data.get('best_sales_day', 'نامشخص')}
+• میانگین فروش روزانه: ${financial_data.get('daily_avg_sales', 0):,.2f}
 
-👥 <b>آمار دعوت:</b>
-• کل دعوت‌ها: {NumberFormatter.format_number_persian(data.get('total_referrals', 0))}
-• دعوت‌های موفق: {NumberFormatter.format_number_persian(data.get('successful_referrals', 0))}
-• دعوت‌های فعال: {NumberFormatter.format_number_persian(data.get('active_referrals', 0))}
-• نرخ موفقیت: {NumberFormatter.format_percentage(data.get('referral_success_rate', 0))}
-
-💰 <b>درآمد رفرال:</b>
-• کل درآمد: {NumberFormatter.format_price(data.get('total_referral_income', 0))}
-• درآمد این ماه: {NumberFormatter.format_price(data.get('monthly_referral_income', 0))}
-• میانگین درآمد/رفرال: {NumberFormatter.format_price(data.get('avg_income_per_referral', 0))}
-
-🏆 <b>رتبه‌بندی:</b>
-• رتبه شما: {data.get('referral_rank', 'نامشخص')}
-• امتیاز رفرال: {NumberFormatter.format_number_persian(data.get('referral_score', 0))}
-
-📊 <b>عملکرد ماهانه:</b>
-{UserReportTemplates._format_monthly_referral_performance(data.get('monthly_performance', []))}
-
-🎯 <b>اهداف:</b>
-• هدف ماه جاری: {data.get('monthly_goal', 0)} دعوت
-• پیشرفت: {NumberFormatter.format_percentage(data.get('goal_progress', 0))}
-• پاداش بعدی: {NumberFormatter.format_price(data.get('next_reward', 0))} در {data.get('referrals_needed', 0)} دعوت
+💳 روش‌های پرداخت:
 """
-    
-    @staticmethod
-    def _format_user_top_symbols(symbols: List[Dict[str, Any]]) -> str:
-        """فرمت‌بندی نمادهای برتر کاربر"""
-        if not symbols:
-            return "• داده‌ای موجود نیست"
         
-        result = ""
-        for i, symbol in enumerate(symbols[:3], 1):
-            name = symbol.get('symbol', 'نامشخص')
-            profit = symbol.get('profit_percentage', 0)
-            trades = symbol.get('trades_count', 0)
-            result += f"• {i}. {name}: {NumberFormatter.format_percentage(profit)} سود ({trades} معامله)\n"
+        payment_methods = financial_data.get('payment_methods', [])
+        for method_data in payment_methods:
+            method = method_data.get('method', 'N/A')
+            percentage = method_data.get('percentage', 0)
+            report += f"• {method}: {percentage:.1f}%\n"
         
-        return result.rstrip()
-    
-    @staticmethod
-    def _format_user_achievements(achievements: List[Dict[str, Any]]) -> str:
-        """فرمت‌بندی دستاوردهای کاربر"""
-        if not achievements:
-            return "• هنوز دستاوردی کسب نکرده‌اید"
-        
-        result = ""
-        for achievement in achievements[:3]:
-            title = achievement.get('title', 'نامشخص')
-            date = achievement.get('date')
-            date_str = DateTimeFormatter.format_date_persian(date) if date else 'نامشخص'
-            result += f"🏆 {title} ({date_str})\n"
-        
-        return result.rstrip()
-    
-    @staticmethod
-    def _format_monthly_referral_performance(performance: List[Dict[str, Any]]) -> str:
-        """فرمت‌بندی عملکرد ماهانه رفرال"""
-        if not performance:
-            return "• داده‌ای موجود نیست"
-        
-        result = ""
-        for month_data in performance[-3:]:  # آخرین 3 ماه
-            month = month_data.get('month', 'نامشخص')
-            referrals = month_data.get('referrals', 0)
-            income = month_data.get('income', 0)
-            result += f"• {month}: {referrals} دعوت، ${NumberFormatter.format_number_persian(income)} درآمد\n"
-        
-        return result.rstrip()
+        return report
 
+class ExportFormats:
+    """فرمت‌های صادرات گزارش"""
+    
+    @staticmethod
+    def to_csv_format(data: List[Dict[str, Any]], headers: List[str]) -> str:
+        """تبدیل به فرمت CSV"""
+        csv_content = ",".join(headers) + "\n"
+        
+        for row in data:
+            csv_row = []
+            for header in headers:
+                value = str(row.get(header, ''))
+                # Escape commas and quotes
+                if ',' in value or '"' in value:
+                    value = f'"{value.replace('"', '""')}"'
+                csv_row.append(value)
+            csv_content += ",".join(csv_row) + "\n"
+        
+        return csv_content
+    
+    @staticmethod
+    def to_json_format(data: Dict[str, Any]) -> str:
+        """تبدیل به فرمت JSON"""
+        import json
+        return json.dumps(data, ensure_ascii=False, indent=2, default=str)
+    
+    @staticmethod
+    def to_excel_summary(data: Dict[str, Any]) -> str:
+        """خلاصه برای Excel"""
+        return f"""خلاصه داده‌ها برای Excel:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-# Export
-__all__ = [
-    'ReportTemplates',
-    'AdminReportTemplates',
-    'UserReportTemplates'
-]
+📊 تعداد رکوردها: {len(data.get('records', []))}
+📅 تاریخ تولید: {TimeManager.to_shamsi(datetime.now())}
+📋 فیلدهای موجود: {', '.join(data.get('fields', []))}
+
+💡 نکته: این فایل قابل باز کردن در Excel، Google Sheets و سایر نرم‌افزارهای صفحه‌گسترده می‌باشد.
+
+🔗 برای دریافت فایل کامل، از گزینه "دانلود گزارش" استفاده کنید.
+"""
+
+class ReportUtils:
+    """ابزارهای کمکی گزارش‌گیری"""
+    
+    @staticmethod
+    def add_watermark(content: str, user_info: Dict[str, Any]) -> str:
+        """اضافه کردن واترمارک"""
+        watermark = f"""
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🏷️ این گزارش برای {user_info.get('username', 'کاربر')} تولید شده است
+🆔 شناسه کاربر: {user_info.get('user_id', 'نامشخص')}
+🕒 زمان تولید: {TimeManager.to_shamsi(datetime.now())}
+🔐 این گزارش محرمانه و غیرقابل انتقال است
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+"""
+        return content + watermark
+    
+    @staticmethod
+    def calculate_report_stats(report_data: Dict[str, Any]) -> Dict[str, Any]:
+        """محاسبه آمار گزارش"""
+        return {
+            'total_words': len(str(report_data).split()),
+            'total_characters': len(str(report_data)),
+            'generation_time': datetime.now().isoformat(),
+            'report_type': report_data.get('type', 'unknown'),
+            'data_points': len(report_data.get('data', [])),
+            'complexity_score': min(100, len(str(report_data)) / 100)
+        }

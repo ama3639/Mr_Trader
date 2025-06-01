@@ -12,6 +12,7 @@ import os
 from core.config import Config
 from core.cache import cache
 from utils.logger import logger
+from utils.helpers import extract_signal_details
 
 
 class ApiClient:
@@ -29,7 +30,7 @@ class ApiClient:
             timeout = aiohttp.ClientTimeout(total=30)
             headers = {
                 'Content-Type': 'application/json',
-                'User-Agent': 'MrTrader-Bot/2.0'
+                'User-Agent': f'MrTrader-Bot/{Config.BOT_VERSION}'
             }
             
             self.session = aiohttp.ClientSession(
@@ -50,47 +51,56 @@ class ApiClient:
         method: str = "GET", 
         data: Optional[Dict] = None,
         headers: Optional[Dict] = None,
-        max_retries: int = 3
+        max_retries: int = 3,
+        timeout: int = 30
     ) -> Dict[str, Any]:
         """درخواست HTTP با مدیریت خطا و تلاش مجدد"""
         
-        session = await self._get_session()
         last_error = None
         
         for attempt in range(max_retries):
             try:
-                request_headers = headers or {}
-                
-                # اضافه کردن API key اگر موجود باشد
-                if hasattr(Config, 'API_KEY') and Config.API_KEY:
-                    request_headers['X-API-Key'] = Config.API_KEY
-                
-                async with session.request(
-                    method=method,
-                    url=url,
-                    json=data,
-                    headers=request_headers
-                ) as response:
+                # ایجاد session موقت برای هر درخواست
+                async with aiohttp.ClientSession(
+                    timeout=aiohttp.ClientTimeout(total=timeout)
+                ) as session:
+                    request_headers = headers or {}
                     
-                    if response.status == 200:
-                        result = await response.json()
-                        logger.info(f"API request successful: {method} {url}")
-                        return result
+                    # اضافه کردن API key اگر موجود باشد
+                    if hasattr(Config, 'API_KEY') and Config.API_KEY:
+                        request_headers['X-API-Key'] = Config.API_KEY
                     
-                    elif response.status == 429:  # Rate limit
-                        wait_time = 2 ** attempt
-                        logger.warning(f"Rate limited, waiting {wait_time}s before retry {attempt + 1}")
-                        await asyncio.sleep(wait_time)
-                        continue
+                    request_headers.update({
+                        'Content-Type': 'application/json',
+                        'User-Agent': f'MrTrader-Bot/{Config.BOT_VERSION}'
+                    })
                     
-                    else:
-                        error_text = await response.text()
-                        raise aiohttp.ClientResponseError(
-                            request_info=response.request_info,
-                            history=response.history,
-                            status=response.status,
-                            message=error_text
-                        )
+                    async with session.request(
+                        method=method,
+                        url=url,
+                        json=data,
+                        headers=request_headers
+                    ) as response:
+                        
+                        if response.status == 200:
+                            result = await response.json()
+                            logger.info(f"API request successful: {method} {url}")
+                            return result
+                        
+                        elif response.status == 429:  # Rate limit
+                            wait_time = 2 ** attempt
+                            logger.warning(f"Rate limited, waiting {wait_time}s before retry {attempt + 1}")
+                            await asyncio.sleep(wait_time)
+                            continue
+                        
+                        else:
+                            error_text = await response.text()
+                            raise aiohttp.ClientResponseError(
+                                request_info=response.request_info,
+                                history=response.history,
+                                status=response.status,
+                                message=error_text
+                            )
             
             except asyncio.TimeoutError as e:
                 last_error = f"Timeout error: {e}"
@@ -112,7 +122,7 @@ class ApiClient:
         logger.error(f"All retry attempts failed for {url}. Last error: {last_error}")
         return {"error": last_error}
     
-    async def fetch_strategy_analysis(
+    async def fetch_analysis(
         self, 
         strategy: str, 
         symbol: str, 
@@ -121,10 +131,10 @@ class ApiClient:
         use_cache: bool = True
     ) -> Dict[str, Any]:
         """
-        دریافت تحلیل برای استراتژی مشخص
+        دریافت تحلیل برای استراتژی مشخص (متد اصلی)
         
         Args:
-            strategy: نام استراتژی (price_action, ichimoku, fibonacci, etc.)
+            strategy: نام استراتژی
             symbol: نماد ارز
             currency: ارز مرجع
             timeframe: تایم‌فریم
@@ -166,7 +176,8 @@ class ApiClient:
                 url=strategy_url,
                 method="POST",
                 data=request_data,
-                max_retries=retry_count
+                max_retries=retry_count,
+                timeout=timeout
             )
             
             if "error" not in result:
@@ -178,8 +189,19 @@ class ApiClient:
             return result
             
         except Exception as e:
-            logger.error(f"Error in fetch_strategy_analysis: {e}")
+            logger.error(f"Error in fetch_analysis: {e}")
             return {"error": str(e)}
+    
+    async def fetch_strategy_analysis(
+        self, 
+        strategy: str, 
+        symbol: str, 
+        currency: str, 
+        timeframe: str,
+        use_cache: bool = True
+    ) -> Dict[str, Any]:
+        """دریافت تحلیل برای استراتژی مشخص (alias برای سازگاری)"""
+        return await self.fetch_analysis(strategy, symbol, currency, timeframe, use_cache)
     
     async def fetch_price_analysis(
         self, 
@@ -189,12 +211,12 @@ class ApiClient:
         use_cache: bool = True
     ) -> Dict[str, Any]:
         """دریافت تحلیل پرایس اکشن (سازگاری با کد قبلی)"""
-        return await self.fetch_strategy_analysis("price_action", symbol, currency, timeframe, use_cache)
+        return await self.fetch_analysis("price_action_pandas_ta", symbol, currency, timeframe, use_cache)
     
     async def fetch_live_price(
         self, 
         symbol: str, 
-        currency: str,
+        currency: str = "USDT",
         use_cache: bool = True
     ) -> float:
         """
@@ -461,16 +483,16 @@ class ApiClient:
             for strategy in all_strategies:
                 try:
                     strategy_config = self.settings_manager.get_strategy_config(strategy)
-                    health_url = strategy_config.get("health_url")
+                    health_url = strategy_config.get("health_url") if strategy_config else None
                     
                     if health_url:
-                        result = await self._make_request(health_url, max_retries=1)
+                        result = await self._make_request(health_url, max_retries=1, timeout=5)
                         results[f"strategy_{strategy}"] = "healthy" if "error" not in result else "unhealthy"
                     else:
                         # اگر health URL نداریم، URL اصلی را تست کنیم
                         strategy_url = self.settings_manager.get_strategy_url(strategy)
                         if strategy_url:
-                            ping_result = await self._make_request(strategy_url, max_retries=1)
+                            ping_result = await self._make_request(strategy_url, max_retries=1, timeout=5)
                             results[f"strategy_{strategy}"] = "reachable" if "error" not in ping_result else "unreachable"
                         else:
                             results[f"strategy_{strategy}"] = "no_url_configured"
@@ -486,12 +508,12 @@ class ApiClient:
                 if binance_config.get("url"):
                     # بررسی سرویس محلی
                     health_url = binance_config["url"].replace("/live_price/", "/health/")
-                    ping_result = await self._make_request(health_url, max_retries=1)
+                    ping_result = await self._make_request(health_url, max_retries=1, timeout=5)
                     results["live_price_local"] = "healthy" if "error" not in ping_result else "unhealthy"
                 
                 # بررسی Binance API
                 ping_url = "https://api.binance.com/api/v3/ping"
-                ping_result = await self._make_request(ping_url, max_retries=1)
+                ping_result = await self._make_request(ping_url, max_retries=1, timeout=5)
                 results["binance"] = "healthy" if "error" not in ping_result else "unhealthy"
                 
             except Exception:
@@ -558,6 +580,14 @@ class ApiClient:
             logger.error(f"Error in batch price fetch: {e}")
             return {}
     
+    async def __aenter__(self):
+        """ورود به context manager"""
+        return self
+    
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        """خروج از context manager"""
+        await self.close()
+    
     def __del__(self):
         """تمیزکاری هنگام نابودی شیء"""
         try:
@@ -573,89 +603,7 @@ class ApiClient:
 api_client = ApiClient()
 
 
-# توابع helper برای استخراج جزئیات سیگنال
-def extract_signal_details(analysis_result: Dict[str, Any]) -> Dict[str, Any]:
-    """استخراج جزئیات سیگنال از نتیجه تحلیل"""
-    try:
-        analysis_text = analysis_result.get("analysis_text", "")
-        
-        # مقادیر پیش‌فرض
-        signal_details = {
-            "signal_direction": "نامشخص",
-            "strength": "متوسط", 
-            "entry_price": 0.0,
-            "stop_loss": 0.0,
-            "take_profit": 0.0,
-            "support": 0.0,
-            "resistance": 0.0,
-            "confidence": 0.5
-        }
-        
-        # استخراج اطلاعات از متن (باید بر اساس فرمت واقعی API تنظیم شود)
-        if analysis_text:
-            lines = analysis_text.split('\n')
-            
-            for line in lines:
-                line = line.strip().lower()
-                
-                if any(word in line for word in ['جهت:', 'direction:', 'سیگنال:', 'signal:']):
-                    if any(word in line for word in ['خرید', 'buy', 'صعودی', 'bullish']):
-                        signal_details["signal_direction"] = "خرید (BUY)"
-                    elif any(word in line for word in ['فروش', 'sell', 'نزولی', 'bearish']):
-                        signal_details["signal_direction"] = "فروش (SELL)"
-                    elif any(word in line for word in ['نگهداری', 'hold', 'انتظار', 'wait']):
-                        signal_details["signal_direction"] = "نگهداری (HOLD)"
-                
-                elif any(word in line for word in ['قدرت:', 'strength:', 'قوی', 'strong']):
-                    if any(word in line for word in ['خیلی قوی', 'very strong', 'بسیار قوی']):
-                        signal_details["strength"] = "خیلی قوی"
-                    elif any(word in line for word in ['قوی', 'strong']):
-                        signal_details["strength"] = "قوی"
-                    elif any(word in line for word in ['ضعیف', 'weak']):
-                        signal_details["strength"] = "ضعیف"
-                
-                elif any(word in line for word in ['اعتماد:', 'confidence:', 'احتمال:', 'probability:']):
-                    # تلاش برای استخراج عدد
-                    import re
-                    numbers = re.findall(r'\d+\.?\d*', line)
-                    if numbers:
-                        confidence = float(numbers[0])
-                        if confidence > 1:  # اگر درصد باشد
-                            confidence = confidence / 100
-                        signal_details["confidence"] = min(max(confidence, 0), 1)
-        
-        # استفاده از سایر فیلدهای analysis_result
-        if "signal_type" in analysis_result:
-            signal_details["signal_direction"] = analysis_result["signal_type"]
-        
-        if "confidence" in analysis_result:
-            signal_details["confidence"] = float(analysis_result["confidence"])
-        
-        if "entry_price" in analysis_result:
-            signal_details["entry_price"] = float(analysis_result["entry_price"])
-        
-        if "stop_loss" in analysis_result:
-            signal_details["stop_loss"] = float(analysis_result["stop_loss"])
-        
-        if "take_profit" in analysis_result:
-            signal_details["take_profit"] = float(analysis_result["take_profit"])
-        
-        return signal_details
-        
-    except Exception as e:
-        logger.error(f"Error extracting signal details: {e}")
-        return {
-            "signal_direction": "نامشخص",
-            "strength": "متوسط",
-            "entry_price": 0.0,
-            "stop_loss": 0.0,
-            "take_profit": 0.0,
-            "support": 0.0,
-            "resistance": 0.0,
-            "confidence": 0.5
-        }
-
-
+# توابع helper برای سازگاری
 def format_analysis_result(analysis_result: Dict[str, Any], symbol: str, currency: str) -> str:
     """فرمت‌بندی نتیجه تحلیل برای نمایش"""
     try:
@@ -666,32 +614,33 @@ def format_analysis_result(analysis_result: Dict[str, Any], symbol: str, currenc
         
         # انتخاب ایموجی بر اساس سیگنال
         signal_emojis = {
-            "خرید (BUY)": "🟢⬆️",
-            "فروش (SELL)": "🔴⬇️", 
-            "نگهداری (HOLD)": "🟡⏸️"
+            "خرید": "🟢⬆️",
+            "فروش": "🔴⬇️", 
+            "نگهداری": "🟡⏸️",
+            "خنثی": "⚪"
         }
         
-        signal_direction = details["signal_direction"]
+        signal_direction = details.get("signal_direction", "خنثی")
         emoji = signal_emojis.get(signal_direction, "⚪")
         
         # ساخت پیام فرمت شده
         formatted_text = f"{emoji} **تحلیل {symbol}/{currency}**\n\n"
         formatted_text += f"📊 **سیگنال:** {signal_direction}\n"
-        formatted_text += f"💪 **قدرت:** {details['strength']}\n"
-        formatted_text += f"🎯 **اعتماد:** {details['confidence']:.1%}\n"
+        formatted_text += f"💪 **قدرت:** {details.get('strength', 'متوسط')}\n"
+        formatted_text += f"🎯 **اعتماد:** {details.get('confidence', 0.5):.1%}\n"
         
-        if details["entry_price"] > 0:
+        if details.get("entry_price", 0) > 0:
             formatted_text += f"💰 **قیمت ورود:** ${details['entry_price']:,.4f}\n"
         
-        if details["stop_loss"] > 0:
+        if details.get("stop_loss", 0) > 0:
             formatted_text += f"🛑 **حد ضرر:** ${details['stop_loss']:,.4f}\n"
             
-        if details["take_profit"] > 0:
+        if details.get("take_profit", 0) > 0:
             formatted_text += f"🎯 **هدف سود:** ${details['take_profit']:,.4f}\n"
         
         # اضافه کردن متن تحلیل اصلی اگر موجود باشد
         if "analysis_text" in analysis_result:
-            formatted_text += f"\n📝 **جزئیات تحلیل:**\n{analysis_result['analysis_text']}"
+            formatted_text += f"\n📝 **جزئیات تحلیل:**\n{analysis_result['analysis_text'][:500]}..."
         
         return formatted_text
         
@@ -701,4 +650,4 @@ def format_analysis_result(analysis_result: Dict[str, Any], symbol: str, currenc
 
 
 # Export
-__all__ = ['ApiClient', 'api_client', 'extract_signal_details', 'format_analysis_result']
+__all__ = ['ApiClient', 'api_client', 'format_analysis_result']

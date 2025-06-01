@@ -1,5 +1,5 @@
 """
-تنظیمات و پیکربندی سیستم
+تنظیمات و پیکربندی سیستم MrTrader Bot - Fixed Version
 """
 
 import os
@@ -19,13 +19,17 @@ class Config:
     REPORTS_DIR = BASE_DIR / "reports"
     CONFIG_DIR = BASE_DIR / "config"
     
-    # ✅ مسیرهای فایل‌های CSV (اضافه شده برای رفع خطا)
+    # ✅ مسیرهای فایل‌های CSV (کامل شده برای رفع خطا)
     USER_CSV_FILE = str(DATA_DIR / "users.csv")
     ADMIN_CSV_FILE = str(DATA_DIR / "admins.csv")
     TRANSACTIONS_CSV_FILE = str(DATA_DIR / "transactions.csv")
     PACKAGES_CSV_FILE = str(DATA_DIR / "packages.csv")
     REFERRALS_CSV_FILE = str(DATA_DIR / "referrals.csv")
     USAGE_CSV_FILE = str(DATA_DIR / "usage_stats.csv")
+    PENDING_PAYMENTS_CSV = str(DATA_DIR / "pending_payments.csv")  # ✅ اضافه شده
+    PAYMENT_LOG_CSV = str(DATA_DIR / "payment_log.csv")  # ✅ اضافه شده
+    SETTINGS_CSV_FILE = str(DATA_DIR / "settings.csv")  # ✅ اضافه شده
+    ANALYTICS_CSV_FILE = str(DATA_DIR / "analytics.csv")  # ✅ اضافه شده
     
     # تنظیمات پایگاه داده
     DATABASE_FILE = str(DATA_DIR / "mrtrader.db")
@@ -33,6 +37,12 @@ class Config:
     # تنظیمات ربات تلگرام
     BOT_TOKEN = os.getenv("BOT_TOKEN", "")
     ADMIN_USER_ID = int(os.getenv("ADMIN_USER_ID", "0"))
+    
+    # ✅ لیست ادمین‌ها (اضافه شده برای compatibility)
+    ADMINS = [
+        ADMIN_USER_ID if ADMIN_USER_ID > 0 else 123456789,  # ادمین اصلی
+        # سایر ادمین‌ها
+    ]
     
     # تنظیمات امنیت
     SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-here")
@@ -47,6 +57,32 @@ class Config:
     LOG_FILE_MAX_BYTES = int(os.getenv("LOG_FILE_MAX_BYTES", 10 * 1024 * 1024))  # 10 مگابایت
     LOG_BACKUP_COUNT = int(os.getenv("LOG_BACKUP_COUNT", 5))
     BOT_VERSION = os.getenv("BOT_VERSION", "2.6.1")
+    
+    # ✅ تنظیمات لاگ (اضافه شده)
+    ERROR_LOG_FILE = str(LOGS_DIR / "errors.log")
+    MAIN_LOG_FILE = str(LOGS_DIR / "mrtrader.log")
+    USER_ACTIONS_LOG = str(LOGS_DIR / "user_actions.log")
+    API_LOG_FILE = str(LOGS_DIR / "api.log")
+    LOG_MAX_BYTES = 10 * 1024 * 1024  # 10 MB
+    
+    # ✅ API Keys (اضافه شده)
+    COINMARKETCAP_API_KEY = os.getenv("COINMARKETCAP_API_KEY", "your_api_key_here")
+    COINGECKO_API_KEY = os.getenv("COINGECKO_API_KEY", "your_api_key_here")
+    BINANCE_API_KEY = os.getenv("BINANCE_API_KEY", "your_api_key_here")
+    BINANCE_SECRET_KEY = os.getenv("BINANCE_SECRET_KEY", "your_secret_key_here")
+    
+    # ✅ تنظیمات API (اضافه شده)
+    API_TIMEOUTS = {
+        'connect': 10,
+        'read': 30,
+        'total': 60
+    }
+    
+    API_RATE_LIMITS = {
+        'coinmarketcap': 10000,  # requests per month
+        'coingecko': 100,        # requests per minute
+        'binance': 1200          # requests per minute
+    }
     
     # تنظیمات کش
     CACHE_ENABLED = True
@@ -75,6 +111,38 @@ class Config:
         "premium": 30,       # روز
         "vip": 30,           # روز
         "ghost": 30          # روز
+    }
+    
+    # ✅ تنظیمات پکیج‌ها (بروزرسانی شده - format جدید)
+    PACKAGES = {
+        'demo': {
+            'name': 'دمو',
+            'price': 0,
+            'duration_days': 9999,  # بی‌نهایت
+            'daily_limit': 5,
+            'features': ['تحلیل ساده', 'سیگنال‌های پایه', 'نمودار قیمت']
+        },
+        'basic': {
+            'name': 'پایه',
+            'price': 99000,
+            'duration_days': 30,
+            'daily_limit': 20,
+            'features': ['تحلیل کامل', 'سیگنال‌های پیشرفته', 'آلارم قیمت']
+        },
+        'premium': {
+            'name': 'ویژه',
+            'price': 199000,
+            'duration_days': 30,
+            'daily_limit': 50,
+            'features': ['تحلیل هوش مصنوعی', 'سیگنال‌های VIP', 'مشاوره تخصصی']
+        },
+        'vip': {
+            'name': 'VIP',
+            'price': 399000,
+            'duration_days': 30,
+            'daily_limit': 100,
+            'features': ['دسترسی کامل', 'سیگنال‌های انحصاری', 'مشاوره شخصی']
+        }
     }
     
     # سطح‌بندی پکیج‌ها و دسترسی‌ها (بروزرسانی شده مطابق مستندات جدید)
@@ -313,12 +381,28 @@ class Config:
     WELCOME_BONUS = 1000             # امتیاز
     FREE_TRIAL_DAYS = 3              # روز
     
+    # ✅ تنظیمات رفرال (اضافه شده)
+    REFERRAL_SETTINGS = {
+        'bonus_amount': 50000,  # 50 هزار تومان
+        'min_withdraw': 100000,  # 100 هزار تومان
+        'commission_percentage': 0.1,  # 10%
+        'max_levels': 3
+    }
+    
     # تنظیمات بکاپ
     AUTO_BACKUP_ENABLED = True
     BACKUP_INTERVAL_HOURS = 24
     MAX_BACKUP_FILES = 7
     
-    # ✅ تنظیمات CSV (اضافه شده)
+    # ✅ تنظیمات بکاپ (اضافه شده)
+    BACKUP_SETTINGS = {
+        'auto_backup': True,
+        'backup_interval': 3600,  # 1 hour
+        'backup_retention': 30,   # 30 days
+        'backup_compression': True
+    }
+    
+    # ✅ تنظیمات CSV (کامل شده برای رفع خطا)
     CSV_SETTINGS = {
         "encoding": "utf-8-sig",
         "delimiter": ",",
@@ -339,8 +423,78 @@ class Config:
             "transactions": [
                 "id", "user_id", "transaction_type", "amount", "currency",
                 "status", "payment_method", "gateway_ref", "date", "description"
+            ],
+            "pending_payments": [  # ✅ اضافه شده
+                "id", "user_id", "amount", "package", "payment_method",
+                "status", "created_at", "gateway_ref", "callback_data"
+            ],
+            "payment_log": [  # ✅ اضافه شده
+                "id", "user_id", "amount", "status", "gateway", "ref_id",
+                "created_at", "completed_at", "description"
+            ],
+            "settings": [  # ✅ اضافه شده
+                "key", "value", "description", "updated_at"
             ]
         }
+    }
+    
+    # ✅ تنظیمات امنیتی (اضافه شده)
+    SECURITY_SETTINGS = {
+        'max_login_attempts': 5,
+        'lockout_duration': 3600,  # 1 hour
+        'session_timeout': 86400,  # 24 hours
+        'require_phone_verification': False,
+        'enable_2fa': False
+    }
+    
+    # ✅ کانال‌ها و گروه‌ها (اضافه شده)
+    CHANNELS = {
+        'main_channel': '@mrtrader_channel',
+        'support_group': '@mrtrader_support',
+        'announcements': '@mrtrader_news'
+    }
+    
+    # ✅ تنظیمات پرداخت (اضافه شده)
+    PAYMENT_SETTINGS = {
+        'zarinpal_merchant': 'your_zarinpal_merchant_id',
+        'idpay_api_key': 'your_idpay_api_key',
+        'callback_url': 'https://yoursite.com/callback',
+        'currency': 'IRT',  # Iranian Toman
+        'min_payment': 10000,
+        'max_payment': 10000000
+    }
+    
+    # ✅ تنظیمات کش (اضافه شده)
+    CACHE_SETTINGS = {
+        'redis_host': 'localhost',
+        'redis_port': 6379,
+        'redis_db': 0,
+        'cache_ttl': 300,  # 5 minutes
+        'max_cache_size': 1000
+    }
+    
+    # ✅ تنظیمات نوتیفیکیشن (اضافه شده)
+    NOTIFICATION_SETTINGS = {
+        'enable_email': False,
+        'enable_sms': False,
+        'enable_telegram': True,
+        'admin_notifications': True
+    }
+    
+    # ✅ تنظیمات monitoring (اضافه شده)
+    MONITORING = {
+        'enable_metrics': True,
+        'metrics_interval': 60,  # 1 minute
+        'alert_threshold': 0.9,
+        'health_check_interval': 30
+    }
+    
+    # ✅ تنظیمات پیام‌ها (اضافه شده)
+    MESSAGE_SETTINGS = {
+        'max_message_length': 4096,
+        'typing_delay': 0.5,
+        'delete_after_seconds': 300,
+        'enable_markdown': True
     }
     
     # پیام‌های سیستم (بروزرسانی شده)
@@ -434,11 +588,14 @@ class Config:
     
     @classmethod
     def ensure_csv_files_exist(cls):
-        """ایجاد فایل‌های CSV با header های مناسب در صورت عدم وجود"""
+        """ایجاد فایل‌های CSV با header های مناسب در صورت عدم وجود - ✅ کامل شده"""
         csv_files = {
             cls.USER_CSV_FILE: cls.CSV_SETTINGS["headers"]["users"],
             cls.ADMIN_CSV_FILE: cls.CSV_SETTINGS["headers"]["admins"], 
-            cls.TRANSACTIONS_CSV_FILE: cls.CSV_SETTINGS["headers"]["transactions"]
+            cls.TRANSACTIONS_CSV_FILE: cls.CSV_SETTINGS["headers"]["transactions"],
+            cls.PENDING_PAYMENTS_CSV: cls.CSV_SETTINGS["headers"]["pending_payments"],  # ✅ اضافه شده
+            cls.PAYMENT_LOG_CSV: cls.CSV_SETTINGS["headers"]["payment_log"],  # ✅ اضافه شده
+            cls.SETTINGS_CSV_FILE: cls.CSV_SETTINGS["headers"]["settings"]  # ✅ اضافه شده
         }
         
         import csv
@@ -455,43 +612,56 @@ class Config:
                     print(f"❌ Error creating CSV file {file_path}: {e}")
     
     @classmethod
-    def validate_config(cls) -> Dict[str, List[str]]:
-        """اعتبارسنجی تنظیمات"""
-        errors = []
-        warnings = []
-        
-        # بررسی متغیرهای ضروری
-        if not cls.BOT_TOKEN:
-            errors.append("BOT_TOKEN is required")
-        
-        if cls.ADMIN_USER_ID == 0:
-            warnings.append("ADMIN_USER_ID not set")
-        
-        if not cls.SECRET_KEY or cls.SECRET_KEY == "your-secret-key-here":
-            warnings.append("SECRET_KEY should be changed from default")
-        
-        # بررسی پوشه‌ها و فایل‌ها
+    def validate_config(cls) -> bool:  # ✅ تغییر از Dict به bool
+        """اعتبارسنجی تنظیمات - ✅ Fixed return type"""
         try:
-            cls.ensure_directories_exist()
+            errors = []
+            warnings = []
+            
+            # بررسی متغیرهای ضروری
+            if not cls.BOT_TOKEN:
+                errors.append("BOT_TOKEN is required")
+            
+            if cls.ADMIN_USER_ID == 0:
+                warnings.append("ADMIN_USER_ID not set")
+            
+            if not cls.SECRET_KEY or cls.SECRET_KEY == "your-secret-key-here":
+                warnings.append("SECRET_KEY should be changed from default")
+            
+            # بررسی پوشه‌ها و فایل‌ها
+            try:
+                cls.ensure_directories_exist()
+            except Exception as e:
+                errors.append(f"Cannot create directories: {e}")
+            
+            # بررسی فایل config
+            config_file = cls.CONFIG_DIR / "api_servers_config.json"
+            if not config_file.exists():
+                warnings.append("API servers config file not found")
+            
+            # ✅ بررسی فایل‌های CSV
+            csv_files = [cls.USER_CSV_FILE, cls.ADMIN_CSV_FILE, cls.TRANSACTIONS_CSV_FILE]
+            for csv_file in csv_files:
+                if not Path(csv_file).exists():
+                    warnings.append(f"CSV file not found: {csv_file}")
+            
+            # نمایش warnings
+            if warnings:
+                for warning in warnings:
+                    print(f"⚠️ Warning: {warning}")
+            
+            # نمایش errors
+            if errors:
+                for error in errors:
+                    print(f"❌ Error: {error}")
+                return False
+            
+            print("✅ Configuration validation passed")
+            return True
+            
         except Exception as e:
-            errors.append(f"Cannot create directories: {e}")
-        
-        # بررسی فایل config
-        config_file = cls.CONFIG_DIR / "api_servers_config.json"
-        if not config_file.exists():
-            warnings.append("API servers config file not found")
-        
-        # ✅ بررسی فایل‌های CSV
-        csv_files = [cls.USER_CSV_FILE, cls.ADMIN_CSV_FILE, cls.TRANSACTIONS_CSV_FILE]
-        for csv_file in csv_files:
-            if not Path(csv_file).exists():
-                warnings.append(f"CSV file not found: {csv_file}")
-        
-        return {
-            "errors": errors,
-            "warnings": warnings,
-            "is_valid": len(errors) == 0
-        }
+            print(f"❌ Configuration validation failed: {e}")
+            return False
     
     @classmethod
     def get_database_url(cls) -> str:
@@ -501,7 +671,7 @@ class Config:
     @classmethod
     def is_admin(cls, user_id: int) -> bool:
         """بررسی مدیر بودن کاربر"""
-        return user_id == cls.ADMIN_USER_ID
+        return user_id == cls.ADMIN_USER_ID or user_id in cls.ADMINS
     
     @classmethod
     def get_package_price(cls, package_name: str) -> int:
@@ -599,6 +769,11 @@ class Config:
         return cls.PACKAGE_HIERARCHY.get(package_name, {}).get("daily_limit", 5)
     
     @classmethod
+    def get_package_info(cls, package_name: str) -> Dict[str, any]:  # ✅ اضافه شده
+        """دریافت اطلاعات کامل پکیج"""
+        return cls.PACKAGES.get(package_name, cls.PACKAGES['demo'])
+    
+    @classmethod
     def load_from_env(cls):
         """بارگذاری تنظیمات از متغیرهای محیطی"""
         # این متد می‌تواند برای بارگذاری تنظیمات اضافی استفاده شود
@@ -607,3 +782,6 @@ class Config:
 
 # ایجاد پوشه‌ها و فایل‌های مورد نیاز هنگام import
 Config.ensure_directories_exist()
+
+# ✅ Export برای استفاده آسان‌تر
+__all__ = ['Config']

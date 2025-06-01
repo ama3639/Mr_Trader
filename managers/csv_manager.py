@@ -1,11 +1,13 @@
 """
-مدیریت فایل‌های CSV برای MrTrader Bot
+مدیریت فایل‌های CSV برای MrTrader Bot - Fixed Version
 """
 import csv
 import os
+import shutil
 from typing import Dict, List, Optional, Any, Union
 from threading import Lock
 from datetime import datetime
+from pathlib import Path
 
 from core.config import Config
 from utils.logger import logger
@@ -22,17 +24,18 @@ class CSVManager:
         """اطمینان از وجود فایل CSV کاربران"""
         try:
             if not os.path.exists(Config.USER_CSV_FILE):
-                Config.DATA_DIR.mkdir(exist_ok=True)
+                # ✅ ایجاد دیرکتوری در صورت عدم وجود
+                Path(Config.USER_CSV_FILE).parent.mkdir(parents=True, exist_ok=True)
                 
-                headers = [
-                    'telegram_id', 'username', 'first_name', 'last_name', 'phone_number',
-                    'package', 'expiry_date', 'balance', 'referral_code', 'referred_by',
-                    'is_blocked', 'entry_date', 'last_activity', 'api_calls_count',
-                    'daily_limit', 'security_token'
-                ]
+                # ✅ استفاده از headers از config
+                headers = Config.CSV_SETTINGS["headers"]["users"]
                 
-                with open(Config.USER_CSV_FILE, 'w', newline='', encoding='utf-8') as csvfile:
-                    writer = csv.writer(csvfile)
+                # ✅ استفاده از encoding از config
+                with open(Config.USER_CSV_FILE, 'w', newline='', 
+                         encoding=Config.CSV_SETTINGS["encoding"]) as csvfile:
+                    writer = csv.writer(csvfile, 
+                                      delimiter=Config.CSV_SETTINGS["delimiter"],
+                                      quotechar=Config.CSV_SETTINGS["quotechar"])
                     writer.writerow(headers)
                 
                 logger.info(f"Created user CSV file: {Config.USER_CSV_FILE}")
@@ -48,15 +51,18 @@ class CSVManager:
         """اطمینان از وجود فایل CSV ادمین‌ها"""
         try:
             if not os.path.exists(Config.ADMIN_CSV_FILE):
-                Config.DATA_DIR.mkdir(exist_ok=True)
+                # ✅ ایجاد دیرکتوری در صورت عدم وجود
+                Path(Config.ADMIN_CSV_FILE).parent.mkdir(parents=True, exist_ok=True)
                 
-                headers = [
-                    'telegram_id', 'level', 'permissions', 'added_by', 
-                    'added_date', 'is_active', 'last_login'
-                ]
+                # ✅ استفاده از headers از config
+                headers = Config.CSV_SETTINGS["headers"]["admins"]
                 
-                with open(Config.ADMIN_CSV_FILE, 'w', newline='', encoding='utf-8') as csvfile:
-                    writer = csv.writer(csvfile)
+                # ✅ استفاده از تنظیمات CSV از config
+                with open(Config.ADMIN_CSV_FILE, 'w', newline='', 
+                         encoding=Config.CSV_SETTINGS["encoding"]) as csvfile:
+                    writer = csv.writer(csvfile,
+                                      delimiter=Config.CSV_SETTINGS["delimiter"],
+                                      quotechar=Config.CSV_SETTINGS["quotechar"])
                     writer.writerow(headers)
                 
                 logger.info(f"Created admin CSV file: {Config.ADMIN_CSV_FILE}")
@@ -65,6 +71,60 @@ class CSVManager:
             
         except Exception as e:
             logger.error(f"Error ensuring admin CSV exists: {e}")
+            return False
+    
+    @classmethod
+    def ensure_all_csv_files_exist(cls):
+        """اطمینان از وجود همه فایل‌های CSV"""
+        try:
+            success = True
+            
+            # ✅ ایجاد همه فایل‌های CSV با headers مناسب
+            csv_files_info = [
+                (Config.USER_CSV_FILE, "users"),
+                (Config.ADMIN_CSV_FILE, "admins"),
+                (Config.TRANSACTIONS_CSV_FILE, "transactions")
+            ]
+            
+            # ✅ فایل‌های اضافی اگر در config تعریف شده باشند
+            if hasattr(Config, 'PENDING_PAYMENTS_CSV') and "pending_payments" in Config.CSV_SETTINGS["headers"]:
+                csv_files_info.append((Config.PENDING_PAYMENTS_CSV, "pending_payments"))
+            
+            if hasattr(Config, 'PAYMENT_LOG_CSV') and "payment_log" in Config.CSV_SETTINGS["headers"]:
+                csv_files_info.append((Config.PAYMENT_LOG_CSV, "payment_log"))
+                
+            if hasattr(Config, 'SETTINGS_CSV_FILE') and "settings" in Config.CSV_SETTINGS["headers"]:
+                csv_files_info.append((Config.SETTINGS_CSV_FILE, "settings"))
+            
+            for file_path, header_key in csv_files_info:
+                if not os.path.exists(file_path):
+                    try:
+                        # ایجاد دیرکتوری
+                        Path(file_path).parent.mkdir(parents=True, exist_ok=True)
+                        
+                        # گرفتن headers
+                        headers = Config.CSV_SETTINGS["headers"].get(header_key, [])
+                        
+                        if headers:
+                            with open(file_path, 'w', newline='', 
+                                     encoding=Config.CSV_SETTINGS["encoding"]) as csvfile:
+                                writer = csv.writer(csvfile,
+                                                  delimiter=Config.CSV_SETTINGS["delimiter"],
+                                                  quotechar=Config.CSV_SETTINGS["quotechar"])
+                                writer.writerow(headers)
+                            
+                            logger.info(f"Created CSV file: {file_path}")
+                        else:
+                            logger.warning(f"No headers found for {header_key}")
+                            
+                    except Exception as file_error:
+                        logger.error(f"Error creating {file_path}: {file_error}")
+                        success = False
+            
+            return success
+            
+        except Exception as e:
+            logger.error(f"Error ensuring all CSV files exist: {e}")
             return False
     
     @classmethod
@@ -85,8 +145,12 @@ class CSVManager:
                     cls.ensure_user_csv_exists()
                     return None
                 
-                with open(Config.USER_CSV_FILE, 'r', encoding='utf-8') as csvfile:
-                    reader = csv.DictReader(csvfile)
+                # ✅ استفاده از تنظیمات CSV از config
+                with open(Config.USER_CSV_FILE, 'r', 
+                         encoding=Config.CSV_SETTINGS["encoding"]) as csvfile:
+                    reader = csv.DictReader(csvfile,
+                                          delimiter=Config.CSV_SETTINGS["delimiter"],
+                                          quotechar=Config.CSV_SETTINGS["quotechar"])
                     for row in reader:
                         if row.get('telegram_id') == telegram_id:
                             return dict(row)
@@ -117,6 +181,10 @@ class CSVManager:
                     logger.warning(f"User {user_data.get('telegram_id')} already exists in CSV")
                     return False
                 
+                # ✅ بکاپ اختیاری
+                if Config.CSV_SETTINGS.get("create_backup", False):
+                    cls._create_backup(Config.USER_CSV_FILE)
+                
                 # آماده‌سازی داده‌ها
                 current_time = TimeManager.get_current_shamsi()
                 csv_row = {
@@ -125,7 +193,7 @@ class CSVManager:
                     'first_name': user_data.get('first_name', ''),
                     'last_name': user_data.get('last_name', ''),
                     'phone_number': user_data.get('phone_number', ''),
-                    'package': user_data.get('package', 'none'),
+                    'package': user_data.get('package', 'demo'),  # ✅ پیش‌فرض demo
                     'expiry_date': user_data.get('expiry_date', ''),
                     'balance': str(user_data.get('balance', 0)),
                     'referral_code': user_data.get('referral_code', ''),
@@ -134,14 +202,17 @@ class CSVManager:
                     'entry_date': user_data.get('entry_date', current_time),
                     'last_activity': user_data.get('last_activity', current_time),
                     'api_calls_count': str(user_data.get('api_calls_count', 0)),
-                    'daily_limit': str(user_data.get('daily_limit', 10)),
+                    'daily_limit': str(user_data.get('daily_limit', 5)),  # ✅ پیش‌فرض 5
                     'security_token': user_data.get('security_token', '')
                 }
                 
                 # خواندن فایل موجود
                 rows = []
-                with open(Config.USER_CSV_FILE, 'r', encoding='utf-8') as csvfile:
-                    reader = csv.DictReader(csvfile)
+                with open(Config.USER_CSV_FILE, 'r', 
+                         encoding=Config.CSV_SETTINGS["encoding"]) as csvfile:
+                    reader = csv.DictReader(csvfile,
+                                          delimiter=Config.CSV_SETTINGS["delimiter"],
+                                          quotechar=Config.CSV_SETTINGS["quotechar"])
                     headers = reader.fieldnames
                     rows = list(reader)
                 
@@ -149,8 +220,11 @@ class CSVManager:
                 rows.append(csv_row)
                 
                 # نوشتن به فایل
-                with open(Config.USER_CSV_FILE, 'w', newline='', encoding='utf-8') as csvfile:
-                    writer = csv.DictWriter(csvfile, fieldnames=headers)
+                with open(Config.USER_CSV_FILE, 'w', newline='', 
+                         encoding=Config.CSV_SETTINGS["encoding"]) as csvfile:
+                    writer = csv.DictWriter(csvfile, fieldnames=headers,
+                                          delimiter=Config.CSV_SETTINGS["delimiter"],
+                                          quotechar=Config.CSV_SETTINGS["quotechar"])
                     writer.writeheader()
                     writer.writerows(rows)
                 
@@ -180,12 +254,19 @@ class CSVManager:
                     logger.warning("User CSV file does not exist")
                     return False
                 
+                # ✅ بکاپ اختیاری
+                if Config.CSV_SETTINGS.get("backup_on_write", False):
+                    cls._create_backup(Config.USER_CSV_FILE)
+                
                 # خواندن فایل
                 rows = []
                 user_found = False
                 
-                with open(Config.USER_CSV_FILE, 'r', encoding='utf-8') as csvfile:
-                    reader = csv.DictReader(csvfile)
+                with open(Config.USER_CSV_FILE, 'r', 
+                         encoding=Config.CSV_SETTINGS["encoding"]) as csvfile:
+                    reader = csv.DictReader(csvfile,
+                                          delimiter=Config.CSV_SETTINGS["delimiter"],
+                                          quotechar=Config.CSV_SETTINGS["quotechar"])
                     headers = reader.fieldnames
                     
                     for row in reader:
@@ -206,8 +287,11 @@ class CSVManager:
                     return False
                 
                 # نوشتن به فایل
-                with open(Config.USER_CSV_FILE, 'w', newline='', encoding='utf-8') as csvfile:
-                    writer = csv.DictWriter(csvfile, fieldnames=headers)
+                with open(Config.USER_CSV_FILE, 'w', newline='', 
+                         encoding=Config.CSV_SETTINGS["encoding"]) as csvfile:
+                    writer = csv.DictWriter(csvfile, fieldnames=headers,
+                                          delimiter=Config.CSV_SETTINGS["delimiter"],
+                                          quotechar=Config.CSV_SETTINGS["quotechar"])
                     writer.writeheader()
                     writer.writerows(rows)
                 
@@ -231,8 +315,11 @@ class CSVManager:
                     cls.ensure_user_csv_exists()
                     return []
                 
-                with open(Config.USER_CSV_FILE, 'r', encoding='utf-8') as csvfile:
-                    reader = csv.DictReader(csvfile)
+                with open(Config.USER_CSV_FILE, 'r', 
+                         encoding=Config.CSV_SETTINGS["encoding"]) as csvfile:
+                    reader = csv.DictReader(csvfile,
+                                          delimiter=Config.CSV_SETTINGS["delimiter"],
+                                          quotechar=Config.CSV_SETTINGS["quotechar"])
                     return list(reader)
                     
         except Exception as e:
@@ -311,8 +398,11 @@ class CSVManager:
                     cls.ensure_admin_csv_exists()
                     return None
                 
-                with open(Config.ADMIN_CSV_FILE, 'r', encoding='utf-8') as csvfile:
-                    reader = csv.DictReader(csvfile)
+                with open(Config.ADMIN_CSV_FILE, 'r', 
+                         encoding=Config.CSV_SETTINGS["encoding"]) as csvfile:
+                    reader = csv.DictReader(csvfile,
+                                          delimiter=Config.CSV_SETTINGS["delimiter"],
+                                          quotechar=Config.CSV_SETTINGS["quotechar"])
                     for row in reader:
                         if row.get('telegram_id') == telegram_id and row.get('is_active', '1') == '1':
                             return dict(row)
@@ -345,22 +435,31 @@ class CSVManager:
                     # به‌روزرسانی ادمین موجود
                     return cls.update_admin_in_csv(telegram_id, admin_data)
                 
+                # ✅ بکاپ اختیاری
+                if Config.CSV_SETTINGS.get("create_backup", False):
+                    cls._create_backup(Config.ADMIN_CSV_FILE)
+                
                 # آماده‌سازی داده‌ها
                 current_time = TimeManager.get_current_shamsi()
                 csv_row = {
                     'telegram_id': telegram_id,
-                    'level': str(admin_data.get('level', 1)),
+                    'username': admin_data.get('username', ''),
+                    'first_name': admin_data.get('first_name', ''),
+                    'last_name': admin_data.get('last_name', ''),
+                    'role': admin_data.get('role', 'admin'),
                     'permissions': admin_data.get('permissions', ''),
-                    'added_by': str(admin_data.get('added_by', '')),
-                    'added_date': admin_data.get('added_date', current_time),
-                    'is_active': str(admin_data.get('is_active', 1)),
-                    'last_login': admin_data.get('last_login', '')
+                    'entry_date': admin_data.get('entry_date', current_time),
+                    'last_activity': admin_data.get('last_activity', ''),
+                    'is_active': str(admin_data.get('is_active', 1))
                 }
                 
                 # خواندن فایل موجود
                 rows = []
-                with open(Config.ADMIN_CSV_FILE, 'r', encoding='utf-8') as csvfile:
-                    reader = csv.DictReader(csvfile)
+                with open(Config.ADMIN_CSV_FILE, 'r', 
+                         encoding=Config.CSV_SETTINGS["encoding"]) as csvfile:
+                    reader = csv.DictReader(csvfile,
+                                          delimiter=Config.CSV_SETTINGS["delimiter"],
+                                          quotechar=Config.CSV_SETTINGS["quotechar"])
                     headers = reader.fieldnames
                     rows = list(reader)
                 
@@ -368,8 +467,11 @@ class CSVManager:
                 rows.append(csv_row)
                 
                 # نوشتن به فایل
-                with open(Config.ADMIN_CSV_FILE, 'w', newline='', encoding='utf-8') as csvfile:
-                    writer = csv.DictWriter(csvfile, fieldnames=headers)
+                with open(Config.ADMIN_CSV_FILE, 'w', newline='', 
+                         encoding=Config.CSV_SETTINGS["encoding"]) as csvfile:
+                    writer = csv.DictWriter(csvfile, fieldnames=headers,
+                                          delimiter=Config.CSV_SETTINGS["delimiter"],
+                                          quotechar=Config.CSV_SETTINGS["quotechar"])
                     writer.writeheader()
                     writer.writerows(rows)
                 
@@ -399,12 +501,19 @@ class CSVManager:
                     logger.warning("Admin CSV file does not exist")
                     return False
                 
+                # ✅ بکاپ اختیاری
+                if Config.CSV_SETTINGS.get("backup_on_write", False):
+                    cls._create_backup(Config.ADMIN_CSV_FILE)
+                
                 # خواندن فایل
                 rows = []
                 admin_found = False
                 
-                with open(Config.ADMIN_CSV_FILE, 'r', encoding='utf-8') as csvfile:
-                    reader = csv.DictReader(csvfile)
+                with open(Config.ADMIN_CSV_FILE, 'r', 
+                         encoding=Config.CSV_SETTINGS["encoding"]) as csvfile:
+                    reader = csv.DictReader(csvfile,
+                                          delimiter=Config.CSV_SETTINGS["delimiter"],
+                                          quotechar=Config.CSV_SETTINGS["quotechar"])
                     headers = reader.fieldnames
                     
                     for row in reader:
@@ -423,8 +532,11 @@ class CSVManager:
                     return False
                 
                 # نوشتن به فایل
-                with open(Config.ADMIN_CSV_FILE, 'w', newline='', encoding='utf-8') as csvfile:
-                    writer = csv.DictWriter(csvfile, fieldnames=headers)
+                with open(Config.ADMIN_CSV_FILE, 'w', newline='', 
+                         encoding=Config.CSV_SETTINGS["encoding"]) as csvfile:
+                    writer = csv.DictWriter(csvfile, fieldnames=headers,
+                                          delimiter=Config.CSV_SETTINGS["delimiter"],
+                                          quotechar=Config.CSV_SETTINGS["quotechar"])
                     writer.writeheader()
                     writer.writerows(rows)
                 
@@ -448,8 +560,11 @@ class CSVManager:
                     cls.ensure_admin_csv_exists()
                     return []
                 
-                with open(Config.ADMIN_CSV_FILE, 'r', encoding='utf-8') as csvfile:
-                    reader = csv.DictReader(csvfile)
+                with open(Config.ADMIN_CSV_FILE, 'r', 
+                         encoding=Config.CSV_SETTINGS["encoding"]) as csvfile:
+                    reader = csv.DictReader(csvfile,
+                                          delimiter=Config.CSV_SETTINGS["delimiter"],
+                                          quotechar=Config.CSV_SETTINGS["quotechar"])
                     return [row for row in reader if row.get('is_active', '1') == '1']
                     
         except Exception as e:
@@ -457,7 +572,43 @@ class CSVManager:
             return []
     
     @classmethod
-    def backup_csv_files(cls, backup_dir: str) -> bool:
+    def _create_backup(cls, file_path: str) -> bool:
+        """ایجاد بکاپ از فایل CSV
+        
+        Args:
+            file_path: مسیر فایل اصلی
+            
+        Returns:
+            موفقیت عملیات
+        """
+        try:
+            if not os.path.exists(file_path):
+                return False
+            
+            # ایجاد نام فایل بکاپ
+            file_name = os.path.basename(file_path)
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            backup_name = f"{timestamp}_{file_name}"
+            
+            # ✅ استفاده از BACKUP_DIRECTORY از config
+            backup_dir = getattr(Config, 'BACKUP_DIRECTORY', Config.BACKUPS_DIR)
+            backup_path = os.path.join(backup_dir, backup_name)
+            
+            # ایجاد دیرکتوری بکاپ
+            os.makedirs(backup_dir, exist_ok=True)
+            
+            # کپی فایل
+            shutil.copy2(file_path, backup_path)
+            
+            logger.info(f"Created backup: {backup_path}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error creating backup for {file_path}: {e}")
+            return False
+    
+    @classmethod
+    def backup_csv_files(cls, backup_dir: str = None) -> bool:
         """پشتیبان‌گیری از فایل‌های CSV
         
         Args:
@@ -467,25 +618,41 @@ class CSVManager:
             موفقیت عملیات
         """
         try:
-            import shutil
+            if backup_dir is None:
+                backup_dir = getattr(Config, 'BACKUP_DIRECTORY', Config.BACKUPS_DIR)
             
             os.makedirs(backup_dir, exist_ok=True)
             
+            # ✅ فایل‌های CSV برای بکاپ
             csv_files = [
                 Config.USER_CSV_FILE,
                 Config.ADMIN_CSV_FILE,
-                Config.PENDING_PAYMENTS_CSV,
-                Config.PAYMENT_LOG_CSV,
-                Config.SETTINGS_CSV_FILE
+                Config.TRANSACTIONS_CSV_FILE
             ]
             
+            # ✅ فایل‌های اضافی اگر وجود داشته باشند
+            additional_files = [
+                getattr(Config, 'PENDING_PAYMENTS_CSV', None),
+                getattr(Config, 'PAYMENT_LOG_CSV', None),
+                getattr(Config, 'SETTINGS_CSV_FILE', None),
+                getattr(Config, 'PACKAGES_CSV_FILE', None),
+                getattr(Config, 'REFERRALS_CSV_FILE', None),
+                getattr(Config, 'USAGE_CSV_FILE', None),
+                getattr(Config, 'ANALYTICS_CSV_FILE', None)
+            ]
+            
+            csv_files.extend([f for f in additional_files if f is not None])
+            
+            success_count = 0
             for csv_file in csv_files:
                 if os.path.exists(csv_file):
-                    backup_file = os.path.join(backup_dir, os.path.basename(csv_file))
-                    shutil.copy2(csv_file, backup_file)
-                    logger.info(f"Backed up {csv_file} to {backup_file}")
+                    if cls._create_backup(csv_file):
+                        success_count += 1
+                    else:
+                        logger.warning(f"Failed to backup {csv_file}")
             
-            return True
+            logger.info(f"Backed up {success_count}/{len(csv_files)} CSV files")
+            return success_count > 0
             
         except Exception as e:
             logger.error(f"Error backing up CSV files: {e}")
@@ -505,16 +672,77 @@ class CSVManager:
             users = cls.get_all_users_from_csv()
             stats['total_users'] = len(users)
             stats['active_users'] = len([u for u in users if u.get('is_blocked', '0') != '1'])
-            stats['premium_users'] = len([u for u in users if u.get('package', 'none') != 'none'])
+            stats['premium_users'] = len([u for u in users if u.get('package', 'demo') not in ['demo', 'none']])
             
             # آمار ادمین‌ها
             admins = cls.get_all_admins_from_csv()
             stats['total_admins'] = len(admins)
             
+            # آمار پکیج‌ها
+            package_counts = {}
+            for user in users:
+                package = user.get('package', 'demo')
+                package_counts[package] = package_counts.get(package, 0) + 1
+            stats['package_distribution'] = package_counts
+            
             return stats
             
         except Exception as e:
             logger.error(f"Error getting CSV statistics: {e}")
+            return {}
+    
+    @classmethod
+    def validate_csv_integrity(cls) -> Dict[str, bool]:
+        """بررسی یکپارچگی فایل‌های CSV
+        
+        Returns:
+            وضعیت یکپارچگی هر فایل
+        """
+        try:
+            results = {}
+            
+            # بررسی فایل کاربران
+            try:
+                users = cls.get_all_users_from_csv()
+                telegram_ids = [user.get('telegram_id') for user in users]
+                unique_ids = set(telegram_ids)
+                
+                results['users_file_exists'] = os.path.exists(Config.USER_CSV_FILE)
+                results['users_readable'] = len(users) >= 0
+                results['users_no_duplicates'] = len(telegram_ids) == len(unique_ids)
+                results['users_valid_data'] = all(user.get('telegram_id') for user in users)
+                
+            except Exception:
+                results.update({
+                    'users_file_exists': False,
+                    'users_readable': False,
+                    'users_no_duplicates': False,
+                    'users_valid_data': False
+                })
+            
+            # بررسی فایل ادمین‌ها
+            try:
+                admins = cls.get_all_admins_from_csv()
+                admin_ids = [admin.get('telegram_id') for admin in admins]
+                unique_admin_ids = set(admin_ids)
+                
+                results['admins_file_exists'] = os.path.exists(Config.ADMIN_CSV_FILE)
+                results['admins_readable'] = len(admins) >= 0
+                results['admins_no_duplicates'] = len(admin_ids) == len(unique_admin_ids)
+                results['admins_valid_data'] = all(admin.get('telegram_id') for admin in admins)
+                
+            except Exception:
+                results.update({
+                    'admins_file_exists': False,
+                    'admins_readable': False,
+                    'admins_no_duplicates': False,
+                    'admins_valid_data': False
+                })
+            
+            return results
+            
+        except Exception as e:
+            logger.error(f"Error validating CSV integrity: {e}")
             return {}
 
 

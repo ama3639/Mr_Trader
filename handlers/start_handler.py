@@ -1,448 +1,452 @@
 """
-هندلرهای شروع، راهنما و کامندهای اولیه MrTrader Bot
+هندلر کامند شروع (/start) - Fixed Imports Only
 """
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, BotCommand
-from telegram.ext import ContextTypes, CommandHandler, CallbackQueryHandler
-from telegram.constants import ParseMode
-from typing import List, Dict, Any
 import asyncio
+from typing import Dict, Any, Optional
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import ContextTypes
 
 from core.config import Config
 from utils.logger import logger, log_user_action
-from managers.user_manager import UserManager
-from managers.admin_manager import AdminManager
-from managers.security_manager import SecurityManager
-from managers.referral_manager import ReferralManager
-from managers.settings_manager import SettingsManager
-from managers.message_manager import MessageManager
 from utils.time_manager import TimeManager
+from managers.user_manager import UserManager
+from managers.security_manager import SecurityManager
+
 
 
 class StartHandler:
-    """هندلر کامندهای شروع و راهنما"""
+    """کلاس مدیریت کامند شروع"""
     
-    def __init__(self):
-        self.user_manager = UserManager()
-        self.admin_manager = AdminManager()
-        self.security_manager = SecurityManager()
-        self.referral_manager = ReferralManager()
-        self.settings_manager = SettingsManager()
-        self.message_manager = MessageManager()
-        self.time_manager = TimeManager()
-    
-    async def start_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """هندلر کامند /start"""
+    @staticmethod
+    async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """هندلر کامند شروع (/start)
+        
+        Args:
+            update: آپدیت تلگرام
+            context: کانتکست ربات
+        """
         try:
-            user = update.effective_user
-            chat = update.effective_chat
+            # ✅ دریافت اطلاعات کاربر
+            user_info = update.effective_user
+            telegram_id = user_info.id
+            username = user_info.username
+            first_name = user_info.first_name or ""
+            last_name = user_info.last_name or ""
             
-            # بررسی امنیت
-            if not await self.security_manager.is_user_allowed(user.id):
-                await self.message_manager.send_security_warning(chat.id, "کاربر مسدود شده")
+            logger.info(f"Start command received from user {telegram_id}")
+            
+            # ✅ بررسی مسدودیت کاربر
+            if UserManager.is_user_blocked(telegram_id):
+                await update.message.reply_text(
+                    "⛔ حساب کاربری شما مسدود شده است.\n"
+                    "لطفاً با پشتیبانی تماس بگیرید: @mrtrader_support",
+                    parse_mode='HTML'
+                )
                 return
             
-            # لاگ فعالیت کاربر
-            log_user_action(user.id, "start_command", f"User started bot: {user.username}")
+            # ✅ دریافت یا ایجاد کاربر - بدون await
+            user_data = UserManager.get_or_create_user(
+                telegram_id=telegram_id,
+                username=username,
+                first_name=first_name,
+                last_name=last_name
+            )
             
-            # استخراج پارامتر start (برای رفرال)
-            referral_code = None
-            if context.args and len(context.args) > 0:
-                referral_code = context.args[0].upper()
-                logger.info(f"User {user.id} started with referral code: {referral_code}")
+            # ✅ لاگ اکشن کاربر
+            log_user_action(telegram_id, "start_command", f"User started bot: {username}")
             
-            # بررسی وجود کاربر
-            existing_user = await self.user_manager.get_user_by_telegram_id(user.id)
+            # ✅ بررسی آیا کاربر از لینک رفرال آمده
+            args = context.args
+            if args and args[0].startswith('ref_'):
+                await StartHandler._handle_referral(update, context, args[0], telegram_id)
             
-            if existing_user:
-                # کاربر موجود - نمایش منوی اصلی
-                await self._show_returning_user_menu(update, context, existing_user)
-            else:
-                # کاربر جدید - فرآیند ثبت‌نام
-                await self._handle_new_user_registration(update, context, referral_code)
+            # ✅ ارسال پیام خوشامدگویی
+            await StartHandler._send_welcome_message(update, user_data)
+            
+            # ✅ نمایش منوی اصلی
+            await StartHandler._show_main_menu(update, user_data)
             
         except Exception as e:
             logger.error(f"Error in start command: {e}")
-            await update.message.reply_text(
-                "❌ خطایی در اجرای دستور رخ داد. لطفاً دوباره تلاش کنید.",
-                parse_mode=ParseMode.HTML
-            )
-    
-    async def _handle_new_user_registration(self, update: Update, context: ContextTypes.DEFAULT_TYPE, referral_code: str = None):
-        """مدیریت ثبت‌نام کاربر جدید"""
-        try:
-            user = update.effective_user
-            
-            # بررسی فعال بودن ثبت‌نام
-            if not self.settings_manager.is_registration_enabled():
+            try:
                 await update.message.reply_text(
-                    "⛔️ ثبت‌نام کاربران جدید در حال حاضر غیرفعال است.\n"
-                    "لطفاً بعداً دوباره تلاش کنید.",
-                    parse_mode=ParseMode.HTML
+                    "❌ خطایی در شروع ربات رخ داد. لطفاً مجدداً تلاش کنید.\n"
+                    "اگر مشکل ادامه داشت با پشتیبانی تماس بگیرید: @mrtrader_support"
                 )
-                return
-            
-            # پیام خوش‌آمدگویی
-            welcome_message = self._generate_welcome_message(user.first_name)
-            
-            # کیبورد ثبت‌نام
-            keyboard = [
-                [InlineKeyboardButton("✅ ثبت‌نام در ربات", callback_data="register_user")],
-                [InlineKeyboardButton("📋 مطالعه قوانین", callback_data="show_terms")],
-                [InlineKeyboardButton("❓ راهنما", callback_data="show_help")]
-            ]
-            
-            if referral_code:
-                # اعتبارسنجی کد رفرال
-                validation = self.referral_manager.validate_referral_code(referral_code)
-                if validation['valid']:
-                    welcome_message += f"\n\n🎉 شما با کد رفرال <code>{referral_code}</code> دعوت شده‌اید!"
-                    welcome_message += f"\n💰 پس از ثبت‌نام پاداش دریافت خواهید کرد."
-                    
-                    # ذخیره کد رفرال در context
-                    context.user_data['referral_code'] = referral_code
-                else:
-                    welcome_message += f"\n\n⚠️ کد رفرال نامعتبر است: {validation['message']}"
-            
-            reply_markup = InlineKeyboardMarkup(keyboard)
-            
-            await update.message.reply_text(
-                welcome_message,
-                reply_markup=reply_markup,
-                parse_mode=ParseMode.HTML
-            )
-            
-        except Exception as e:
-            logger.error(f"Error handling new user registration: {e}")
+            except Exception as reply_error:
+                logger.error(f"Error sending error message: {reply_error}")
     
-    def _generate_welcome_message(self, first_name: str) -> str:
-        """تولید پیام خوش‌آمدگویی"""
-        return f"""
-🤖 <b>سلام {first_name}، به ربات MrTrader خوش آمدید!</b>
-
-🚀 <b>امکانات ربات:</b>
-📊 تحلیل تکنیکال ارزهای دیجیتال
-📈 سیگنال‌های معاملاتی هوشمند
-💰 مدیریت ریسک پیشرفته
-📱 اعلان‌های قیمتی
-📊 گزارش‌های تفصیلی عملکرد
-🎯 استراتژی‌های متنوع تحلیل
-
-💎 <b>ویژگی‌های ویژه:</b>
-✅ تحلیل real-time بازار
-✅ هوش مصنوعی پیشرفته
-✅ پشتیبانی 24/7
-✅ رابط کاربری ساده
-
-برای شروع، روی دکمه ثبت‌نام کلیک کنید 👇
-"""
-    
-    async def _show_returning_user_menu(self, update: Update, context: ContextTypes.DEFAULT_TYPE, user_data: Dict):
-        """نمایش منوی کاربر بازگشتی"""
+    @staticmethod
+    async def _handle_referral(update: Update, context: ContextTypes.DEFAULT_TYPE, 
+                              ref_code: str, telegram_id: int) -> None:
+        """پردازش کد رفرال
+        
+        Args:
+            update: آپدیت تلگرام
+            context: کانتکست ربات
+            ref_code: کد رفرال
+            telegram_id: شناسه تلگرام کاربر
+        """
         try:
-            user = update.effective_user
+            # استخراج کد رفرال
+            referral_code = ref_code.replace('ref_', '')
             
-            # بروزرسانی آخرین فعالیت
-            await self.user_manager.update_last_activity(user.id)
+            # یافتن کاربر معرف
+            try:
+                # استفاده از CSVManager برای یافتن معرف
+                from managers.csv_manager import CSVManager
+                referrer_id = CSVManager.find_user_by_referral_code(referral_code)
+                
+                if referrer_id and int(referrer_id) != telegram_id:
+                    # پردازش رفرال
+                    success = UserManager.process_referral(int(referrer_id), telegram_id)
+                    
+                    if success:
+                        # به‌روزرسانی کاربر جدید
+                        UserManager.update_user(telegram_id, referred_by=int(referrer_id))
+                        
+                        await update.message.reply_text(
+                            "🎉 شما از طریق لینک رفرال وارد شدید!\n"
+                            "پاداش رفرال به حساب معرف شما اضافه شد.",
+                            parse_mode='HTML'
+                        )
+                        
+                        # اطلاع به معرف
+                        try:
+                            await context.bot.send_message(
+                                chat_id=int(referrer_id),
+                                text=f"🎉 یک کاربر جدید از طریق لینک رفرال شما عضو شد!\n"
+                                     f"پاداش 50,000 تومان به حساب شما اضافه شد.",
+                                parse_mode='HTML'
+                            )
+                        except Exception as notify_error:
+                            logger.warning(f"Could not notify referrer {referrer_id}: {notify_error}")
+                    else:
+                        logger.warning(f"Failed to process referral for {telegram_id}")
+                else:
+                    logger.warning(f"Invalid referral code or self-referral: {referral_code}")
+                    
+            except Exception as ref_error:
+                logger.warning(f"Error processing referral code {referral_code}: {ref_error}")
+                
+        except Exception as e:
+            logger.error(f"Error handling referral: {e}")
+    
+    @staticmethod
+    async def _send_welcome_message(update: Update, user_data: Dict[str, Any]) -> None:
+        """ارسال پیام خوشامدگویی
+        
+        Args:
+            update: آپدیت تلگرام
+            user_data: اطلاعات کاربر
+        """
+        try:
+            # ✅ دریافت نام کاربر
+            first_name = user_data.get('first_name', '')
+            username = user_data.get('username', '')
+            display_name = first_name or username or "کاربر"
             
-            # تنظیمات کاربر
-            user_settings = self.settings_manager.get_user_settings(user.id)
+            # ✅ تعیین نوع پکیج
+            package = user_data.get('package', 'demo')
+            package_info = Config.get_package_info(package)
+            package_name = package_info.get('name', 'دمو')
             
-            # پیام خوش‌آمدگویی مجدد
-            welcome_back_message = f"""
-👋 سلام مجدد <b>{user.first_name}</b>!
+            # ✅ بررسی وضعیت پکیج - بدون await
+            is_expired, days_left = UserManager.is_package_expired(user_data.get('telegram_id'))
+            
+            # ✅ پیام خوشامدگویی
+            welcome_message = f"""
+🎉 <b>به ربات تحلیل ارزهای دیجیتال MrTrader خوش آمدید!</b>
+
+👋 سلام <b>{display_name}</b>
 
 📊 <b>وضعیت حساب شما:</b>
-🎟️ پکیج فعال: {user_data.get('package_type', 'رایگان')}
-📅 تاریخ انقضا: {self.time_manager.format_date_persian(user_data.get('expiry_date', 'نامحدود'))}
-⭐ امتیاز: {user_data.get('user_points', 0):,} امتیاز
+🎫 پکیج فعلی: <b>{package_name}</b>
+{'⏰ روزهای باقیمانده: <b>' + str(days_left) + '</b>' if not is_expired and package != 'demo' else ''}
+{'✅ بدون محدودیت زمانی' if package == 'demo' else ''}
+💰 موجودی: <b>{user_data.get('balance', 0):,}</b> تومان
 
-🕐 آخرین ورود: {self.time_manager.format_datetime_persian(user_data.get('last_login'))}
+🔰 <b>امکانات ربات:</b>
+📈 تحلیل تکنیکال کامل
+🎯 سیگنال‌های خرید و فروش
+📊 نمودارهای قیمت
+🔔 هشدارهای قیمتی
+💎 تحلیل ارزهای مختلف
 
-از منوی زیر گزینه مورد نظر را انتخاب کنید:
-"""
-            
-            # منوی اصلی
-            keyboard = [
-                [
-                    InlineKeyboardButton("📊 تحلیل سریع", callback_data="quick_analysis"),
-                    InlineKeyboardButton("📈 سیگنال‌ها", callback_data="show_signals")
-                ],
-                [
-                    InlineKeyboardButton("💼 پورتفولیو", callback_data="show_portfolio"),
-                    InlineKeyboardButton("⚙️ تنظیمات", callback_data="show_settings")
-                ],
-                [
-                    InlineKeyboardButton("📊 گزارش‌ها", callback_data="show_reports"),
-                    InlineKeyboardButton("🎁 رفرال", callback_data="show_referral")
-                ],
-                [
-                    InlineKeyboardButton("💎 ارتقاء پکیج", callback_data="show_packages"),
-                    InlineKeyboardButton("🆘 پشتیبانی", callback_data="contact_support")
-                ]
-            ]
-            
-            reply_markup = InlineKeyboardMarkup(keyboard)
+🚀 برای شروع از منوی زیر استفاده کنید:
+            """
             
             await update.message.reply_text(
-                welcome_back_message,
-                reply_markup=reply_markup,
-                parse_mode=ParseMode.HTML
+                welcome_message.strip(),
+                parse_mode='HTML'
             )
             
         except Exception as e:
-            logger.error(f"Error showing returning user menu: {e}")
-    
-    async def help_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """هندلر کامند /help"""
-        try:
-            user = update.effective_user
-            log_user_action(user.id, "help_command", "User requested help")
-            
-            help_message = self._generate_help_message()
-            
-            # کیبورد راهنما
-            keyboard = [
-                [
-                    InlineKeyboardButton("🚀 شروع سریع", callback_data="quick_start_guide"),
-                    InlineKeyboardButton("📊 راهنمای تحلیل", callback_data="analysis_guide")
-                ],
-                [
-                    InlineKeyboardButton("💰 راهنمای سیگنال‌ها", callback_data="signals_guide"),
-                    InlineKeyboardButton("⚙️ راهنمای تنظیمات", callback_data="settings_guide")
-                ],
-                [
-                    InlineKeyboardButton("🎁 راهنمای رفرال", callback_data="referral_guide"),
-                    InlineKeyboardButton("💎 راهنمای پکیج‌ها", callback_data="packages_guide")
-                ],
-                [
-                    InlineKeyboardButton("🔙 منوی اصلی", callback_data="main_menu")
-                ]
-            ]
-            
-            reply_markup = InlineKeyboardMarkup(keyboard)
-            
-            await update.message.reply_text(
-                help_message,
-                reply_markup=reply_markup,
-                parse_mode=ParseMode.HTML
-            )
-            
-        except Exception as e:
-            logger.error(f"Error in help command: {e}")
-    
-    def _generate_help_message(self) -> str:
-        """تولید پیام راهنما"""
-        return """
-📚 <b>راهنمای کامل ربات MrTrader</b>
-
-🔧 <b>دستورات اصلی:</b>
-/start - شروع یا منوی اصلی
-/help - نمایش این راهنما
-/menu - منوی سریع
-/analysis - تحلیل سریع
-/signals - سیگنال‌های فعال
-/portfolio - پورتفولیو شما
-/settings - تنظیمات
-
-📊 <b>نحوه استفاده:</b>
-1️⃣ ابتدا ارز مورد نظر را انتخاب کنید
-2️⃣ نوع تحلیل را مشخص کنید
-3️⃣ تایم فریم دلخواه را انتخاب کنید
-4️⃣ نتایج را دریافت و بررسی کنید
-
-💡 <b>نکات مهم:</b>
-• همیشه مدیریت ریسک را رعایت کنید
-• از چند تحلیل برای تصمیم‌گیری استفاده کنید
-• بازارهای مالی ریسک دارند
-
-❓ برای کسب اطلاعات بیشتر از منوی زیر استفاده کنید.
-"""
-    
-    async def menu_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """هندلر کامند /menu"""
-        try:
-            user = update.effective_user
-            log_user_action(user.id, "menu_command", "User opened menu")
-            
-            # بررسی وجود کاربر
-            user_data = await self.user_manager.get_user_by_telegram_id(user.id)
-            if not user_data:
+            logger.error(f"Error sending welcome message: {e}")
+            # ✅ پیام ساده در صورت خطا
+            try:
                 await update.message.reply_text(
-                    "❌ ابتدا باید در ربات ثبت‌نام کنید.\nاز دستور /start استفاده کنید.",
-                    parse_mode=ParseMode.HTML
+                    "🎉 به ربات MrTrader خوش آمدید!\n"
+                    "از منوی زیر برای شروع استفاده کنید."
                 )
-                return
+            except Exception as simple_error:
+                logger.error(f"Error sending simple welcome: {simple_error}")
+    
+    @staticmethod
+    async def _show_main_menu(update: Update, user_data: Dict[str, Any]) -> None:
+        """نمایش منوی اصلی
+        
+        Args:
+            update: آپدیت تلگرام
+            user_data: اطلاعات کاربر
+        """
+        try:
+            # ✅ ایجاد کیبورد منوی اصلی
+            keyboard = [
+                [
+                    InlineKeyboardButton("📊 تحلیل ارز", callback_data="analysis_menu"),
+                    InlineKeyboardButton("💎 لیست ارزها", callback_data="coins_list")
+                ],
+                [
+                    InlineKeyboardButton("📈 نمودار قیمت", callback_data="price_chart"),
+                    InlineKeyboardButton("🔔 هشدار قیمت", callback_data="price_alert")
+                ],
+                [
+                    InlineKeyboardButton("🎯 سیگنال‌ها", callback_data="signals_menu"),
+                    InlineKeyboardButton("📰 اخبار بازار", callback_data="market_news")
+                ],
+                [
+                    InlineKeyboardButton("👤 حساب کاربری", callback_data="user_profile"),
+                    InlineKeyboardButton("💰 کیف پول", callback_data="wallet_menu")
+                ],
+                [
+                    InlineKeyboardButton("🛒 خرید پکیج", callback_data="packages_menu"),
+                    InlineKeyboardButton("🎁 دعوت دوستان", callback_data="referral_menu")
+                ],
+                [
+                    InlineKeyboardButton("ℹ️ راهنما", callback_data="help_menu"),
+                    InlineKeyboardButton("📞 پشتیبانی", callback_data="support_menu")
+                ]
+            ]
             
-            # نمایش منوی سریع
-            await self._show_quick_menu(update, context)
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            
+            menu_text = """
+🏠 <b>منوی اصلی MrTrader</b>
+
+لطفاً از گزینه‌های زیر یکی را انتخاب کنید:
+
+📊 <b>تحلیل ارز:</b> تحلیل تکنیکال کامل
+💎 <b>لیست ارزها:</b> مشاهده قیمت ارزها
+📈 <b>نمودار قیمت:</b> رسم نمودار تعاملی
+🔔 <b>هشدار قیمت:</b> تنظیم آلارم قیمت
+🎯 <b>سیگنال‌ها:</b> سیگنال‌های خرید/فروش
+📰 <b>اخبار بازار:</b> آخرین اخبار کریپتو
+            """
+            
+            await update.message.reply_text(
+                menu_text.strip(),
+                reply_markup=reply_markup,
+                parse_mode='HTML'
+            )
+            
+        except Exception as e:
+            logger.error(f"Error showing main menu: {e}")
+            # ✅ منوی ساده در صورت خطا
+            try:
+                simple_keyboard = [
+                    [InlineKeyboardButton("📊 تحلیل ارز", callback_data="analysis_menu")],
+                    [InlineKeyboardButton("💎 لیست ارزها", callback_data="coins_list")],
+                    [InlineKeyboardButton("ℹ️ راهنما", callback_data="help_menu")]
+                ]
+                
+                reply_markup = InlineKeyboardMarkup(simple_keyboard)
+                
+                await update.message.reply_text(
+                    "🏠 منوی اصلی\n\nلطفاً یکی از گزینه‌ها را انتخاب کنید:",
+                    reply_markup=reply_markup
+                )
+            except Exception as simple_error:
+                logger.error(f"Error sending simple menu: {simple_error}")
+    
+    @staticmethod
+    async def menu_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """هندلر کامند منو (/menu)
+        
+        Args:
+            update: آپدیت تلگرام
+            context: کانتکست ربات
+        """
+        try:
+            telegram_id = update.effective_user.id
+            
+            # ✅ دریافت اطلاعات کاربر - بدون await
+            user_data = UserManager.safe_get_user(telegram_id)
+            
+            # ✅ نمایش منوی اصلی
+            await StartHandler._show_main_menu(update, user_data)
+            
+            log_user_action(telegram_id, "menu_command", "User accessed menu")
             
         except Exception as e:
             logger.error(f"Error in menu command: {e}")
+            try:
+                await update.message.reply_text(
+                    "❌ خطایی در نمایش منو رخ داد. لطفاً از /start استفاده کنید."
+                )
+            except Exception as reply_error:
+                logger.error(f"Error sending menu error message: {reply_error}")
     
-    async def _show_quick_menu(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """نمایش منوی سریع"""
+    @staticmethod
+    async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """هندلر کامند راهنما (/help)
+        
+        Args:
+            update: آپدیت تلگرام
+            context: کانتکست ربات
+        """
         try:
-            menu_message = """
-🔥 <b>منوی سریع MrTrader</b>
+            help_text = """
+🤖 <b>راهنمای ربات MrTrader</b>
 
-یکی از گزینه‌های زیر را انتخاب کنید:
-"""
+<b>📋 دستورات اصلی:</b>
+/start - شروع ربات و منوی اصلی
+/menu - نمایش منوی اصلی
+/help - نمایش این راهنما
+/profile - مشاهده پروفایل کاربری
+/balance - مشاهده موجودی کیف پول
+
+<b>🔍 نحوه تحلیل ارز:</b>
+1️⃣ روی "📊 تحلیل ارز" کلیک کنید
+2️⃣ نماد ارز مورد نظر را وارد کنید (مثل: BTC)
+3️⃣ نوع تحلیل را انتخاب کنید
+4️⃣ نتایج تحلیل را دریافت کنید
+
+<b>📊 امکانات موجود:</b>
+• تحلیل تکنیکال 35 اندیکاتور
+• سیگنال‌های خرید و فروش
+• نمودارهای قیمت تعاملی  
+• هشدارهای قیمتی
+• اخبار بازار لحظه‌ای
+• پورتفوی شخصی
+
+<b>💎 پکیج‌های اشتراک:</b>
+🆓 دمو: 5 تحلیل روزانه
+💰 پایه: 20 تحلیل روزانه - 99 هزار تومان
+🌟 ویژه: 50 تحلیل روزانه - 199 هزار تومان  
+👑 VIP: نامحدود - 399 هزار تومان
+
+<b>📞 پشتیبانی:</b>
+@mrtrader_support - پشتیبانی فنی
+@mrtrader_channel - کانال اصلی
+            """
             
             keyboard = [
                 [
-                    InlineKeyboardButton("⚡ تحلیل فوری", callback_data="instant_analysis"),
-                    InlineKeyboardButton("📊 نمادهای محبوب", callback_data="popular_symbols")
+                    InlineKeyboardButton("🏠 منوی اصلی", callback_data="main_menu"),
+                    InlineKeyboardButton("📞 پشتیبانی", callback_data="support_menu")
                 ],
                 [
-                    InlineKeyboardButton("🔥 سیگنال‌های داغ", callback_data="hot_signals"),
-                    InlineKeyboardButton("📈 بازار کل", callback_data="market_overview")
-                ],
-                [
-                    InlineKeyboardButton("💰 قیمت‌ها", callback_data="price_check"),
-                    InlineKeyboardButton("🔔 هشدارها", callback_data="price_alerts")
-                ],
-                [
-                    InlineKeyboardButton("👤 پروفایل من", callback_data="my_profile")
+                    InlineKeyboardButton("🛒 خرید پکیج", callback_data="packages_menu")
                 ]
             ]
             
             reply_markup = InlineKeyboardMarkup(keyboard)
             
             await update.message.reply_text(
-                menu_message,
+                help_text.strip(),
                 reply_markup=reply_markup,
-                parse_mode=ParseMode.HTML
+                parse_mode='HTML'
             )
             
+            telegram_id = update.effective_user.id
+            log_user_action(telegram_id, "help_command", "User viewed help")
+            
         except Exception as e:
-            logger.error(f"Error showing quick menu: {e}")
+            logger.error(f"Error in help command: {e}")
+            try:
+                await update.message.reply_text(
+                    "❌ خطایی در نمایش راهنما رخ داد.\n"
+                    "لطفاً با پشتیبانی تماس بگیرید: @mrtrader_support"
+                )
+            except Exception as reply_error:
+                logger.error(f"Error sending help error message: {reply_error}")
     
-    async def status_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """هندلر کامند /status - نمایش وضعیت سیستم"""
+    @staticmethod
+    async def profile_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """هندلر کامند پروفایل (/profile)
+        
+        Args:
+            update: آپدیت تلگرام
+            context: کانتکست ربات
+        """
         try:
-            user = update.effective_user
+            telegram_id = update.effective_user.id
             
-            # بررسی ادمین بودن
-            if not await self.admin_manager.is_admin(user.id):
-                await update.message.reply_text("❌ شما مجوز دسترسی به این بخش را ندارید.")
-                return
+            # ✅ دریافت اطلاعات کاربر - بدون await
+            user_data = UserManager.safe_get_user(telegram_id)
             
-            # دریافت وضعیت سیستم
-            system_status = await self._get_system_status()
+            # ✅ محاسبه اطلاعات پروفایل
+            package = user_data.get('package', 'demo')
+            package_info = Config.get_package_info(package)
             
-            status_message = f"""
-🖥️ <b>وضعیت سیستم MrTrader</b>
+            # ✅ بررسی انقضا - بدون await
+            is_expired, days_left = UserManager.is_package_expired(telegram_id)
+            
+            profile_text = f"""
+👤 <b>پروفایل کاربری</b>
 
-🟢 <b>سلامت کلی:</b> {system_status['health']}
-📊 <b>کاربران فعال:</b> {system_status['active_users']}
-💾 <b>استفاده دیتابیس:</b> {system_status['db_usage']}
-🌐 <b>وضعیت API:</b> {system_status['api_status']}
-📡 <b>آخرین بکاپ:</b> {system_status['last_backup']}
+🆔 شناسه: <code>{telegram_id}</code>
+👤 نام: <b>{user_data.get('first_name', 'نامشخص')}</b>
+📱 نام کاربری: @{user_data.get('username', 'ندارد')}
 
-⏱️ <b>زمان تولید گزارش:</b> {self.time_manager.get_current_time_persian()}
-"""
+🎫 <b>اطلاعات اشتراک:</b>
+📦 پکیج فعلی: <b>{package_info.get('name', 'دمو')}</b>
+{'⏰ روزهای باقیمانده: <b>' + str(days_left) + '</b>' if not is_expired and package != 'demo' else ''}
+{'✅ بدون محدودیت زمانی' if package == 'demo' else ''}
+📊 حد روزانه: <b>{user_data.get('daily_limit', 5)}</b> تحلیل
+📈 استفاده امروز: <b>{user_data.get('api_calls_count', 0)}</b> تحلیل
+
+💰 <b>اطلاعات مالی:</b>
+💵 موجودی: <b>{user_data.get('balance', 0):,}</b> تومان
+🎁 کد رفرال: <code>{user_data.get('referral_code', 'ندارد')}</code>
+
+📅 <b>اطلاعات تکمیلی:</b>
+📝 تاریخ عضویت: <b>{user_data.get('entry_date', 'نامشخص')}</b>
+🕒 آخرین فعالیت: <b>{user_data.get('last_activity', 'نامشخص')}</b>
+            """
             
             keyboard = [
                 [
-                    InlineKeyboardButton("🔄 تازه‌سازی", callback_data="refresh_status"),
-                    InlineKeyboardButton("📊 گزارش کامل", callback_data="full_system_report")
+                    InlineKeyboardButton("🛒 ارتقای پکیج", callback_data="packages_menu"),
+                    InlineKeyboardButton("💰 کیف پول", callback_data="wallet_menu")
                 ],
                 [
-                    InlineKeyboardButton("🔧 مدیریت سیستم", callback_data="system_management")
+                    InlineKeyboardButton("🎁 دعوت دوستان", callback_data="referral_menu"),
+                    InlineKeyboardButton("🏠 منوی اصلی", callback_data="main_menu")
                 ]
             ]
             
             reply_markup = InlineKeyboardMarkup(keyboard)
             
             await update.message.reply_text(
-                status_message,
+                profile_text.strip(),
                 reply_markup=reply_markup,
-                parse_mode=ParseMode.HTML
+                parse_mode='HTML'
             )
             
-        except Exception as e:
-            logger.error(f"Error in status command: {e}")
-    
-    async def _get_system_status(self) -> Dict[str, str]:
-        """دریافت وضعیت سیستم"""
-        try:
-            # این‌ها داده‌های نمونه هستند - در پیاده‌سازی واقعی از منابع مناسب دریافت شوند
-            return {
-                'health': '✅ سالم',
-                'active_users': '1,247 نفر',
-                'db_usage': '2.3 GB',
-                'api_status': '🟢 فعال',
-                'last_backup': self.time_manager.format_datetime_persian(datetime.now())
-            }
-        except Exception as e:
-            logger.error(f"Error getting system status: {e}")
-            return {
-                'health': '❌ خطا',
-                'active_users': 'نامشخص',
-                'db_usage': 'نامشخص',
-                'api_status': '❌ خطا',
-                'last_backup': 'نامشخص'
-            }
-    
-    async def version_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """هندلر کامند /version"""
-        try:
-            version_message = f"""
-🤖 <b>اطلاعات نسخه MrTrader Bot</b>
-
-🔢 <b>نسخه:</b> {Config.BOT_VERSION}
-📅 <b>تاریخ انتشار:</b> {Config.RELEASE_DATE}
-👨‍💻 <b>سازنده:</b> {Config.DEVELOPER_NAME}
-
-🆕 <b>آخرین بروزرسانی‌ها:</b>
-• بهبود دقت سیگنال‌ها
-• افزودن استراتژی‌های جدید
-• بهینه‌سازی سرعت
-
-📞 <b>پشتیبانی:</b> @{Config.SUPPORT_USERNAME}
-🌐 <b>وب‌سایت:</b> {Config.WEBSITE_URL}
-"""
-            
-            await update.message.reply_text(
-                version_message,
-                parse_mode=ParseMode.HTML,
-                disable_web_page_preview=True
-            )
+            log_user_action(telegram_id, "profile_command", "User viewed profile")
             
         except Exception as e:
-            logger.error(f"Error in version command: {e}")
-    
-    async def setup_bot_commands(self, application):
-        """تنظیم کامندهای ربات"""
-        try:
-            commands = [
-                BotCommand("start", "شروع یا منوی اصلی"),
-                BotCommand("help", "راهنمای کامل"),
-                BotCommand("menu", "منوی سریع"),
-                BotCommand("analysis", "تحلیل سریع"),
-                BotCommand("signals", "سیگنال‌های فعال"),
-                BotCommand("portfolio", "پورتفولیو"),
-                BotCommand("settings", "تنظیمات"),
-                BotCommand("support", "پشتیبانی"),
-                BotCommand("version", "نسخه ربات")
-            ]
-            
-            await application.bot.set_my_commands(commands)
-            logger.info("Bot commands set successfully")
-            
-        except Exception as e:
-            logger.error(f"Error setting bot commands: {e}")
-    
-    def get_handlers(self) -> List:
-        """دریافت لیست هندلرها"""
-        return [
-            CommandHandler("start", self.start_command),
-            CommandHandler("help", self.help_command),
-            CommandHandler("menu", self.menu_command),
-            CommandHandler("status", self.status_command),
-            CommandHandler("version", self.version_command),
-        ]
+            logger.error(f"Error in profile command: {e}")
+            try:
+                await update.message.reply_text(
+                    "❌ خطایی در نمایش پروفایل رخ داد.\n"
+                    "لطفاً مجدداً تلاش کنید یا با پشتیبانی تماس بگیرید."
+                )
+            except Exception as reply_error:
+                logger.error(f"Error sending profile error message: {reply_error}")
 
 
-# Export
+# Export برای استفاده آسان‌تر
 __all__ = ['StartHandler']

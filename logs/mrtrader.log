@@ -1,0 +1,100 @@
+2025-07-24 05:52:14,788 - MrTrader - INFO - DB_MIGRATION | Version: initial | Status: completed
+2025-07-24 05:52:14,789 - MrTrader - INFO - DB_CONNECTION | Status: initialized | Details: D:\phonix coin\mr.trader\st\telegram_bot\MR-TRADER-BOT\data\mrtrader.db
+2025-07-24 05:52:14,796 - MrTrader - INFO - API configuration reloaded
+2025-07-24 05:52:15,031 - MrTrader - INFO - Logging system initialized
+2025-07-24 05:52:15,033 - MrTrader - INFO - Symbol manager initialized successfully
+2025-07-24 05:52:15,036 - MrTrader - INFO - Referral system initialized successfully
+2025-07-24 05:52:15,036 - MrTrader - INFO - API configuration reloaded
+2025-07-24 05:52:15,039 - MrTrader - INFO - Report system initialized successfully
+2025-07-24 05:52:15,048 - MrTrader - INFO - Backup system initialized successfully
+2025-07-24 05:52:15,048 - MrTrader - INFO - All managers initialized successfully
+2025-07-24 05:52:15,052 - MrTrader - INFO - Referral system initialized successfully
+2025-07-24 05:52:15,053 - MrTrader - INFO - API configuration reloaded
+2025-07-24 05:52:15,056 - MrTrader - INFO - Symbol manager initialized successfully
+2025-07-24 05:52:15,059 - MrTrader - INFO - Report system initialized successfully
+2025-07-24 05:52:15,059 - MrTrader - ERROR - Failed to initialize handlers: 'CallbackHandler' object has no attribute 'handle_package_selection'
+2025-07-24 05:52:15,060 - MrTrader - INFO - MrTrader Bot initialized successfully
+2025-07-24 05:52:15,060 - MrTrader - INFO - Starting MrTrader Bot...
+2025-07-24 05:52:18,693 - MrTrader - INFO - Bot commands set successfully
+2025-07-24 05:52:18,693 - MrTrader - INFO - Start handlers registered manually
+2025-07-24 05:52:18,694 - MrTrader - ERROR - Failed to register handlers: 'MrTraderBot' object has no attribute 'callback_handler'
+2025-07-24 05:52:18,694 - MrTrader - WARNING - Continuing with partial handler registration
+2025-07-24 05:52:18,694 - MrTrader - INFO - Bot application initialized successfully
+2025-07-24 05:52:18,695 - MrTrader - INFO - Starting bot startup tasks...
+2025-07-24 05:52:18,699 - MrTrader - INFO - Database health check: OK
+2025-07-24 05:52:18,699 - MrTrader - INFO - API ping check skipped - method not available
+2025-07-24 05:52:18,699 - MrTrader - INFO - System settings loading skipped - method not available
+2025-07-24 05:52:18,700 - MrTrader - INFO - Scheduled tasks configured:
+2025-07-24 05:52:18,700 - MrTrader - INFO - - Backup: Daily at 2:00 AM
+2025-07-24 05:52:18,700 - MrTrader - INFO - - Reports: Daily at 1:00 AM
+2025-07-24 05:52:18,700 - MrTrader - INFO - - Cleanup: Weekly on Sunday
+2025-07-24 05:52:18,701 - MrTrader - INFO - - Analytics: Hourly
+2025-07-24 05:52:18,702 - MrTrader - WARNING - Could not get admins list: No admins found
+2025-07-24 05:52:18,889 - MrTrader - INFO - Startup notification sent successfully
+2025-07-24 05:52:18,889 - MrTrader - INFO - All startup tasks completed successfully
+2025-07-24 05:52:19,125 - MrTrader - INFO - Bot is running... Press Ctrl+C to stop
+2025-07-24 05:52:34,419 - MrTrader - INFO - Start command received from user 1517662886
+2025-07-24 05:52:34,421 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: start_command | Details: User started bot: am369ap
+2025-07-24 05:53:17,158 - MrTrader - INFO - Start command received from user 1517662886
+2025-07-24 05:53:17,162 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: start_command | Details: User started bot: am369ap
+2025-07-24 05:53:48,962 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: help_command | Details: User viewed help
+2025-07-24 05:55:28,055 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: profile_command | Details: User viewed profile
+2025-07-24 05:55:35,562 - MrTrader - INFO - Start command received from user 1517662886
+2025-07-24 05:55:35,563 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: start_command | Details: User started bot: am369ap
+2025-07-24 05:55:43,775 - MrTrader - INFO - Received signal 2
+2025-07-24 05:55:43,778 - MrTrader - INFO - Shutdown event set
+2025-07-24 05:55:44,162 - MrTrader - INFO - Starting bot shutdown tasks...
+2025-07-24 05:55:44,162 - MrTrader - INFO - Database connections closed
+2025-07-24 05:55:44,162 - MrTrader - INFO - Database connection closed
+2025-07-24 05:55:44,162 - MrTrader - INFO - All connections closed
+2025-07-24 05:55:44,163 - MrTrader - INFO - Bot shutdown at: 2025-07-24T05:55:44.163028
+2025-07-24 05:55:44,164 - MrTrader - WARNING - Could not send shutdown notification: Unknown error in HTTP implementation: RuntimeError('This HTTPXRequest is not initialized!')
+2025-07-24 05:55:44,164 - MrTrader - INFO - All shutdown tasks completed
+2025-07-24 05:55:44,164 - MrTrader - INFO - Starting bot shutdown tasks...
+2025-07-24 05:55:44,164 - MrTrader - INFO - Database connections closed
+2025-07-24 05:55:44,165 - MrTrader - INFO - Database connection closed
+2025-07-24 05:55:44,165 - MrTrader - INFO - All connections closed
+2025-07-24 05:55:44,165 - MrTrader - INFO - Bot shutdown at: 2025-07-24T05:55:44.165022
+2025-07-24 05:55:44,166 - MrTrader - WARNING - Could not send shutdown notification: Unknown error in HTTP implementation: RuntimeError('This HTTPXRequest is not initialized!')
+2025-07-24 05:55:44,166 - MrTrader - INFO - All shutdown tasks completed
+2025-07-24 05:55:44,167 - MrTrader - INFO - Bot finished successfully
+2025-07-24 05:59:07,357 - MrTrader - INFO - DB_MIGRATION | Version: initial | Status: completed
+2025-07-24 05:59:07,357 - MrTrader - INFO - DB_CONNECTION | Status: initialized | Details: D:\phonix coin\mr.trader\st\telegram_bot\MR-TRADER-BOT\data\mrtrader.db
+2025-07-24 05:59:07,363 - MrTrader - INFO - API configuration reloaded
+2025-07-24 05:59:07,614 - MrTrader - INFO - Logging system initialized
+2025-07-24 05:59:07,616 - MrTrader - INFO - Symbol manager initialized successfully
+2025-07-24 05:59:07,620 - MrTrader - INFO - Referral system initialized successfully
+2025-07-24 05:59:07,620 - MrTrader - INFO - API configuration reloaded
+2025-07-24 05:59:07,624 - MrTrader - INFO - Report system initialized successfully
+2025-07-24 05:59:07,629 - MrTrader - INFO - Backup system initialized successfully
+2025-07-24 05:59:07,629 - MrTrader - INFO - All managers initialized successfully
+2025-07-24 05:59:07,632 - MrTrader - INFO - Referral system initialized successfully
+2025-07-24 05:59:07,633 - MrTrader - INFO - API configuration reloaded
+2025-07-24 05:59:07,635 - MrTrader - INFO - Symbol manager initialized successfully
+2025-07-24 05:59:07,638 - MrTrader - INFO - Report system initialized successfully
+2025-07-24 05:59:07,639 - MrTrader - ERROR - Failed to initialize CallbackHandler: 'CallbackHandler' object has no attribute 'handle_package_selection'
+2025-07-24 05:59:07,642 - MrTrader - INFO - Symbol manager initialized successfully
+2025-07-24 05:59:07,642 - MrTrader - INFO - All handlers initialized successfully
+2025-07-24 05:59:07,643 - MrTrader - INFO - MrTrader Bot initialized successfully
+2025-07-24 05:59:07,643 - MrTrader - INFO - Starting MrTrader Bot...
+2025-07-24 05:59:11,768 - MrTrader - INFO - Bot commands set successfully
+2025-07-24 05:59:11,769 - MrTrader - INFO - Start handlers registered manually
+2025-07-24 05:59:11,770 - MrTrader - WARNING - No callback handler available
+2025-07-24 05:59:11,770 - MrTrader - INFO - Message handlers registered successfully
+2025-07-24 05:59:11,770 - MrTrader - INFO - All handlers registered successfully
+2025-07-24 05:59:11,771 - MrTrader - INFO - Bot application initialized successfully
+2025-07-24 05:59:11,771 - MrTrader - INFO - Starting bot startup tasks...
+2025-07-24 05:59:11,772 - MrTrader - INFO - Database health check: OK
+2025-07-24 05:59:11,773 - MrTrader - INFO - API ping check skipped - method not available
+2025-07-24 05:59:11,773 - MrTrader - INFO - System settings loading skipped - method not available
+2025-07-24 05:59:11,774 - MrTrader - INFO - Scheduled tasks configured:
+2025-07-24 05:59:11,777 - MrTrader - INFO - - Backup: Daily at 2:00 AM
+2025-07-24 05:59:11,778 - MrTrader - INFO - - Reports: Daily at 1:00 AM
+2025-07-24 05:59:11,779 - MrTrader - INFO - - Cleanup: Weekly on Sunday
+2025-07-24 05:59:11,780 - MrTrader - INFO - - Analytics: Hourly
+2025-07-24 05:59:11,781 - MrTrader - WARNING - Could not get admins list: No admins found
+2025-07-24 05:59:11,951 - MrTrader - INFO - Startup notification sent successfully
+2025-07-24 05:59:11,952 - MrTrader - INFO - All startup tasks completed successfully
+2025-07-24 05:59:12,177 - MrTrader - INFO - Bot is running... Press Ctrl+C to stop
+2025-07-24 05:59:26,442 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: help_command | Details: User viewed help
+2025-07-24 05:59:47,754 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: menu_command | Details: User accessed menu

@@ -1,0 +1,55 @@
+{
+  "api_servers": {
+    "base_url": "https://api.mrtrader.com",
+    "strategies": {
+      "price_action": {
+        "url": "https://api.mrtrader.com/analyze_price_action/",
+        "health_url": "https://api.mrtrader.com/health/",
+        "timeout": 45,
+        "retry_count": 5
+      },
+      "martingale": {
+        "url": "https://api.mrtrader.com/analyze_martingale/",
+        "health_url": "https://api.mrtrader.com/health/",
+        "timeout": 45,
+        "retry_count": 5
+      },
+      "cup_handle": {
+        "url": "https://api.mrtrader.com/analyze_cup_handle/",
+        "health_url": "https://api.mrtrader.com/health/",
+        "timeout": 45,
+        "retry_count": 5
+      },
+      "ichimoku": {
+        "url": "https://api.mrtrader.com/analyze_ichimoku/",
+        "health_url": "https://api.mrtrader.com/health/",
+        "timeout": 45,
+        "retry_count": 5
+      },
+      "fibonacci": {
+        "url": "https://api.mrtrader.com/analyze_fibonacci/",
+        "health_url": "https://api.mrtrader.com/health/",
+        "timeout": 45,
+        "retry_count": 5
+      },
+      "komo_plus": {
+        "url": "https://api.mrtrader.com/analyze_komo_plus/",
+        "health_url": "https://api.mrtrader.com/health/",
+        "timeout": 60,
+        "retry_count": 5
+      }
+    }
+  },
+  "live_price": {
+    "binance": {
+      "url": "https://api.mrtrader.com/live_price/",
+      "timeout": 15,
+      "retry_count": 3
+    }
+  },
+  "cache_settings": {
+    "default_duration": 120,
+    "min_request_interval": 90,
+    "max_cache_size": 5000
+  }
+}

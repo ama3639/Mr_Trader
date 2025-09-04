@@ -1,6 +1,7 @@
 """
 هندلرهای پردازش Callback Query برای MrTrader Bot - Fixed Version
 """
+
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery
 from telegram.ext import ContextTypes, CallbackQueryHandler
 from telegram.constants import ParseMode
@@ -47,56 +48,104 @@ class CallbackHandler:
         self.report_manager = ReportManager()
         self.time_manager = TimeManager()
         
-        # نقشه callback ها به توابع - بروزرسانی شده
+        # <- بعد (نگاشت به نام متدها به صورت رشته؛ کمترین تغییر در ساختار)
+        # نقشه callback ها به توابع - بروزرسانی شده (از bound methods به نام متدها)
         self.callback_map = {
             # منوی اصلی و پروفایل
-            'main_menu': self.show_main_menu,
-            'user_profile': self.show_user_profile,
-            'wallet_menu': self.show_wallet_menu,
-            'help_menu': self.show_help_menu,
-            'support_menu': self.show_support_menu,
-            
+            'main_menu': 'show_main_menu',
+            'user_profile': 'show_user_profile',
+            'wallet_menu': 'show_wallet_menu',
+            'help_menu': 'show_help_menu',
+            'support_menu': 'show_support_menu',
+
             # استراتژی‌ها و تحلیل
-            'analysis_menu': self.show_strategy_menu,
-            'menu_strategy': self.show_strategy_menu,
-            'coins_list': self.show_coins_list,
-            'price_chart': self.show_price_chart,
-            'price_alert': self.show_price_alert,
-            'signals_menu': self.show_signals_menu,
-            'market_news': self.show_market_news,
-            
+            'analysis_menu': 'show_strategy_menu',
+            'menu_strategy': 'show_strategy_menu',
+            'coins_list': 'show_coins_list',
+            'price_chart': 'show_price_chart',
+            'price_alert': 'show_price_alert',
+            'signals_menu': 'show_signals_menu',
+            'market_news': 'show_market_news',
+
             # پکیج‌ها و پرداخت
-            'packages_menu': self.show_packages_menu,
-            'menu_packages': self.show_packages_menu,
-            'referral_menu': self.show_referral_menu,
-            
+            'packages_menu': 'show_packages_menu',
+            'menu_packages': 'show_packages_menu',
+            'referral_menu': 'show_referral_menu',
+
             # سایر callback های موجود...
-            'pkg_select': self.handle_package_selection,
-            'payment_methods': self.show_payment_methods,
-            'show_referral': self.show_referral_menu,
-            'referral_stats': self.show_referral_stats,
-            'claim_rewards': self.handle_claim_rewards,
-            'show_reports': self.show_reports_menu,
-            'daily_report': self.show_daily_report,
-            'weekly_report': self.show_weekly_report,
-            'user_report': self.show_user_report,
-            'contact_support': self.contact_support,
-            'support_contact': self.contact_support,
-            'create_ticket': self.create_support_ticket,
-            'admin_panel': self.show_admin_panel,
-            'user_management': self.show_user_management,
-            'system_stats': self.show_system_statistics,
-            'broadcast_message': self.handle_broadcast_message,
-            'show_help': self.show_help_menu,
-            'help_getting_started': self.show_getting_started_help,
-            'help_strategies': self.show_strategies_help,
-            'help_packages': self.show_packages_help,
-            'help_faq': self.show_faq,
-            'back': self.handle_back_action,
-            'cancel': self.handle_cancel_action,
-            'refresh': self.handle_refresh_action
+            'pkg_select': 'handle_package_selection',
+            'payment_methods': 'show_payment_methods',
+            'show_referral': 'show_referral_menu',
+            'referral_stats': 'show_referral_stats',
+            'claim_rewards': 'handle_claim_rewards',
+            'show_reports': 'show_reports_menu',
+            'daily_report': 'show_daily_report',
+            'weekly_report': 'show_weekly_report',
+            'user_report': 'show_user_report',
+            'contact_support': 'contact_support',
+            'support_contact': 'contact_support',
+            'create_ticket': 'create_support_ticket',
+            'admin_panel': 'show_admin_panel',
+            'user_management': 'show_user_management',
+            'system_stats': 'show_system_statistics',
+            'broadcast_message': 'handle_broadcast_message',
+            'show_help': 'show_help_menu',
+            'help_getting_started': 'show_getting_started_help',
+            'help_strategies': 'show_strategies_help',
+            'help_packages': 'show_packages_help',
+            'help_faq': 'show_faq',
+            'back': 'handle_back_action',
+            'cancel': 'handle_cancel_action',
+            'refresh': 'handle_refresh_action'
         }
-    
+    def _build_strategy_keyboard_fallback(self, user_package: str = "free") -> InlineKeyboardMarkup:
+        """
+        Fallback برای زمانی که KeyboardTemplates.strategy_menu قابل استفاده نباشد.
+        تولید یک کیبورد ساده و امن که از Config/KeyboardTemplates پویا استفاده کند.
+        """
+        kb = []
+        try:
+            # اگر Config دسته‌بندی‌ها/نام‌ها را دارد، از آن استفاده کن
+            categories = getattr(Config, "STRATEGY_CATEGORIES", None)
+            names_map = getattr(Config, "STRATEGY_NAMES", {})
+
+            if categories and isinstance(categories, dict):
+                for cat, strategies in categories.items():
+                    # عنوان دسته (غیرقابل کلیک)
+                    kb.append([InlineKeyboardButton(f"— {cat} —", callback_data=f"info_{cat}")])
+                    # اضافه کردن حداکثر 4 استراتژی در هر دسته (برای جلوگیری از شلوغی)
+                    for i in range(0, min(len(strategies), 4), 2):
+                        row = []
+                        for j in range(2):
+                            if i + j < len(strategies):
+                                s = strategies[i + j]
+                                label = names_map.get(s, s.replace('_', ' ').title())
+                                row.append(InlineKeyboardButton(label, callback_data=f"strategy_{s}"))
+                        if row:
+                            kb.append(row)
+            else:
+                # اگر Config نبود، حداقل چند دکمه نمونه بساز
+                sample = ["demo_price_action", "demo_rsi", "strategy_rsi", "strategy_macd"]
+                for i in range(0, len(sample), 2):
+                    row = []
+                    for j in range(2):
+                        if i + j < len(sample):
+                            s = sample[i + j]
+                            label = s.replace('_', ' ').title()
+                            row.append(InlineKeyboardButton(label, callback_data=f"strategy_{s}"))
+                    kb.append(row)
+
+        except Exception as e:
+            logger.warning(f"Strategy keyboard fallback generation failed: {e}")
+            # حداقل یک دکمه بازگشت در هر صورت
+            kb = [[InlineKeyboardButton("🏠 منوی اصلی", callback_data="main_menu")]]
+
+        # دکمه‌های نهایی: ارتقا و بازگشت
+        kb.append([InlineKeyboardButton("💎 ارتقا پکیج", callback_data="menu_packages")])
+        kb.append([InlineKeyboardButton("🏠 منوی اصلی", callback_data="main_menu")])
+
+        return InlineKeyboardMarkup(kb)
+
     async def handle_callback_query(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """هندلر اصلی پردازش callback query ها"""
         try:
@@ -169,10 +218,27 @@ class CallbackHandler:
             elif action.startswith('admin_'):
                 await self.handle_admin_action(query, context, action, params)
             else:
-                # یافتن تابع مناسب در نقشه
-                handler_function = self.callback_map.get(action)
+                # <- بعد (resolve کردن entry به صورت رشته یا callback واقعی)
+                # یافتن تابع مناسب در نقشه و resolve کردن آن در زمان اجرا
+                handler_entry = self.callback_map.get(action)
+                handler_function = None
+
+                if handler_entry:
+                    # اگر نگاشت به صورت نام متد (رشته) است، getattr کنیم
+                    if isinstance(handler_entry, str):
+                        handler_function = getattr(self, handler_entry, None)
+                        if handler_function is None:
+                            logger.warning(f"Callback mapped to method name '{handler_entry}' but method not found on CallbackHandler.")
+                    else:
+                        # فرض می‌کنیم مستقیم یک callable باشد
+                        handler_function = handler_entry
+
                 if handler_function:
-                    await handler_function(query, context)
+                    try:
+                        await handler_function(query, context)
+                    except Exception as hf_err:
+                        logger.error(f"Error while executing callback handler for action '{action}': {hf_err}")
+                        await query.edit_message_text("❌ خطا در اجرای عملیات.")
                 else:
                     await query.edit_message_text("❌ عمل نامشخص.")
                 
@@ -533,12 +599,24 @@ class CallbackHandler:
             
             message = f"""📊 <b>استراتژی‌های تحلیل MrTrader</b>
 
-🎯 <b>پکیج فعلی شما:</b> {user_package.upper()}
+    🎯 <b>پکیج فعلی شما:</b> {user_package.upper()}
 
-📈 <b>انتخاب استراتژی مورد نظر:</b>"""
+    📈 <b>انتخاب استراتژی مورد نظر:</b>"""
             
-            keyboard = KeyboardTemplates.strategy_menu(user_package)
-            
+            # تلاش برای استفاده از قالب اصلی؛ در صورت خطا از فالن‌بک استفاده کن
+            try:
+                if hasattr(KeyboardTemplates, "strategy_menu"):
+                    try:
+                        keyboard = KeyboardTemplates.strategy_menu(user_package)
+                    except Exception as kt_e:
+                        logger.warning(f"KeyboardTemplates.strategy_menu raised: {kt_e}; using fallback.")
+                        keyboard = self._build_strategy_keyboard_fallback(user_package)
+                else:
+                    keyboard = self._build_strategy_keyboard_fallback(user_package)
+            except Exception as final_kb_err:
+                logger.error(f"Failed to build strategy keyboard: {final_kb_err}")
+                keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("🏠 منوی اصلی", callback_data="main_menu")]])
+
             await query.edit_message_text(
                 message,
                 reply_markup=keyboard,
@@ -613,7 +691,19 @@ class CallbackHandler:
         except Exception as e:
             logger.error(f"Error showing referral menu: {e}")
             await query.edit_message_text("❌ خطا در نمایش منوی رفرال.")
-    
+
+    async def handle_package_selection(self, query: CallbackQuery, context: ContextTypes.DEFAULT_TYPE):
+        """هندلر موقت برای انتخاب پکیج - این متد برای رفع خطا اضافه شده است"""
+        try:
+            await query.edit_message_text(
+                "🛒 بخش انتخاب پکیج در حال توسعه است.",
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("🔙 بازگشت به منوی اصلی", callback_data="main_menu")]
+                ])
+            )
+        except Exception as e:
+            logger.error(f"Error in placeholder handle_package_selection: {e}")
+
     # =========================
     # بقیه متدهای موجود بدون تغییر
     # =========================
@@ -711,8 +801,82 @@ class CallbackHandler:
         except Exception as e:
             logger.error(f"Error showing help menu: {e}")
     
-    # بقیه متدها همانطور که بودند، فقط اطمینان از عدم استفاده از await برای متدهای sync
-    
+    # متدهای موقت برای رفع خطا
+    async def show_payment_methods(self, query: CallbackQuery, context: ContextTypes.DEFAULT_TYPE):
+        await query.edit_message_text("این بخش در حال توسعه است.", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔙 بازگشت", callback_data="main_menu")]]))
+
+    async def show_referral_stats(self, query: CallbackQuery, context: ContextTypes.DEFAULT_TYPE):
+        await query.edit_message_text("این بخش در حال توسعه است.", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔙 بازگشت", callback_data="main_menu")]]))
+
+    async def handle_claim_rewards(self, query: CallbackQuery, context: ContextTypes.DEFAULT_TYPE):
+        await query.edit_message_text("این بخش در حال توسعه است.", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔙 بازگشت", callback_data="main_menu")]]))
+
+    async def show_reports_menu(self, query: CallbackQuery, context: ContextTypes.DEFAULT_TYPE):
+        await query.edit_message_text("این بخش در حال توسعه است.", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔙 بازگشت", callback_data="main_menu")]]))
+
+    async def show_daily_report(self, query: CallbackQuery, context: ContextTypes.DEFAULT_TYPE):
+        await query.edit_message_text("این بخش در حال توسعه است.", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔙 بازگشت", callback_data="main_menu")]]))
+
+    async def show_weekly_report(self, query: CallbackQuery, context: ContextTypes.DEFAULT_TYPE):
+        await query.edit_message_text("این بخش در حال توسعه است.", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔙 بازگشت", callback_data="main_menu")]]))
+
+    async def show_user_report(self, query: CallbackQuery, context: ContextTypes.DEFAULT_TYPE):
+        await query.edit_message_text("این بخش در حال توسعه است.", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔙 بازگشت", callback_data="main_menu")]]))
+
+    async def contact_support(self, query: CallbackQuery, context: ContextTypes.DEFAULT_TYPE):
+        await query.edit_message_text("این بخش در حال توسعه است.", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔙 بازگشت", callback_data="main_menu")]]))
+
+    async def create_support_ticket(self, query: CallbackQuery, context: ContextTypes.DEFAULT_TYPE):
+        await query.edit_message_text("این بخش در حال توسعه است.", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔙 بازگشت", callback_data="main_menu")]]))
+
+    async def show_admin_panel(self, query: CallbackQuery, context: ContextTypes.DEFAULT_TYPE):
+        """نمایش پنل مدیریت برای ادمین"""
+        if AdminManager.is_admin(query.from_user.id):
+            await query.edit_message_text("❌ شما دسترسی به پنل مدیریت ندارید.")
+            return
+
+        # ساختار دکمه‌های پنل ادمین
+        message = "پنل مدیریت\n\nانتخاب کنید:"
+        keyboard = [
+            [InlineKeyboardButton("مدیریت کاربران", callback_data="admin:manage_users")],
+            [InlineKeyboardButton("مدیریت پکیج‌ها", callback_data="admin:manage_packages")],
+            [InlineKeyboardButton("مدیریت گزارش‌ها", callback_data="admin:manage_reports")],
+            [InlineKeyboardButton("بازگشت", callback_data="main_menu")]
+        ]
+        
+        await query.edit_message_text(message, reply_markup=InlineKeyboardMarkup(keyboard))
+
+
+    async def show_user_management(self, query: CallbackQuery, context: ContextTypes.DEFAULT_TYPE):
+        await query.edit_message_text("این بخش در حال توسعه است.", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔙 بازگشت", callback_data="main_menu")]]))
+
+    async def show_system_statistics(self, query: CallbackQuery, context: ContextTypes.DEFAULT_TYPE):
+        await query.edit_message_text("این بخش در حال توسعه است.", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔙 بازگشت", callback_data="main_menu")]]))
+
+    async def handle_broadcast_message(self, query: CallbackQuery, context: ContextTypes.DEFAULT_TYPE):
+        await query.edit_message_text("این بخش در حال توسعه است.", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔙 بازگشت", callback_data="main_menu")]]))
+
+    async def show_getting_started_help(self, query: CallbackQuery, context: ContextTypes.DEFAULT_TYPE):
+        await query.edit_message_text("این بخش در حال توسعه است.", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔙 بازگشت", callback_data="main_menu")]]))
+
+    async def show_strategies_help(self, query: CallbackQuery, context: ContextTypes.DEFAULT_TYPE):
+        await query.edit_message_text("این بخش در حال توسعه است.", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔙 بازگشت", callback_data="main_menu")]]))
+
+    async def show_packages_help(self, query: CallbackQuery, context: ContextTypes.DEFAULT_TYPE):
+        await query.edit_message_text("این بخش در حال توسعه است.", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔙 بازگشت", callback_data="main_menu")]]))
+
+    async def show_faq(self, query: CallbackQuery, context: ContextTypes.DEFAULT_TYPE):
+        await query.edit_message_text("این بخش در حال توسعه است.", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔙 بازگشت", callback_data="main_menu")]]))
+
+    async def handle_back_action(self, query: CallbackQuery, context: ContextTypes.DEFAULT_TYPE):
+        await query.edit_message_text("این بخش در حال توسعه است.", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔙 بازگشت", callback_data="main_menu")]]))
+
+    async def handle_cancel_action(self, query: CallbackQuery, context: ContextTypes.DEFAULT_TYPE):
+        await query.edit_message_text("این بخش در حال توسعه است.", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔙 بازگشت", callback_data="main_menu")]]))
+
+    async def handle_refresh_action(self, query: CallbackQuery, context: ContextTypes.DEFAULT_TYPE):
+        await query.edit_message_text("این بخش در حال توسعه است.", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔙 بازگشت", callback_data="main_menu")]]))
+
     def get_handlers(self) -> List:
         """دریافت لیست هندلرها"""
         return [

@@ -43,6 +43,18 @@ from handlers.message_handlers import MessageHandler
 from utils.time_manager import TimeManager
 from api.api_client import ApiClient
 
+async def maybe_call(func, *args, **kwargs):
+    """
+    اگر func آسنکرون باشد await می‌کند؛ در غیر این صورت آن را sync فراخوانی می‌کند.
+    اگر نتیجه coroutine برگردد نیز آن را await می‌کند.
+    """
+    if asyncio.iscoroutinefunction(func):
+        return await func(*args, **kwargs)
+    result = func(*args, **kwargs)
+    if asyncio.iscoroutine(result):
+        return await result
+    return result
+# -------------------------
 
 class MrTraderBot:
     """کلاس اصلی ربات MrTrader"""
@@ -79,9 +91,18 @@ class MrTraderBot:
             # مدیریت کاربران و امنیت
             self.user_manager = UserManager()
             
-            # ✅ Safe initialization برای managers که ممکن است وجود نداشته باشند
             try:
                 self.admin_manager = AdminManager()
+                # ✅ مقداردهی اولیه مدیران اصلی از Config.ADMINS (اگر تعریف شده)
+                try:
+                    manager_ids = getattr(Config, "ADMINS", []) or []
+                    # تضمین تبدیل به لیست اعداد
+                    manager_ids = [int(x) for x in manager_ids if x]
+                    if manager_ids:
+                        AdminManager.initialize_managers(manager_ids)
+                        logger.info(f"AdminManager initialized with managers: {manager_ids}")
+                except Exception as mgr_init_err:
+                    logger.warning(f"Could not initialize AdminManager manager IDs: {mgr_init_err}")
             except ImportError:
                 logger.warning("AdminManager not available, using fallback")
                 self.admin_manager = None
@@ -202,31 +223,41 @@ class MrTraderBot:
             raise  # ✅ raise به جای sys.exit برای بهتر handling
     
     async def _setup_bot_commands(self):
-        """تنظیم کامندهای ربات"""
+        """تنظیم کامندهای ربات (با timeout و retry کنترل‌شده)"""
+        commands = [
+                    BotCommand("start", "شروع یا منوی اصلی"),
+                    BotCommand("help", "راهنمای کامل"),
+                    BotCommand("menu", "منوی سریع"),
+                    BotCommand("analysis", "تحلیل سریع"),
+                    BotCommand("signals", "سیگنال‌های فعال"),
+                    BotCommand("portfolio", "پورتفولیو"),
+                    BotCommand("settings", "تنظیمات"),
+                    BotCommand("support", "پشتیبانی"),
+                    BotCommand("version", "نسخه ربات"),
+                    BotCommand("status", "وضعیت سیستم (ادمین)")
+                ]
+
+        # تلاش اولیه با timeout کوتاه‌تر تا از بلوکه شدن طولانی جلوگیری شود
         try:
-            commands = [
-                BotCommand("start", "شروع یا منوی اصلی"),
-                BotCommand("help", "راهنمای کامل"),
-                BotCommand("menu", "منوی سریع"),
-                BotCommand("analysis", "تحلیل سریع"),
-                BotCommand("signals", "سیگنال‌های فعال"),
-                BotCommand("portfolio", "پورتفولیو"),
-                BotCommand("settings", "تنظیمات"),
-                BotCommand("support", "پشتیبانی"),
-                BotCommand("version", "نسخه ربات"),
-                BotCommand("status", "وضعیت سیستم (ادمین)")
-            ]
-            
-            await self.bot.set_my_commands(commands)
-            logger.info("Bot commands set successfully")
-            
-        except Exception as e:
-            logger.error(f"Failed to set bot commands: {e}")
-            # ✅ تست timeout اضافه شده
             try:
-                # دوباره تلاش با timeout کمتر
-                await asyncio.wait_for(self.bot.set_my_commands(commands), timeout=10.0)
+                await asyncio.wait_for(self.bot.set_my_commands(commands), timeout=8.0)
+                logger.info("Bot commands set successfully (initial attempt)")
+                return
+            except asyncio.TimeoutError as te:
+                logger.error(f"Timeout while setting bot commands (initial): {te}")
+                # ادامه به retry
+                raise te
+            except Exception as e:
+                logger.error(f"Failed to set bot commands (initial): {e}")
+                raise e
+
+        except Exception:
+            # تلاش مجدد با timeout طولانی‌تر و لاگ دقیق‌تر
+            try:
+                await asyncio.wait_for(self.bot.set_my_commands(commands), timeout=12.0)
                 logger.info("Bot commands set successfully on retry")
+            except asyncio.TimeoutError as te2:
+                logger.warning(f"Timeout while setting bot commands (retry): {te2}")
             except Exception as retry_error:
                 logger.warning(f"Could not set bot commands even on retry: {retry_error}")
     
@@ -430,67 +461,82 @@ class MrTraderBot:
             logger.error(f"Failed to setup scheduled tasks: {e}")
     
     async def _notify_startup(self):
-        """اطلاع‌رسانی شروع به ادمین‌ها"""
+        """اطلاع‌رسانی شروع به ادمین‌ها (با timeout و fallback ایمن)"""
         try:
             startup_message = f"""
-🤖 <b>MrTrader Bot Started</b>
+    🤖 <b>MrTrader Bot Started</b>
 
-🕐 <b>زمان شروع:</b> {self.time_manager.get_current_time_persian()}
-🔧 <b>نسخه:</b> {getattr(Config, 'BOT_VERSION', '1.0.0')}
-🌐 <b>محیط:</b> {'Production' if getattr(Config, 'PRODUCTION', False) else 'Development'}
+    🕐 <b>زمان شروع:</b> {self.time_manager.get_current_time_persian()}
+    🔧 <b>نسخه:</b> {getattr(Config, 'BOT_VERSION', '1.0.0')}
+    🌐 <b>محیط:</b> {'Production' if getattr(Config, 'PRODUCTION', False) else 'Development'}
 
-✅ سیستم آماده خدمات‌رسانی است.
-"""
-            
-            # ارسال به ادمین‌ها
+    ✅ سیستم آماده خدمات‌رسانی است.
+    """
+
+            sent = False
             try:
-                # ✅ بررسی وجود admin_manager و متد مناسب
-                if self.admin_manager and hasattr(self.admin_manager, 'get_all_admins'):
+                # 1) اگر admin_manager موجود است، سعی کن از آن admin ها را بگیری (پشتیبانی از sync/async)
+                if getattr(self, "admin_manager", None) and hasattr(self.admin_manager, "get_all_admins"):
                     try:
-                        admins = self.admin_manager.get_all_admins()
-                        if admins and isinstance(admins, list):
-                            for admin in admins:
-                                try:
-                                    await self.bot.send_message(
-                                        chat_id=admin.get('telegram_id', admin.get('id')),
-                                        text=startup_message,
-                                        parse_mode=ParseMode.HTML
+                        admins = await maybe_call(self.admin_manager.get_all_admins)
+                    except Exception as am_err:
+                        admins = None
+                        logger.warning(f"AdminManager.get_all_admins failed: {am_err}")
+
+                    if admins and isinstance(admins, (list, tuple)):
+                        for admin in admins:
+                            # admin ممکن است dict یا عدد باشد — ایمن سازی
+                            if isinstance(admin, dict):
+                                admin_id = admin.get("telegram_id") or admin.get("id")
+                            else:
+                                admin_id = admin
+                            try:
+                                if admin_id:
+                                    await asyncio.wait_for(
+                                        self.bot.send_message(chat_id=admin_id, text=startup_message, parse_mode=ParseMode.HTML),
+                                        timeout=8.0
                                     )
-                                except Exception as send_error:
-                                    logger.warning(f"Failed to notify admin {admin.get('telegram_id', 'Unknown')}: {send_error}")
-                        else:
-                            raise Exception("No admins found")
-                    except Exception as admin_error:
-                        logger.warning(f"Could not get admins list: {admin_error}")
-                        # fallback به config
-                        raise admin_error
-                else:
-                    # fallback به config
-                    raise Exception("AdminManager not available")
-                    
-            except Exception:
-                # fallback - فرستادن به ادمین اصلی از config
-                try:
-                    if hasattr(Config, 'ADMIN_USER_ID') and Config.ADMIN_USER_ID > 0:
-                        await self.bot.send_message(
-                            chat_id=Config.ADMIN_USER_ID,
-                            text=startup_message,
-                            parse_mode=ParseMode.HTML
-                        )
-                    elif hasattr(Config, 'ADMINS') and Config.ADMINS:
-                        for admin_id in Config.ADMINS:
-                            if admin_id > 0:
-                                await self.bot.send_message(
-                                    chat_id=admin_id,
-                                    text=startup_message,
-                                    parse_mode=ParseMode.HTML
-                                )
-                                break  # فقط به اولی ارسال کن
-                except Exception as fallback_error:
-                    logger.warning(f"Could not send startup notification even as fallback: {fallback_error}")
-            
-            logger.info("Startup notification sent successfully")
-            
+                                    sent = True
+                                    break
+                            except asyncio.TimeoutError:
+                                logger.warning(f"Timeout sending startup message to admin {admin_id}")
+                            except Exception as send_error:
+                                logger.warning(f"Failed to notify admin {admin_id}: {send_error}")
+
+                # 2) fallback به Config.ADMIN_USER_ID یا Config.ADMINS
+                if not sent:
+                    try:
+                        if getattr(Config, "ADMIN_USER_ID", None):
+                            await asyncio.wait_for(
+                                self.bot.send_message(chat_id=Config.ADMIN_USER_ID, text=startup_message, parse_mode=ParseMode.HTML),
+                                timeout=8.0
+                            )
+                            sent = True
+                        elif getattr(Config, "ADMINS", None):
+                            for admin_id in Config.ADMINS:
+                                if admin_id and admin_id > 0:
+                                    try:
+                                        await asyncio.wait_for(
+                                            self.bot.send_message(chat_id=admin_id, text=startup_message, parse_mode=ParseMode.HTML),
+                                            timeout=8.0
+                                        )
+                                        sent = True
+                                        break
+                                    except asyncio.TimeoutError:
+                                        logger.warning(f"Timeout sending startup message to admin {admin_id}")
+                                    except Exception as e:
+                                        logger.warning(f"Failed sending startup message to admin {admin_id}: {e}")
+                    except Exception as fallback_error:
+                        logger.warning(f"Fallback admin notify failed: {fallback_error}")
+
+            except Exception as fallback_error:
+                logger.warning(f"Could not send startup notification even as fallback: {fallback_error}")
+
+            if sent:
+                logger.info("Startup notification sent successfully")
+            else:
+                logger.info("No startup notification sent (no reachable admins or timed out)")
+
         except Exception as e:
             logger.warning(f"Failed to send startup notification: {e}")
     
@@ -682,37 +728,42 @@ async def main():
 
 
 def run_bot():
-    """تابع کمکی برای اجرا - ✅ Fixed event loop handling"""
+    """تابع کمکی برای اجرا — بازنگری شده برای بازگشت کد خروج به جای sys.exit داخلی"""
+    exit_code = 0
     try:
         # بررسی نسخه Python
         if sys.version_info < (3, 8):
             print("Python 3.8 or higher is required")
-            sys.exit(1)
+            logger.error("Python version is lower than 3.8")
+            return 1
         
-        # ✅ اجرای async main با handling بهتر
+        # اجرای async main با handling بهتر
         success = asyncio.run(main())
         
         if success:
             logger.info("Bot finished successfully")
+            exit_code = 0
         else:
             logger.error("Bot finished with errors")
-            sys.exit(1)
+            exit_code = 1
         
     except KeyboardInterrupt:
         print("\n🔴 ربات توسط کاربر متوقف شد")
         logger.info("Bot stopped by user interrupt")
+        exit_code = 0
     except Exception as e:
         print(f"❌ خطای غیرمنتظره: {e}")
-        logger.error(f"Unexpected error: {e}")
-        sys.exit(1)
+        logger.exception(f"Unexpected error: {e}")
+        exit_code = 1
     finally:
         print("🔄 خروج از برنامه...")
+        return exit_code
 
 
 if __name__ == "__main__":
     print(f"""
 ╔══════════════════════════════════════════════════════════════╗
-║                    🤖 MrTrader Bot v{getattr(Config, 'BOT_VERSION', '1.0.0')}     ║
+║ 🤖 MrTrader Bot v{getattr(Config, 'BOT_VERSION', '1.0.0')}     ║
 ║                                                              ║
 ║  📊 Advanced Cryptocurrency Trading Analysis Bot            ║
 ║  🚀 Starting up...                                          ║

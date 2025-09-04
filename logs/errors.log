@@ -1,3 +1,16 @@
-2025-07-24 05:52:15,059 - MrTrader - ERROR - Failed to initialize handlers: 'CallbackHandler' object has no attribute 'handle_package_selection'
-2025-07-24 05:52:18,694 - MrTrader - ERROR - Failed to register handlers: 'MrTraderBot' object has no attribute 'callback_handler'
-2025-07-24 05:59:07,639 - MrTrader - ERROR - Failed to initialize CallbackHandler: 'CallbackHandler' object has no attribute 'handle_package_selection'
+2025-07-24 08:23:56,806 - MrTrader - ERROR - Failed to initialize CallbackHandler: 'CallbackHandler' object has no attribute 'show_help_menu'
+2025-08-30 09:24:36,885 - MrTrader - ERROR - Failed to set bot commands: httpx.ConnectError: 
+2025-08-30 09:24:47,126 - MrTrader - ERROR - Critical error in bot execution: httpx.ConnectError: 
+2025-08-30 09:24:49,163 - MrTrader - ERROR - Failed to start bot: httpx.ConnectError: 
+2025-08-30 09:24:54,175 - MrTrader - ERROR - Bot finished with errors
+2025-08-30 09:30:07,564 - MrTrader - ERROR - BOT_TOKEN is not set in environment variables
+2025-08-30 09:30:07,564 - MrTrader - ERROR - Bot finished with errors
+2025-08-30 09:30:27,085 - MrTrader - ERROR - Failed to set bot commands: Timed out
+2025-08-30 09:30:42,163 - MrTrader - ERROR - Critical error in bot execution: Timed out
+2025-08-30 09:30:47,198 - MrTrader - ERROR - Failed to start bot: Timed out
+2025-08-30 09:30:56,107 - MrTrader - ERROR - Bot finished with errors
+2025-08-30 10:49:13,868 - MrTrader - ERROR - Error sending welcome message: Timed out
+2025-08-30 10:49:18,897 - MrTrader - ERROR - Error sending simple welcome: Timed out
+2025-08-30 10:49:25,800 - MrTrader - ERROR - Error showing main menu: Timed out
+2025-08-30 10:49:33,414 - MrTrader - ERROR - Error sending simple menu: Timed out
+2025-08-30 11:08:48,689 - MrTrader - ERROR - Error processing callback admin_panel: 'CallbackHandler' object has no attribute 'handle_admin_action'

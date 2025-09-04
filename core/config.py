@@ -40,10 +40,12 @@ class Config:
     
     # ✅ لیست ادمین‌ها (اضافه شده برای compatibility)
     ADMINS = [
-        ADMIN_USER_ID if ADMIN_USER_ID > 0 else 123456789,  # ادمین اصلی
+        ADMIN_USER_ID if ADMIN_USER_ID > 0 else 1517662886,  # ادمین اصلی
         # سایر ادمین‌ها
     ]
-    
+        # Database Configuration
+    DATABASE_URL = os.getenv("DATABASE_URL")
+
     # تنظیمات امنیت
     SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-here")
     API_KEY = os.getenv("API_KEY", "")

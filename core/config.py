@@ -1,6 +1,10 @@
 """
 تنظیمات و پیکربندی سیستم MrTrader Bot - Fixed Version
 """
+# **[اصلاح نهایی]** بارگذاری فایل .env به ابتدای این فایل منتقل شد
+# این تضمین می‌کند که متغیرهای محیطی همیشه قبل از تعریف کلاس Config بارگذاری شوند.
+from dotenv import load_dotenv
+load_dotenv()
 
 import os
 from pathlib import Path
@@ -34,16 +38,16 @@ class Config:
     # تنظیمات پایگاه داده
     DATABASE_FILE = str(DATA_DIR / "mrtrader.db")
     
-    # تنظیمات ربات تلگرام
+    # **[اصلاح نهایی]** تنظیمات ربات و ادمین‌ها به صورت صحیح و از یک منبع واحد خوانده می‌شود
     BOT_TOKEN = os.getenv("BOT_TOKEN", "")
-    ADMIN_USER_ID = int(os.getenv("ADMIN_USER_ID", "0"))
-    
-    # ✅ لیست ادمین‌ها (اضافه شده برای compatibility)
-    ADMINS = [
-        ADMIN_USER_ID if ADMIN_USER_ID > 0 else 1517662886,  # ادمین اصلی
-        # سایر ادمین‌ها
-    ]
-        # Database Configuration
+    ADMIN_IDS_STR = os.getenv("ADMIN_IDS", "")
+    try:
+        ADMINS = [int(admin_id.strip()) for admin_id in ADMIN_IDS_STR.split(',') if admin_id.strip()]
+    except (ValueError, TypeError):
+        print("⚠️ Warning: ADMIN_IDS contains non-numeric or invalid values. Please check your .env file.")
+        ADMINS = []
+        
+    # Database Configuration
     DATABASE_URL = os.getenv("DATABASE_URL")
 
     # تنظیمات امنیت
@@ -624,8 +628,8 @@ class Config:
             if not cls.BOT_TOKEN:
                 errors.append("BOT_TOKEN is required")
             
-            if cls.ADMIN_USER_ID == 0:
-                warnings.append("ADMIN_USER_ID not set")
+            if not cls.ADMINS:
+                warnings.append("ADMIN_IDS not set in .env file")
             
             if not cls.SECRET_KEY or cls.SECRET_KEY == "your-secret-key-here":
                 warnings.append("SECRET_KEY should be changed from default")
@@ -673,7 +677,7 @@ class Config:
     @classmethod
     def is_admin(cls, user_id: int) -> bool:
         """بررسی مدیر بودن کاربر"""
-        return user_id == cls.ADMIN_USER_ID or user_id in cls.ADMINS
+        return user_id in cls.ADMINS
     
     @classmethod
     def get_package_price(cls, package_name: str) -> int:

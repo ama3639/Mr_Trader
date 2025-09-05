@@ -14,3 +14,23 @@
 2025-08-30 10:49:25,800 - MrTrader - ERROR - Error showing main menu: Timed out
 2025-08-30 10:49:33,414 - MrTrader - ERROR - Error sending simple menu: Timed out
 2025-08-30 11:08:48,689 - MrTrader - ERROR - Error processing callback admin_panel: 'CallbackHandler' object has no attribute 'handle_admin_action'
+2025-09-05 20:13:45,200 - MrTrader - ERROR - Error processing callback admin_panel: 'CallbackHandler' object has no attribute 'handle_admin_action'
+2025-09-05 22:15:47,138 - MrTrader - ERROR - Error processing callback admin_view_user:5089112952: Can't parse entities: can't find end of the entity starting at byte offset 200
+2025-09-05 22:16:52,454 - MrTrader - ERROR - Error processing callback admin_view_user:5089112952: Can't parse entities: can't find end of the entity starting at byte offset 200
+2025-09-05 22:32:01,144 - MrTrader - ERROR - Error processing callback admin_charge_wallet:5089112952: Can't parse entities: character '.' is reserved and must be escaped with the preceding '\'
+2025-09-05 22:32:20,803 - MrTrader - ERROR - Error processing callback admin_charge_wallet:5089112952: Can't parse entities: character '.' is reserved and must be escaped with the preceding '\'
+2025-09-05 22:41:33,550 - MrTrader - ERROR - Error processing callback admin_view_user:5089112952: Can't parse entities: can't find end of italic entity at byte offset 194
+2025-09-05 22:42:04,215 - MrTrader - ERROR - Error processing callback admin_view_user:5089112952: Can't parse entities: can't find end of italic entity at byte offset 194
+2025-09-05 22:46:07,715 - MrTrader - ERROR - Error processing callback admin_view_user:5089112952: Can't parse entities: can't find end of italic entity at byte offset 194
+2025-09-05 22:47:06,085 - MrTrader - ERROR - Error processing callback admin_charge_wallet:6432698092: Can't parse entities: character '.' is reserved and must be escaped with the preceding '\'
+2025-09-05 22:48:26,372 - MrTrader - ERROR - Error processing callback admin_view_user:5089112952: Can't parse entities: can't find end of italic entity at byte offset 194
+2025-09-05 22:48:41,405 - MrTrader - ERROR - Error processing callback admin_charge_wallet:6432698092: Can't parse entities: character '.' is reserved and must be escaped with the preceding '\'
+2025-09-05 22:51:34,288 - MrTrader - ERROR - Error processing callback admin_view_user:5089112952: Can't parse entities: can't find end of italic entity at byte offset 194
+2025-09-05 22:51:50,667 - MrTrader - ERROR - Error processing callback admin_charge_wallet:6432698092: Can't parse entities: character '.' is reserved and must be escaped with the preceding '\'
+2025-09-05 22:55:22,675 - MrTrader - ERROR - Error processing callback admin_view_user:5089112952: 'NoneType' object has no attribute 'replace'
+2025-09-05 22:56:39,099 - MrTrader - ERROR - Error processing callback admin_view_user:6432698092: 'NoneType' object has no attribute 'replace'
+2025-09-05 22:59:28,540 - MrTrader - ERROR - Error processing callback admin_charge_wallet:5089112952: Can't parse entities: character '.' is reserved and must be escaped with the preceding '\'
+2025-09-05 23:00:04,512 - MrTrader - ERROR - Error processing callback admin_charge_wallet:1517662886: Can't parse entities: character '.' is reserved and must be escaped with the preceding '\'
+2025-09-05 23:10:05,145 - MrTrader - ERROR - Error processing callback admin_charge_wallet:5089112952: Can't parse entities: character '.' is reserved and must be escaped with the preceding '\'
+2025-09-05 23:12:17,872 - MrTrader - ERROR - Error processing callback admin_charge_wallet:5089112952: Can't parse entities: character '.' is reserved and must be escaped with the preceding '\'
+2025-09-05 23:38:48,518 - MrTrader - ERROR - Error changing package: list index out of range

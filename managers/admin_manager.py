@@ -4,6 +4,7 @@
 from typing import List, Dict, Tuple , Optional, Set
 from datetime import datetime
 
+# **[اصلاح شد]** Config به درستی وارد شد
 from core.config import Config
 from utils.logger import logger, log_admin_action
 from utils.time_manager import TimeManager
@@ -20,101 +21,52 @@ class AdminManager:
     
     @classmethod
     def initialize_managers(cls, manager_ids: List[int]):
-        """مقداردهی اولیه مدیران اصلی
-        
-        Args:
-            manager_ids: لیست آیدی مدیران اصلی
-        """
+        """مقداردهی اولیه مدیران اصلی"""
         cls._manager_ids = set(manager_ids)
         logger.info(f"Initialized {len(manager_ids)} main managers")
     
     @classmethod
     def is_manager(cls, telegram_id: int) -> bool:
-        """بررسی مدیر اصلی بودن
-        
-        Args:
-            telegram_id: شناسه تلگرام
-            
-        Returns:
-            آیا مدیر اصلی است
-        """
+        """بررسی مدیر اصلی بودن"""
         return telegram_id in cls._manager_ids
     
     @classmethod
     def is_admin(cls, telegram_id: int) -> bool:
-        """بررسی ادمین بودن (شامل مدیران اصلی)
-        
-        Args:
-            telegram_id: شناسه تلگرام
-            
-        Returns:
-            آیا ادمین است
+        """
+        **[اصلاح شد]**
+        بررسی ادمین بودن کاربر به صورت مستقیم از لیست ادمین‌ها در فایل Config.
+        این روش یک منبع حقیقت واحد (Single Source of Truth) ایجاد می‌کند و از پیچیدگی جلوگیری می‌کند.
         """
         try:
-            # مدیران اصلی همیشه ادمین هستند
-            if cls.is_manager(telegram_id):
-                return True
-            
-            # بررسی کش
-            if telegram_id in cls._admin_cache:
-                cached_data = cls._admin_cache[telegram_id]
-                # کش 5 دقیقه معتبر است
-                if (datetime.now() - cached_data['timestamp']).seconds < 300:
-                    return cached_data['is_admin']
-            
-            # بررسی از دیتابیس
-            is_admin_db = database_manager.is_admin(telegram_id)
-            
-            # اگر در دیتابیس نبود، بررسی CSV
-            if not is_admin_db:
-                admin_data = CSVManager.get_admin_data_from_csv(telegram_id)
-                is_admin_db = bool(admin_data)
-            
-            # به‌روزرسانی کش
-            cls._admin_cache[telegram_id] = {
-                'is_admin': is_admin_db,
-                'timestamp': datetime.now()
-            }
-            
-            return is_admin_db
-            
+            # بررسی مستقیم از لیست ADMINS که از فایل .env خوانده شده است
+            return telegram_id in Config.ADMINS
         except Exception as e:
             logger.error(f"Error checking admin status for {telegram_id}: {e}")
             return False
     
     @classmethod
     def get_admin_level(cls, telegram_id: int) -> int:
-        """دریافت سطح دسترسی ادمین
-        
-        Args:
-            telegram_id: شناسه تلگرام
-            
-        Returns:
-            سطح دسترسی (0=غیرادمین, 1-3=سطوح ادمین, 4=مدیر اصلی)
-        """
+        """دریافت سطح دسترسی ادمین"""
         try:
-            # مدیران اصلی سطح 4 دارند
             if cls.is_manager(telegram_id):
                 return 4
             
-            # بررسی کش
+            if not cls.is_admin(telegram_id):
+                return 0
+
             cache_key = f"admin_level_{telegram_id}"
             cached_level = cache.get(cache_key)
             if cached_level is not None:
                 return int(cached_level)
             
-            # بررسی از دیتابیس
             level = database_manager.get_admin_level(telegram_id)
             
-            # اگر در دیتابیس نبود، بررسی CSV
             if level == 0:
                 admin_data = CSVManager.get_admin_data_from_csv(telegram_id)
                 if admin_data:
                     level = int(admin_data.get('level', 1))
             
-            # ذخیره در کش (5 دقیقه)
             cache.set(cache_key, level, 300)
-            
             return level
             
         except Exception as e:

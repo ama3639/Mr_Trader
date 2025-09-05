@@ -95,7 +95,7 @@ class AdminHandlers:
     
     @staticmethod
     async def admin_users_management(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """مدیریت کاربران"""
+        """مدیریت کاربران با نمایش لیست صفحه‌بندی شده"""
         query = update.callback_query
         user_id = query.from_user.id
         
@@ -104,52 +104,66 @@ class AdminHandlers:
                 await query.answer("⛔ دسترسی غیرمجاز!", show_alert=True)
                 return
             
-            # آمار کاربران
-            user_stats = UserManager.get_user_statistics()
+            # مدیریت صفحه‌بندی
+            page = 1
+            if query.data and ':' in query.data:
+                try:
+                    page = int(query.data.split(':')[1])
+                except (ValueError, IndexError):
+                    page = 1
+
+            per_page = 5  # تعداد کاربران در هر صفحه
             
-            users_text = (
-                f"👥 **مدیریت کاربران**\n"
-                f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
-                f"📈 **آمار کاربران:**\n"
-                f"🆔 کل کاربران: `{user_stats['total']:,}`\n"
-                f"🟢 فعال امروز: `{user_stats['active_today']:,}`\n"
-                f"🟡 فعال این هفته: `{user_stats['active_week']:,}`\n"
-                f"🆕 عضو جدید امروز: `{user_stats['new_today']:,}`\n"
-                f"💎 VIP فعال: `{user_stats['vip_active']:,}`\n"
-                f"⏸ معلق شده: `{user_stats['suspended']:,}`\n\n"
-                f"⚡ **اقدامات سریع:**"
-            )
+            # دریافت لیست کاربران و تعداد کل آنها
+            users_list = UserManager.get_all_users_paginated(page=page, per_page=per_page)
+            total_users = UserManager.count_all_users()
+            total_pages = (total_users + per_page - 1) // per_page
+
+            message_text = f"👥 **مدیریت کاربران ({total_users} کل)** - صفحه {page}/{total_pages}\n"
+            message_text += "━━━━━━━━━━━━━━━━━━━━━━\n\n"
+
+            keyboard = []
+            if not users_list:
+                message_text += "هیچ کاربری یافت نشد."
+            else:
+                for user in users_list:
+                    # ایجاد یک خط دکمه برای هر کاربر
+                    user_id = user.get('telegram_id')
+                    first_name = user.get('first_name', 'کاربر')
+                    last_name = user.get('last_name', '')
+                    username = f"(@{user.get('username')})" if user.get('username') else ""
+                    
+                    label = f"{first_name} {last_name} {username}".strip()
+                    # در مرحله بعد این دکمه‌ها را فعال خواهیم کرد
+                    callback = f"admin_view_user:{user_id}"
+                    keyboard.append([InlineKeyboardButton(label, callback_data=callback)])
+
+            # ساخت دکمه‌های صفحه‌بندی
+            pagination_row = []
+            if page > 1:
+                pagination_row.append(InlineKeyboardButton("⬅️ قبلی", callback_data=f"admin_users:{page-1}"))
             
-            keyboard = [
-                [
-                    InlineKeyboardButton("🔍 جستجوی کاربر", callback_data="admin_search_user"),
-                    InlineKeyboardButton("👤 اطلاعات کاربر", callback_data="admin_user_info")
-                ],
-                [
-                    InlineKeyboardButton("🎁 اعطای پکیج", callback_data="admin_grant_package"),
-                    InlineKeyboardButton("⛔ مسدود کردن", callback_data="admin_ban_user")
-                ],
-                [
-                    InlineKeyboardButton("📋 لیست VIP ها", callback_data="admin_vip_list"),
-                    InlineKeyboardButton("🔓 رفع مسدودیت", callback_data="admin_unban_user")
-                ],
-                [
-                    InlineKeyboardButton("📊 گزارش کاربران", callback_data="admin_users_report"),
-                    InlineKeyboardButton("💸 تخفیف ویژه", callback_data="admin_special_discount")
-                ],
-                [InlineKeyboardButton("⬅️ بازگشت", callback_data="admin_panel")]
-            ]
+            pagination_row.append(InlineKeyboardButton(f"صفحه {page}", callback_data="noop")) # دکمه‌ای که کاری نمی‌کند
+
+            if page < total_pages:
+                pagination_row.append(InlineKeyboardButton("بعدی ➡️", callback_data=f"admin_users:{page+1}"))
+            
+            if pagination_row:
+                keyboard.append(pagination_row)
+
+            keyboard.append([InlineKeyboardButton("🔍 جستجوی کاربر", callback_data="admin_search_user")])
+            keyboard.append([InlineKeyboardButton("⬅️ بازگشت به پنل ادمین", callback_data="admin_panel")])
             
             await query.edit_message_text(
-                users_text,
+                message_text,
                 reply_markup=InlineKeyboardMarkup(keyboard),
                 parse_mode="Markdown"
             )
             
         except Exception as e:
             UserLogger.log_error(user_id, f"Error in admin_users_management: {e}")
-            await query.edit_message_text("❌ خطا در نمایش مدیریت کاربران")
-    
+            await query.edit_message_text("❌ خطا در نمایش لیست کاربران")
+                
     @staticmethod
     async def admin_reports(update: Update, context: ContextTypes.DEFAULT_TYPE):
         """گزارش‌های مدیریتی"""

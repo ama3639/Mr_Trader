@@ -627,7 +627,19 @@ class DatabaseManager:
         except sqlite3.Error as e:
             logger.error(f"Error adding description column: {e}")
 
+    def count_users(self) -> int:
+        """تعداد کل کاربران را شمارش می‌کند."""
+        query = "SELECT COUNT(id) as total FROM users"
+        result = self.fetch_one(query)
+        return result['total'] if result and 'total' in result else 0
 
+    def get_users_paginated(self, page: int = 1, per_page: int = 5) -> List[Dict]:
+        """لیستی از کاربران را به صورت صفحه‌بندی شده برمی‌گرداند."""
+        offset = (page - 1) * per_page
+        query = "SELECT telegram_id, first_name, last_name, username FROM users ORDER BY id DESC LIMIT ? OFFSET ?"
+        params = (per_page, offset)
+        return self.fetch_all(query, params)
+    
 # Export برای استفاده آسان‌تر
 database_manager = DatabaseManager()
 

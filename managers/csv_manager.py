@@ -746,5 +746,36 @@ class CSVManager:
             return {}
 
 
+    @classmethod
+    def count_users_in_csv(cls) -> int:
+        """تعداد کل کاربران را از فایل CSV شمارش می‌کند."""
+        try:
+            users = cls.get_all_users_from_csv()
+            return len(users)
+        except Exception as e:
+            logger.error(f"Error counting users in CSV: {e}")
+            return 0
+
+    @classmethod
+    def get_users_from_csv(cls, page: int = 1, per_page: int = 5) -> List[Dict[str, str]]:
+        """لیستی از کاربران را به صورت صفحه‌بندی شده از CSV برمی‌گرداند."""
+        try:
+            with cls._lock:
+                if not os.path.exists(Config.USER_CSV_FILE):
+                    return []
+                
+                with open(Config.USER_CSV_FILE, 'r', encoding=Config.CSV_SETTINGS["encoding"]) as csvfile:
+                    reader = csv.DictReader(csvfile)
+                    all_users = list(reader)
+                    
+                    # محاسبه slice برای صفحه‌بندی
+                    start_index = (page - 1) * per_page
+                    end_index = start_index + per_page
+                    
+                    return all_users[start_index:end_index]
+        except Exception as e:
+            logger.error(f"Error getting paginated users from CSV: {e}")
+            return []
+    
 # Export برای استفاده آسان‌تر
 __all__ = ['CSVManager']

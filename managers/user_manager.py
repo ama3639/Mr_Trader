@@ -296,44 +296,43 @@ class UserManager:
     
     @staticmethod
     def update_user(telegram_id: int, **kwargs) -> bool:
-        """به‌روزرسانی اطلاعات کاربر
-        
-        Args:
-            telegram_id: شناسه تلگرام
-            **kwargs: فیلدهای به‌روزرسانی
-            
-        Returns:
-            موفقیت عملیات
-        """
+        """به‌روزرسانی اطلاعات کاربر در دیتابیس و CSV"""
         try:
-            # به‌روزرسانی در دیتابیس
             db_success = False
-            try:
-                if hasattr(database_manager, 'update_user'):
+            if hasattr(database_manager, 'update_user'):
+                try:
                     db_success = database_manager.update_user(telegram_id, **kwargs)
-            except Exception as db_error:
-                logger.warning(f"Database update failed for user {telegram_id}: {db_error}")
-            
-            # به‌روزرسانی در CSV
+                except Exception as db_error:
+                    logger.warning(f"Database update failed for user {telegram_id}: {db_error}")
+
             csv_success = False
-            try:
-                if hasattr(CSVManager, 'update_user_in_csv'):
-                    csv_success = CSVManager.update_user_in_csv(telegram_id, kwargs)
-            except Exception as csv_error:
-                logger.warning(f"CSV update failed for user {telegram_id}: {csv_error}")
+            if hasattr(CSVManager, 'update_user_in_csv'):
+                try:
+                    # **[منطق جدید]** ابتدا چک می‌کنیم کاربر در CSV هست یا نه
+                    if CSVManager.get_user_data_from_csv(telegram_id):
+                        csv_success = CSVManager.update_user_in_csv(telegram_id, kwargs)
+                    else:
+                        # اگر کاربر در CSV نبود، هشدار نمی‌دهیم چون انتظار می‌رود در دیتابیس باشد
+                        csv_success = True # عملیات را موفق در نظر می‌گیریم
+                except Exception as csv_error:
+                    logger.warning(f"CSV update failed for user {telegram_id}: {csv_error}")
             
-            # اگر یکی موفق باشد، کافی است
-            if db_success or csv_success:
+            if db_success: # اولویت با موفقیت در دیتابیس است
                 log_user_action(telegram_id, "user_updated", f"Fields: {list(kwargs.keys())}")
                 return True
-            else:
-                logger.warning(f"Failed to update user {telegram_id} in both database and CSV")
-                return False
+            
+            # اگر دیتابیس ناموفق بود ولی CSV موفق بود
+            if csv_success:
+                log_user_action(telegram_id, "user_updated", f"Fields: {list(kwargs.keys())} (CSV only)")
+                return True
+
+            logger.error(f"Failed to update user {telegram_id} in any data source.")
+            return False
                 
         except Exception as e:
-            logger.error(f"Error updating user {telegram_id}: {e}")
+            logger.error(f"Critical error during user update for {telegram_id}: {e}", exc_info=True)
             return False
-    
+            
     @staticmethod
     def is_package_expired(telegram_id: int) -> Tuple[bool, int]:
         """بررسی انقضای پکیج کاربر - ✅ حذف async
@@ -510,6 +509,63 @@ class UserManager:
                 'api_calls_count': 0
             }
 
+    @staticmethod
+    def count_all_users() -> int:
+        """تعداد کل کاربران را شمارش می‌کند."""
+        try:
+            # این تابع باید در database_manager شما پیاده‌سازی شود
+            if hasattr(database_manager, 'count_users'):
+                return database_manager.count_users()
+            # اگر تابع بالا نبود، از CSV به عنوان جایگزین استفاده می‌کند
+            if hasattr(CSVManager, 'count_users_in_csv'):
+                return CSVManager.count_users_in_csv()
+            logger.warning("No method found to count users.")
+            return 0
+        except Exception as e:
+            logger.error(f"Error counting all users: {e}")
+            return 0
+
+    @staticmethod
+    def get_all_users_paginated(page: int = 1, per_page: int = 5) -> List[Dict[str, Any]]:
+        """لیستی از کاربران را به صورت صفحه‌بندی شده برمی‌گرداند."""
+        try:
+            # این تابع باید در database_manager شما پیاده‌سازی شود
+            if hasattr(database_manager, 'get_users_paginated'):
+                return database_manager.get_users_paginated(page, per_page)
+            # اگر تابع بالا نبود، از CSV به عنوان جایگزین استفاده می‌کند
+            if hasattr(CSVManager, 'get_users_from_csv'):
+                return CSVManager.get_users_from_csv(page, per_page)
+            logger.warning("No method found to get paginated users.")
+            return []
+        except Exception as e:
+            logger.error(f"Error getting paginated users: {e}")
+            return []        
+
+    @staticmethod
+    def block_user(telegram_id: int) -> bool:
+        """یک کاربر را مسدود می‌کند."""
+        try:
+            # عدد 1 در دیتابیس معادل True برای فیلد is_blocked است
+            success = UserManager.update_user(telegram_id, is_blocked=1)
+            if success:
+                log_user_action(telegram_id, "user_blocked", "User access has been revoked by an admin.")
+            return success
+        except Exception as e:
+            logger.error(f"Error blocking user {telegram_id}: {e}")
+            return False
+
+    @staticmethod
+    def unblock_user(telegram_id: int) -> bool:
+        """یک کاربر را از حالت مسدود خارج می‌کند."""
+        try:
+            # عدد 0 در دیتابیس معادل False برای فیلد is_blocked است
+            success = UserManager.update_user(telegram_id, is_blocked=0)
+            if success:
+                log_user_action(telegram_id, "user_unblocked", "User access has been restored by an admin.")
+            return success
+        except Exception as e:
+            logger.error(f"Error unblocking user {telegram_id}: {e}")
+            return False
 
 # Export برای استفاده آسان‌تر
 __all__ = ['UserManager']

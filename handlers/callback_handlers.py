@@ -30,7 +30,7 @@ from utils.helpers import extract_signal_details
 from templates.keyboards import KeyboardTemplates
 from templates.messages import MessageTemplates
 from core.cache import cache
-
+from utils.helpers import extract_signal_details, format_signal_message
 class CallbackHandler:
     """هندلر اصلی Callback Query ها"""
     
@@ -140,6 +140,18 @@ class CallbackHandler:
                 await self.show_help_menu(query, context)
             elif action == "support_menu":
                 await self.show_support_menu(query, context)
+
+            elif action == "select_strategy":
+                await self.handle_strategy_selection(query, context, param)
+            elif action == "select_symbol":
+                await self.handle_symbol_selection(query, context, param)
+            elif action == "manual_symbol":
+                await self.handle_manual_symbol_request(query, context, param)
+            elif action == "select_currency":
+                await self.handle_currency_selection(query, context, param)
+            elif action == "select_timeframe":
+                await self.handle_timeframe_selection(query, context, param)
+
             else:
                 # سایر callback های ساده
                 await self.handle_simple_callbacks(query, context, action)
@@ -278,6 +290,159 @@ class CallbackHandler:
             logger.error(f"Error showing user profile: {e}")
             await query.edit_message_text("⛔ خطا در نمایش پروفایل.")
 
+    # =======================================
+    # <<< توابع جدید برای جریان تحلیل ارز >>>
+    # =======================================
+
+    async def handle_strategy_selection(self, query: CallbackQuery, context: ContextTypes.DEFAULT_TYPE, strategy_key: str):
+        """مرحله 1: کاربر استراتژی را انتخاب کرده است. حالا نماد را می‌پرسیم."""
+        try:
+            # ذخیره استراتژی انتخاب شده در حافظه موقت کاربر
+            context.user_data['selected_strategy'] = strategy_key
+            
+            strategy_name = self.strategy_manager.get_strategy_display_name(strategy_key)
+            
+            # ارسال پیام درخواست نماد
+            message = MessageTemplates.get_ask_for_symbol_message(strategy_name)
+            keyboard = KeyboardTemplates.symbol_selection(strategy_key)
+            
+            await query.edit_message_text(
+                text=message,
+                reply_markup=keyboard,
+                parse_mode=ParseMode.HTML
+            )
+        except Exception as e:
+            logger.error(f"Error in handle_strategy_selection for {strategy_key}: {e}")
+            await query.edit_message_text("⛔ خطا در پردازش استراتژی.")
+
+    async def handle_symbol_selection(self, query: CallbackQuery, context: ContextTypes.DEFAULT_TYPE, param: str):
+        """مرحله 2: کاربر نماد را انتخاب کرده است. حالا ارز مرجع را می‌پرسیم."""
+        try:
+            strategy_key, symbol = param.split('|')
+            context.user_data['selected_symbol'] = symbol
+
+            message = MessageTemplates.get_ask_for_currency_message(symbol)
+            keyboard = KeyboardTemplates.currency_selection(strategy_key, symbol)
+            
+            await query.edit_message_text(
+                text=message,
+                reply_markup=keyboard,
+                parse_mode=ParseMode.HTML
+            )
+        except Exception as e:
+            logger.error(f"Error in handle_symbol_selection for {param}: {e}")
+
+    async def handle_manual_symbol_request(self, query: CallbackQuery, context: ContextTypes.DEFAULT_TYPE, strategy_key: str):
+        """کاربر درخواست ورود دستی نماد را داده است."""
+        context.user_data['waiting_for_manual_symbol'] = strategy_key
+        message = "🪙 لطفاً نماد ارز مورد نظر را تایپ کنید (مثلاً: `BTC`):"
+        await query.edit_message_text(text=message, parse_mode=ParseMode.MARKDOWN)
+
+    async def handle_currency_selection(self, query: CallbackQuery, context: ContextTypes.DEFAULT_TYPE, param: str):
+        """مرحله 3: کاربر ارز مرجع را انتخاب کرده است. حالا تایم‌فریم را می‌پرسیم."""
+        try:
+            strategy_key, symbol, currency = param.split('|')
+            context.user_data['selected_currency'] = currency
+
+            message = MessageTemplates.get_ask_for_timeframe_message(symbol, currency)
+            keyboard = KeyboardTemplates.timeframe_selection(strategy_key, symbol, currency)
+
+            await query.edit_message_text(
+                text=message,
+                reply_markup=keyboard,
+                parse_mode=ParseMode.HTML
+            )
+        except Exception as e:
+            logger.error(f"Error in handle_currency_selection for {param}: {e}")
+
+    async def handle_timeframe_selection(self, query: CallbackQuery, context: ContextTypes.DEFAULT_TYPE, param: str):
+        """مرحله نهایی: کاربر تایم‌فریم را انتخاب کرده است. تحلیل را انجام می‌دهیم."""
+        try:
+            strategy_key, symbol, currency, timeframe = param.split('|')
+            user_id = query.from_user.id
+            
+            # نمایش پیام "در حال پردازش"
+            await query.edit_message_text(
+                text=MessageTemplates.processing_message("analyzing", symbol),
+                parse_mode=ParseMode.HTML
+            )
+
+            # فراخوانی API برای تحلیل
+            analysis_result = await self.strategy_manager.analyze_strategy(
+                user_id, strategy_key, symbol, currency, timeframe
+            )
+            logger.info(f"Raw API response: {analysis_result}")
+
+            if "error" in analysis_result:
+                await query.edit_message_text(
+                    text=f"❌ **خطا در تحلیل**\n\n{analysis_result['error']}",
+                    reply_markup=KeyboardTemplates.back_to_menu("analysis_menu", "📊 بازگشت به استراتژی‌ها"),
+                    parse_mode=ParseMode.HTML
+                )
+                return
+
+            # دریافت قیمت فعلی از نتیجه تحلیل (API خودش قیمت لایو برمی‌گرداند)
+            current_price = analysis_result.get('current_price', analysis_result.get('price', 0.0))
+            if current_price == 0.0:
+                # اگر در نتیجه API قیمت نبود، سعی کن از فیلدهای دیگر استخراج کن
+                current_price = analysis_result.get('close', analysis_result.get('last_price', 0.0))
+            # فرمت‌بندی نتیجه نهایی با error handling
+            try:
+                # استخراج جزئیات سیگنال با تابع بهبود یافته
+                signal_details = extract_signal_details(analysis_result)
+
+                # استفاده از تابع جدید فرمت‌بندی  
+                formatted_message = format_signal_message(
+                    signal_details, symbol, currency, timeframe, strategy_key
+                )
+            except Exception as format_error:
+                logger.error(f"Error formatting message: {format_error}")
+                # پیام ساده در صورت خطا در فرمت
+                formatted_message = f"""✅ **تحلیل {symbol}/{currency} @ {timeframe} کامل شد!**
+
+    📊 **نتیجه تحلیل:**
+    {analysis_result.get('signal_direction', 'نامشخص')}
+
+    💰 **قیمت فعلی:** {current_price:,.4f} {currency}
+
+    🕒 **زمان:** {TimeManager.to_shamsi(datetime.now()) if hasattr(self, 'time_manager') else 'اکنون'}
+
+    ⚠️ **یادآوری:** این تحلیل جنبه آموزشی دارد."""
+            
+            # کیبورد اقدامات بعدی
+            try:
+                keyboard = KeyboardTemplates.analysis_result_actions(strategy_key, symbol, currency, timeframe)
+            except Exception as keyboard_error:
+                logger.error(f"Error creating keyboard: {keyboard_error}")
+                # کیبورد ساده در صورت خطا
+                keyboard = InlineKeyboardMarkup([
+                    [InlineKeyboardButton("📊 تحلیل جدید", callback_data="analysis_menu")],
+                    [InlineKeyboardButton("🏠 منوی اصلی", callback_data="main_menu")]
+                ])
+            
+            await query.edit_message_text(
+                text=formatted_message,
+                reply_markup=keyboard,
+                parse_mode=ParseMode.HTML
+            )
+
+        except Exception as e:
+            logger.error(f"Error in handle_timeframe_selection for {param}: {e}", exc_info=True)
+            await query.edit_message_text(
+                text="❌ خطایی نهایی در اجرای تحلیل رخ داد. لطفاً دوباره تلاش کنید.",
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("📊 بازگشت به استراتژی‌ها", callback_data="analysis_menu")],
+                    [InlineKeyboardButton("🏠 منوی اصلی", callback_data="main_menu")]
+                ]),
+                parse_mode=ParseMode.HTML
+            )
+        finally:
+            # پاکسازی حافظه موقت کاربر
+            keys_to_clear = ['selected_strategy', 'selected_symbol', 'selected_currency']
+            for key in keys_to_clear:
+                if key in context.user_data:
+                    del context.user_data[key]
+                
     # =========================
     # توابع پنل ادمین
     # =========================

@@ -12,10 +12,8 @@ import asyncio
 from core.config import Config
 from utils.logger import logger
 from database.database_manager import database_manager
-from managers.settings_manager import settings_manager
-from api.api_client import api_client
 from core.cache import cache
-
+from dateutil.parser import parse
 
 class PackageLevel(Enum):
     """سطوح پکیج‌های دسترسی"""
@@ -29,280 +27,326 @@ class PackageLevel(Enum):
 class StrategyManager:
     """مدیریت استراتژی‌ها و کنترل دسترسی"""
     
-    # نقشه کامل تمام 35 استراتژی
+    # نقشه کامل تمام 35 استراتژی مطابق API واقعی
     ALL_STRATEGIES = {
         # DEMO (2 استراتژی)
         "demo_price_action": {
-            "name": "دمو پرایس اکشن",
+            "name": "🎯 دمو پرایس اکشن",
             "package": "free",
             "category": "demo",
             "difficulty": "دمو",
-            "description": "نسخه دمو تحلیل حرکت قیمت - محدود به 5 تحلیل در روز"
+            "description": "نسخه دمو تحلیل حرکت قیمت - محدود به 5 تحلیل در روز",
+            "endpoint": "/analyze_price_action_pandas_ta/"
         },
         "demo_rsi": {
-            "name": "دمو RSI", 
+            "name": "📈 دمو RSI", 
             "package": "free",
             "category": "demo",
             "difficulty": "دمو",
-            "description": "نسخه دمو شاخص قدرت نسبی - محدود به 5 تحلیل در روز"
+            "description": "نسخه دمو شاخص قدرت نسبی - محدود به 5 تحلیل در روز",
+            "endpoint": "/analyze_RSI_basic/"
         },
         
         # BASIC Package (9 استراتژی)
         "cci_analysis": {
-            "name": "تحلیل CCI",
+            "name": "📊 تحلیل CCI",
             "package": "basic",
             "category": "technical_indicators",
             "difficulty": "مبتدی",
-            "description": "شاخص کانال کالا برای تشخیص نقاط اشباع خرید و فروش"
+            "description": "شاخص کانال کالا برای تشخیص نقاط اشباع خرید و فروش",
+            "endpoint": "/analyze_CCI_strategy/"
         },
         "ema_analysis": {
-            "name": "تحلیل EMA",
+            "name": "📈 تحلیل EMA",
             "package": "basic",
             "category": "technical_indicators", 
             "difficulty": "مبتدی",
-            "description": "میانگین متحرک نمایی برای تشخیص روند و نقاط ورود"
+            "description": "میانگین متحرک نمایی برای تشخیص روند و نقاط ورود",
+            "endpoint": "/analyze_EMA_strategy/"
         },
         "ichimoku": {
-            "name": "ابر ایچیموکو",
+            "name": "☁️ ابر ایچیموکو",
             "package": "basic",
             "category": "trend_analysis",
             "difficulty": "متوسط",
-            "description": "سیستم جامع تحلیل ژاپنی با ابر ایچیموکو"
+            "description": "سیستم جامع تحلیل ژاپنی با ابر ایچیموکو",
+            "endpoint": "/analyze_ichimoku_strategy/"
         },
         "ichimoku_low_signal": {
-            "name": "سیگنال پایین ایچیموکو",
+            "name": "☁️ ایچیموکو سیگنال پایین",
             "package": "basic",
             "category": "trend_analysis",
             "difficulty": "متوسط",
-            "description": "سیگنال‌های کم ریسک و محافظه‌کارانه ایچیموکو"
+            "description": "سیگنال‌های کم ریسک و محافظه‌کارانه ایچیموکو",
+            "endpoint": "/analyze_ichimoku_strategy/"
         },
         "macd": {
-            "name": "تحلیل MACD",
+            "name": "🌊 تحلیل MACD",
             "package": "basic",
             "category": "technical_indicators",
             "difficulty": "مبتدی",
-            "description": "واگرایی همگرایی میانگین متحرک برای تشخیص تغییر روند"
+            "description": "واگرایی همگرایی میانگین متحرک برای تشخیص تغییر روند",
+            "endpoint": "/analyze_MACD_basic/"
         },
         "price_action_pandas_ta": {
-            "name": "پرایس اکشن pandas",
+            "name": "🎯 پرایس اکشن TA",
             "package": "basic",
             "category": "price_action",
             "difficulty": "مبتدی",
-            "description": "تحلیل حرکت قیمت با کتابخانه pandas و اندیکاتورهای تکنیکال"
+            "description": "تحلیل حرکت قیمت با کتابخانه pandas و اندیکاتورهای تکنیکال",
+            "endpoint": "/analyze_price_action_pandas_ta/"
         },
         "project_price_live_binance": {
-            "name": "قیمت زنده بایننس",
+            "name": "🔴 قیمت زنده بایننس",
             "package": "basic",
             "category": "volume_analysis",
             "difficulty": "مبتدی",
-            "description": "دریافت قیمت‌های زنده و تحلیل آنی از صرافی بایننس"
+            "description": "دریافت قیمت‌های زنده و تحلیل آنی از صرافی بایننس",
+            "endpoint": "/live_price/"
         },
         "rsi": {
-            "name": "تحلیل RSI",
+            "name": "📊 تحلیل RSI",
             "package": "basic",
             "category": "technical_indicators",
             "difficulty": "مبتدی", 
-            "description": "شاخص قدرت نسبی برای شناسایی شرایط اشباع"
+            "description": "شاخص قدرت نسبی برای شناسایی شرایط اشباع",
+            "endpoint": "/analyze_RSI_basic/"
         },
         "williams_r_analysis": {
-            "name": "تحلیل Williams R",
+            "name": "📉 تحلیل Williams R",
             "package": "basic",
             "category": "technical_indicators",
             "difficulty": "مبتدی",
-            "description": "اندیکاتور Williams %R برای تشخیص نقاط برگشت"
+            "description": "اندیکاتور Williams %R برای تشخیص نقاط برگشت",
+            "endpoint": "/analyze_WilliamsR/"
         },
         
         # PREMIUM Package (17 استراتژی اضافی)
         "a_candlestick": {
-            "name": "تحلیل کندل استیک",
+            "name": "🕯️ تحلیل کندل استیک",
             "package": "premium",
             "category": "price_action",
             "difficulty": "پیشرفته",
-            "description": "تشخیص و تحلیل الگوهای کندل استیک ژاپنی"
+            "description": "تشخیص و تحلیل الگوهای کندل استیک ژاپنی",
+            "endpoint": "/analyze_price_action_pandas_ta/"
         },
         "b_pivot": {
-            "name": "نقاط محوری",
+            "name": "🎯 نقاط محوری",
             "package": "premium",
             "category": "trend_analysis",
             "difficulty": "پیشرفته",
-            "description": "محاسبه و تحلیل نقاط محوری حمایت و مقاومت"
+            "description": "محاسبه و تحلیل نقاط محوری حمایت و مقاومت",
+            "endpoint": "/analyze_fibonacci/"
         },
         "bollinger_bands": {
-            "name": "باندهای بولینگر",
+            "name": "📊 باندهای بولینگر",
             "package": "premium",
             "category": "technical_indicators",
             "difficulty": "پیشرفته",
-            "description": "باندهای بولینگر برای تحلیل نوسانات و نقاط ورود"
+            "description": "باندهای بولینگر برای تحلیل نوسانات و نقاط ورود",
+            "endpoint": "/analyze_bollinger/"
         },
         "c_trend_lines": {
-            "name": "خطوط روند",
+            "name": "📐 خطوط روند",
             "package": "premium",
             "category": "trend_analysis",
             "difficulty": "پیشرفته",
-            "description": "ترسیم و تحلیل خطوط روند و کانال‌های قیمتی"
-        },
-        "cup_handle": {
-            "name": "الگوی کاپ اند هندل",
-            "package": "premium",
-            "category": "pattern_recognition",
-            "difficulty": "متخصص",
-            "description": "شناسایی الگوی برگشتی کاپ اند هندل"
+            "description": "ترسیم و تحلیل خطوط روند و کانال‌های قیمتی",
+            "endpoint": "/analyze_price_action_pandas_ta/"
         },
         "double_top_pattern": {
-            "name": "الگوی دو قله",
+            "name": "⛰️ الگوی دو قله",
             "package": "premium",
             "category": "pattern_recognition",
             "difficulty": "متخصص",
-            "description": "تشخیص الگوهای دو قله و دو کف برای پیش‌بینی برگشت روند"
+            "description": "تشخیص الگوهای دو قله و دو کف برای پیش‌بینی برگشت روند",
+            "endpoint": "/analyze_double_top_strategy/"
         },
         "fibonacci_strategy": {
-            "name": "استراتژی فیبوناچی",
+            "name": "🌀 استراتژی فیبوناچی",
             "package": "premium",
             "category": "trend_analysis",
             "difficulty": "پیشرفته",
-            "description": "استفاده از سطوح فیبوناچی ریتریسمنت برای نقاط ورود"
+            "description": "استفاده از سطوح فیبوناچی ریتریسمنت برای نقاط ورود",
+            "endpoint": "/analyze_fibonacci/"
         },
         "flag_pattern": {
-            "name": "الگوی پرچم",
+            "name": "🏁 الگوی پرچم",
             "package": "premium",
             "category": "pattern_recognition",
             "difficulty": "متخصص",
-            "description": "شناسایی الگوی ادامه‌دهنده پرچم در روندهای قوی"
+            "description": "شناسایی الگوی ادامه‌دهنده پرچم در روندهای قوی",
+            "endpoint": "/analyze_flag_pattern/"
         },
         "head_shoulders_analysis": {
-            "name": "الگوی سر و شانه",
+            "name": "👤 الگوی سر و شانه",
             "package": "premium",
             "category": "pattern_recognition",
             "difficulty": "متخصص",
-            "description": "تحلیل الگوی برگشتی سر و شانه"
+            "description": "تحلیل الگوی برگشتی سر و شانه",
+            "endpoint": "/analyze_head_shoulders_analysis/"
         },
         "heikin_ashi": {
-            "name": "کندل هایکن آشی",
+            "name": "🕯️ کندل هایکن آشی",
             "package": "premium",
             "category": "price_action",
             "difficulty": "متخصص",
-            "description": "تحلیل با کندل‌های هایکن آشی برای تشخیص روند"
-        },
-        "ichimoku_hi_signal": {
-            "name": "سیگنال بالا ایچیموکو",
-            "package": "premium",
-            "category": "trend_analysis",
-            "difficulty": "پیشرفته",
-            "description": "سیگنال‌های قوی و پرریسک ایچیموکو"
+            "description": "تحلیل با کندل‌های هایکن آشی برای تشخیص روند",
+            "endpoint": "/analyze_heikin_ashi_strategy/"
         },
         "macd_divergence": {
-            "name": "واگرایی MACD",
+            "name": "🌊 واگرایی MACD",
             "package": "premium",
             "category": "divergence_analysis",
             "difficulty": "متخصص",
-            "description": "تشخیص واگرایی‌های MACD برای پیش‌بینی تغییر روند"
+            "description": "تشخیص واگرایی‌های MACD برای پیش‌بینی تغییر روند",
+            "endpoint": "/analyze_macd_divergence_strategy/"
         },
         "martingale_low": {
-            "name": "مارتینگل پایین",
+            "name": "🎰 مارتینگل پایین",
             "package": "premium",
             "category": "advanced_systems",
             "difficulty": "متخصص",
-            "description": "استراتژی مارتینگل با ریسک پایین و مدیریت سرمایه"
+            "description": "استراتژی مارتینگل با ریسک پایین و مدیریت سرمایه",
+            "endpoint": "/analyze_momentum_strategy/"
         },
         "momentum": {
-            "name": "تحلیل مومنتوم",
+            "name": "🚀 تحلیل مومنتوم",
             "package": "premium",
             "category": "advanced_systems",
             "difficulty": "پیشرفته",
-            "description": "تحلیل قدرت و مومنتوم حرکت قیمت"
-        },
-        "price_action_hi": {
-            "name": "پرایس اکشن پیشرفته",
-            "package": "premium",
-            "category": "price_action",
-            "difficulty": "پیشرفته",
-            "description": "تحلیل پیشرفته حرکت قیمت با الگوهای پیچیده"
+            "description": "تحلیل قدرت و مومنتوم حرکت قیمت",
+            "endpoint": "/analyze_momentum_strategy/"
         },
         "stochastic": {
-            "name": "تحلیل استوکاستیک",
+            "name": "📈 تحلیل استوکاستیک",
             "package": "premium",
             "category": "technical_indicators",
             "difficulty": "متخصص",
-            "description": "نوسان‌گر استوکاستیک برای تشخیص اشباع و نقاط برگشت"
+            "description": "نوسان‌گر استوکاستیک برای تشخیص اشباع و نقاط برگشت",
+            "endpoint": "/analyze_RSI_basic/"
+        },
+        "stoch_rsi": {
+            "name": "📊 استوکاستیک RSI",
+            "package": "premium",
+            "category": "technical_indicators",
+            "difficulty": "متخصص",
+            "description": "ترکیب استوکاستیک و RSI برای دقت بیشتر",
+            "endpoint": "/analyze_RSI_basic/"
+        },
+        "support_resistance": {
+            "name": "🛡️ حمایت و مقاومت",
+            "package": "premium",
+            "category": "trend_analysis",
+            "difficulty": "پیشرفته",
+            "description": "تشخیص خودکار سطوح حمایت و مقاومت",
+            "endpoint": "/analyze_price_action_pandas_ta/"
         },
         "triangle_pattern": {
-            "name": "الگوی مثلث",
+            "name": "📐 الگوی مثلث",
             "package": "premium",
             "category": "pattern_recognition",
             "difficulty": "متخصص",
-            "description": "تشخیص انواع الگوهای مثلث صعودی، نزولی و متقارن"
+            "description": "تشخیص انواع الگوهای مثلث صعودی، نزولی و متقارن",
+            "endpoint": "/analyze_double_top_strategy/"
         },
         "wedge_pattern": {
-            "name": "الگوی گوه",
+            "name": "📊 الگوی گوه",
             "package": "premium",
             "category": "pattern_recognition",
             "difficulty": "متخصص",
-            "description": "تحلیل الگوهای گوه صعودی و نزولی"
+            "description": "تحلیل الگوهای گوه صعودی و نزولی",
+            "endpoint": "/analyze_double_top_strategy/"
+        },
+        "williams_alligator": {
+            "name": "🐊 تمساح ویلیامز",
+            "package": "premium",
+            "category": "technical_indicators",
+            "difficulty": "پیشرفته",
+            "description": "سیستم تمساح ویلیامز برای تشخیص روند",
+            "endpoint": "/analyze_WilliamsR/"
+        },
+        "parabolic_sar": {
+            "name": "📈 سار پارابولیک",
+            "package": "premium",
+            "category": "technical_indicators",
+            "difficulty": "پیشرفته",
+            "description": "سیستم سار پارابولیک برای تعیین نقاط توقف",
+            "endpoint": "/analyze_price_action_pandas_ta/"
         },
         
         # VIP Package (9 استراتژی اضافی)
         "atr": {
-            "name": "تحلیل ATR",
+            "name": "📊 تحلیل ATR",
             "package": "vip",
             "category": "technical_indicators",
             "difficulty": "متخصص",
-            "description": "میانگین دامنه واقعی برای محاسبه نوسانات و تنظیم stop loss"
+            "description": "میانگین دامنه واقعی برای محاسبه نوسانات و تنظیم stop loss",
+            "endpoint": "/analyze_atr/"
         },
-        "crt": {
-            "name": "تحلیل CRT",
-            "package": "vip",
-            "category": "advanced_systems",
-            "difficulty": "متخصص",
-            "description": "سیستم تحلیل CRT پیشرفته برای شناسایی روندها"
-        },
-        "diamond_pattern": {
-            "name": "الگوی الماس",
-            "package": "vip",
-            "category": "pattern_recognition",
-            "difficulty": "متخصص",
-            "description": "تشخیص الگوی نادر و قوی الماس"
-        },
-        "multi_level_resistance": {
-            "name": "مقاومت چند سطحی",
-            "package": "vip",
-            "category": "advanced_systems",
-            "difficulty": "متخصص",
-            "description": "تحلیل چند سطحی حمایت و مقاومت"
-        },
-        "p3": {
-            "name": "تحلیل P3",
-            "package": "vip",
-            "category": "advanced_systems",
-            "difficulty": "متخصص",
-            "description": "سیستم تحلیل P3 برای پیش‌بینی نقاط عطف"
-        },
-        "rtm": {
-            "name": "تحلیل RTM",
-            "package": "vip",
-            "category": "advanced_systems",
-            "difficulty": "متخصص",
-            "description": "سیستم RTM پیشرفته برای تحلیل ریسک و بازده"
-        },
-        "sma": {
-            "name": "تحلیل SMA",
+        "sma_advanced": {
+            "name": "📈 SMA پیشرفته",
             "package": "vip",
             "category": "technical_indicators",
             "difficulty": "پیشرفته",
-            "description": "میانگین متحرک ساده با تحلیل‌های پیشرفته"
+            "description": "میانگین متحرک ساده با تحلیل‌های پیشرفته و چندتایم‌فریمه",
+            "endpoint": "/analyze_EMA_strategy/"
         },
         "volume_profile": {
-            "name": "پروفایل حجم",
+            "name": "📊 پروفایل حجم",
             "package": "vip",
             "category": "volume_analysis",
             "difficulty": "متخصص",
-            "description": "تحلیل پروفایل حجم معاملات برای شناسایی نواحی مهم"
+            "description": "تحلیل پروفایل حجم معاملات برای شناسایی نواحی مهم",
+            "endpoint": "/analyze_price_action_pandas_ta/"
         },
         "vwap": {
-            "name": "تحلیل VWAP",
+            "name": "💎 تحلیل VWAP",
             "package": "vip",
             "category": "volume_analysis",
             "difficulty": "متخصص",
-            "description": "میانگین موزون حجمی برای شناسایی قیمت منصفانه"
+            "description": "میانگین موزون حجمی برای شناسایی قیمت منصفانه",
+            "endpoint": "/analyze_price_action_pandas_ta/"
+        },
+        "diamond_pattern": {
+            "name": "💎 الگوی الماس",
+            "package": "vip",
+            "category": "pattern_recognition",
+            "difficulty": "متخصص",
+            "description": "تشخیص الگوی نادر و قوی الماس",
+            "endpoint": "/analyze_Diamond_Pattern/"
+        },
+        "crt": {
+            "name": "🎯 تحلیل CRT",
+            "package": "vip",
+            "category": "advanced_systems",
+            "difficulty": "متخصص",
+            "description": "سیستم تحلیل CRT پیشرفته برای شناسایی روندها",
+            "endpoint": "/analyze_CRT_strategy/"
+        },
+        "p3": {
+            "name": "🎯 سیستم P3",
+            "package": "vip",
+            "category": "advanced_systems",
+            "difficulty": "متخصص",
+            "description": "سیستم تحلیل P3 برای پیش‌بینی نقاط عطف",
+            "endpoint": "/analyze_momentum_strategy/"
+        },
+        "rtm": {
+            "name": "🔄 تحلیل RTM",
+            "package": "vip",
+            "category": "advanced_systems",
+            "difficulty": "متخصص",
+            "description": "سیستم RTM پیشرفته برای تحلیل ریسک و بازده",
+            "endpoint": "/analyze_momentum_strategy/"
+        },
+        "multi_resistance": {
+            "name": "🛡️ مقاومت چندگانه",
+            "package": "vip",
+            "category": "advanced_systems",
+            "difficulty": "متخصص",
+            "description": "تحلیل چند سطحی حمایت و مقاومت با دقت بالا",
+            "endpoint": "/analyze_price_action_pandas_ta/"
         }
     }
     
@@ -321,6 +365,7 @@ class StrategyManager:
             # تبدیل نام پکیج به enum
             package_mapping = {
                 'free': PackageLevel.FREE,
+                'demo': PackageLevel.FREE,  # سازگاری
                 'basic': PackageLevel.BASIC,
                 'premium': PackageLevel.PREMIUM,
                 'vip': PackageLevel.VIP,
@@ -332,33 +377,7 @@ class StrategyManager:
         except Exception as e:
             logger.error(f"Error getting user package level: {e}")
             return PackageLevel.FREE
-    
-    @classmethod
-    def is_package_expired(cls, user_id: int) -> bool:
-        """بررسی انقضای پکیج کاربر"""
-        try:
-            user_data = database_manager.get_user_by_telegram_id(user_id)
-            if not user_data:
-                return True
-                
-            package_expiry = user_data.get('package_expiry')
-            if not package_expiry:
-                # اگر پکیج رایگان است، هرگز منقضی نمی‌شود
-                package_type = user_data.get('package', 'free')
-                return package_type != 'free'
-                
-            # تبدیل رشته به datetime
-            if isinstance(package_expiry, str):
-                expiry_date = datetime.fromisoformat(package_expiry)
-            else:
-                expiry_date = package_expiry
-                
-            return datetime.now() > expiry_date
-            
-        except Exception as e:
-            logger.error(f"Error checking package expiry: {e}")
-            return True
-    
+        
     @classmethod
     def check_strategy_access(cls, user_id: int, strategy: str) -> Tuple[bool, str]:
         """بررسی دسترسی کاربر به استراتژی مشخص"""
@@ -391,8 +410,10 @@ class StrategyManager:
                         "لطفاً یکی از پکیج‌های موجود را خریداری کنید."
                     )
             
-            # بررسی انقضای پکیج (غیر از free)
-            if cls.is_package_expired(user_id):
+            # بررسی انقضای پکیج (غیر از free)  
+            from managers.user_manager import UserManager
+            is_expired, days_left = UserManager.is_package_expired(user_id)
+            if is_expired:   
                 return False, (
                     "⏰ **پکیج منقضی شده**\n\n"
                     "پکیج شما منقضی شده است.\n"
@@ -510,6 +531,13 @@ class StrategyManager:
         return "متوسط"
     
     @classmethod
+    def get_strategy_endpoint(cls, strategy: str) -> Optional[str]:
+        """دریافت endpoint API استراتژی"""
+        if strategy in cls.ALL_STRATEGIES:
+            return cls.ALL_STRATEGIES[strategy]["endpoint"]
+        return None
+    
+    @classmethod
     def get_available_strategies_for_user(cls, user_id: int) -> List[str]:
         """دریافت لیست استراتژی‌های در دسترس کاربر"""
         try:
@@ -528,13 +556,13 @@ class StrategyManager:
             available_strategies = []
             
             package_hierarchy = {
-                "basic": ["basic"],
-                "premium": ["basic", "premium"],
-                "vip": ["basic", "premium", "vip"],
-                "ghost": ["basic", "premium", "vip", "ghost"]
+                "basic": ["free", "basic"],
+                "premium": ["free", "basic", "premium"],
+                "vip": ["free", "basic", "premium", "vip"],
+                "ghost": ["free", "basic", "premium", "vip", "ghost"]
             }
             
-            allowed_packages = package_hierarchy.get(user_package_name, [])
+            allowed_packages = package_hierarchy.get(user_package_name, ["free"])
             
             for strategy_key, strategy_info in cls.ALL_STRATEGIES.items():
                 if strategy_info["package"] in allowed_packages:
@@ -559,13 +587,37 @@ class StrategyManager:
                         "name": strategy_info["name"],
                         "description": strategy_info["description"],
                         "category": strategy_info["category"],
-                        "difficulty": strategy_info["difficulty"]
+                        "difficulty": strategy_info["difficulty"],
+                        "endpoint": strategy_info["endpoint"]
                     })
             
             return strategy_list
             
         except Exception as e:
             logger.error(f"Error getting strategies by package: {e}")
+            return []
+    
+    @classmethod
+    def get_strategies_by_category(cls, category: str) -> List[Dict[str, Any]]:
+        """دریافت استراتژی‌های یک دسته‌بندی"""
+        try:
+            strategy_list = []
+            
+            for strategy_key, strategy_info in cls.ALL_STRATEGIES.items():
+                if strategy_info["category"] == category:
+                    strategy_list.append({
+                        "key": strategy_key,
+                        "name": strategy_info["name"],
+                        "description": strategy_info["description"],
+                        "package": strategy_info["package"],
+                        "difficulty": strategy_info["difficulty"],
+                        "endpoint": strategy_info["endpoint"]
+                    })
+            
+            return strategy_list
+            
+        except Exception as e:
+            logger.error(f"Error getting strategies by category: {e}")
             return []
     
     @classmethod
@@ -596,60 +648,65 @@ class StrategyManager:
     
     @classmethod
     async def analyze_strategy(cls, user_id: int, strategy: str, symbol: str, currency: str, timeframe: str) -> Optional[Dict[str, Any]]:
-        """انجام تحلیل استراتژی با مدیریت کش"""
+        """انجام تحلیل استراتژی بدون کش"""
         try:
+            logger.info(f"Starting analysis for user {user_id}: {strategy} {symbol}/{currency} @ {timeframe}")
+            
             # بررسی دسترسی
             has_access, access_message = cls.check_strategy_access(user_id, strategy)
             if not has_access:
+                logger.warning(f"Access denied for user {user_id} to strategy {strategy}")
                 return {"error": access_message}
             
             # بررسی تایم‌فریم
             timeframe_allowed, timeframe_message = cls.check_timeframe_access(user_id, timeframe)
             if not timeframe_allowed:
+                logger.warning(f"Timeframe {timeframe} not allowed for user {user_id}")
                 return {"error": timeframe_message}
             
             # بررسی محدودیت دمو
             if strategy.startswith('demo_'):
                 can_use_demo, demo_message, usage_count = cls.check_demo_usage_limit(user_id)
                 if not can_use_demo:
+                    logger.warning(f"Demo limit exceeded for user {user_id}")
                     return {"error": demo_message}
             
-            # بررسی کش
-            cache_key = f"analysis_{strategy}_{symbol}_{currency}_{timeframe}"
-            cached_result = cache.get(cache_key)
-            
-            if cached_result:
-                logger.info(f"Using cached result for {cache_key}")
-                cached_result["is_cached"] = True
-                return cached_result
-            
-            # فراخوانی API
+            # فراخوانی API مستقیم (بدون کش)
             try:
+                # وارد کردن api_client در اینجا برای جلوگیری از circular import
+                from api.api_client import api_client
+                
+                logger.info(f"Calling API for {strategy} analysis: {symbol}/{currency} @ {timeframe}")
+                
                 analysis_data = await api_client.fetch_strategy_analysis(
                     strategy, symbol, currency, timeframe
                 )
                 
-                if analysis_data:
-                    # ذخیره در کش
-                    cache.set(cache_key, analysis_data, ttl=Config.SIGNAL_CACHE_DURATION)
+                if analysis_data and "error" not in analysis_data:
+                    # تنظیم flag برای نشان دادن که از کش نیست
                     analysis_data["is_cached"] = False
                     
                     # ثبت آمار استفاده
                     if strategy.startswith('demo_'):
                         cls.increment_demo_usage(user_id)
+                        logger.info(f"Demo usage incremented for user {user_id}")
                     
+                    logger.info(f"Analysis successful for {strategy} {symbol}/{currency}")
                     return analysis_data
                 else:
-                    return {"error": "❌ خطا در دریافت داده‌ها از سرور"}
+                    error_msg = analysis_data.get("error", "خطای ناشناخته") if analysis_data else "پاسخ خالی از API"
+                    logger.error(f"API returned error: {error_msg}")
+                    return {"error": f"❌ خطا در دریافت داده‌ها: {error_msg}"}
                     
             except Exception as api_error:
-                logger.error(f"API error for {strategy}: {api_error}")
-                return {"error": f"❌ خطای API: {str(api_error)}"}
+                logger.error(f"API error for {strategy}: {api_error}", exc_info=True)
+                return {"error": f"❌ خطای ارتباط با سرور: {str(api_error)}"}
                 
         except Exception as e:
-            logger.error(f"Error analyzing strategy: {e}")
-            return {"error": "❌ خطای غیرمنتظره در تحلیل"}
+            logger.error(f"Error analyzing strategy {strategy}: {e}", exc_info=True)
+            return {"error": "❌ خطای غیرمنتظره در تحلیل. لطفاً دوباره تلاش کنید."}
     
+        
     @classmethod
     def increment_demo_usage(cls, user_id: int) -> None:
         """افزایش شمارنده استفاده از دمو"""
@@ -684,48 +741,6 @@ class StrategyManager:
         except Exception as e:
             logger.error(f"Error checking strategy usage: {e}")
             return False, "❌ خطا در بررسی دسترسی."
-    
-    @classmethod
-    def get_strategy_type_from_name(cls, strategy: str) -> str:
-        """تشخیص نوع استراتژی برای انتخاب قالب پیام مناسب"""
-        try:
-            if strategy in cls.ALL_STRATEGIES:
-                category = cls.ALL_STRATEGIES[strategy]["category"]
-                
-                category_mapping = {
-                    "technical_indicators": "rsi" if "rsi" in strategy else "general",
-                    "pattern_recognition": "pattern",
-                    "trend_analysis": "ichimoku" if "ichimoku" in strategy else "fibonacci" if "fibonacci" in strategy else "general",
-                    "price_action": "candlestick" if "candlestick" in strategy or "heikin" in strategy else "general",
-                    "volume_analysis": "volume",
-                    "advanced_systems": "momentum" if "momentum" in strategy else "general",
-                    "divergence_analysis": "macd",
-                    "demo": "general"
-                }
-                
-                return category_mapping.get(category, "general")
-            
-            # fallback به روش قدیمی
-            if "momentum" in strategy.lower():
-                return "momentum"
-            elif any(pattern in strategy.lower() for pattern in ["double_top", "triangle", "wedge", "diamond", "cup_handle", "flag", "head_shoulders"]):
-                return "pattern"
-            elif "ichimoku" in strategy.lower():
-                return "ichimoku"
-            elif "fibonacci" in strategy.lower():
-                return "fibonacci"
-            elif "bollinger" in strategy.lower():
-                return "bollinger"
-            elif "rsi" in strategy.lower():
-                return "rsi"
-            elif "volume" in strategy.lower():
-                return "volume"
-            elif "candlestick" in strategy.lower() or "heikin" in strategy.lower():
-                return "candlestick"
-            else:
-                return "general"
-        except:
-            return "general"
     
     @classmethod
     def get_strategy_statistics(cls) -> Dict[str, Any]:
@@ -783,28 +798,20 @@ class StrategyManager:
             return {}
     
     @classmethod
-    def get_user_usage_stats(cls, user_id: int) -> Dict[str, Any]:
-        """دریافت آمار استفاده کاربر"""
-        try:
-            # دریافت آمار از دیتابیس
-            stats = database_manager.get_user_usage_stats(user_id)
-            
-            # اضافه کردن اطلاعات پکیج
-            user_package = cls.get_user_package_level(user_id)
-            package_info = {
-                "package_level": user_package.value if user_package else "free",
-                "is_expired": cls.is_package_expired(user_id),
-                "available_strategies": len(cls.get_available_strategies_for_user(user_id))
-            }
-            
-            stats.update(package_info)
-            return stats
-            
-        except Exception as e:
-            logger.error(f"Error getting user usage stats: {e}")
-            return {}
-    
-    @classmethod
     def is_strategy_available(cls, strategy: str) -> bool:
         """بررسی در دسترس بودن استراتژی"""
         return strategy in cls.ALL_STRATEGIES
+    
+    @classmethod
+    def get_all_strategy_keys(cls) -> List[str]:
+        """دریافت لیست تمام کلیدهای استراتژی"""
+        return list(cls.ALL_STRATEGIES.keys())
+    
+    @classmethod
+    def get_package_strategy_count(cls, package_name: str) -> int:
+        """دریافت تعداد استراتژی‌های یک پکیج"""
+        return len(cls.get_strategies_by_package(package_name))
+
+
+# Export
+__all__ = ['StrategyManager', 'PackageLevel']

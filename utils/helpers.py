@@ -1,5 +1,6 @@
 """
 ابزارهای کمکی - توابع عمومی و کاربردی
+نسخه بهبود یافته با Parser پیکربندی‌محور برای استخراج سیگنال‌ها
 """
 
 import re
@@ -12,6 +13,400 @@ from datetime import datetime, timedelta
 import asyncio
 from functools import wraps
 import time
+
+# =========================
+# پیکربندی Parser برای استخراج سیگنال‌ها
+# =========================
+
+# پیکربندی patterns برای استخراج داده‌ها از همه استراتژی‌ها
+EXTRACTION_PATTERNS = {
+    # الگوهای استخراج قیمت - از عمومی به خاص
+    "price_patterns": [
+        r"قیمت لایو[:\s]*([0-9,]+\.?[0-9]*)",
+        r"آخرین قیمت[:\s]*([0-9,]+\.?[0-9]*)", 
+        r"قیمت فعلی[:\s]*([0-9,]+\.?[0-9]*)",
+        r"قیمت آخر[:\s]*([0-9,]+\.?[0-9]*)",
+        r"آخرین قیمت بسته شدن[:\s]*([0-9,]+\.?[0-9]*)",
+        r"قیمت بسته شدن[:\s]*([0-9,]+\.?[0-9]*)"
+    ],
+    
+    # الگوهای استخراج سیگنال - چندین pattern با mapping
+    "signal_patterns": [
+        {
+            "pattern": r"نتیجه نهایی تحلیل[:\s]*([^\n]+)",
+            "mapping": {
+                r"سیگنال صعودی|BUY": "خرید",
+                r"سیگنال نزولی|SELL": "فروش", 
+                r"HOLD|نگهداری|تعادل": "نگهداری"
+            }
+        },
+        {
+            "pattern": r"آخرین سیگنال[:\s]*([A-Z_]+)",
+            "mapping": {
+                r"SELL_DIVERGENCE|STRONG_SELL": "فروش",
+                r"BUY_DIVERGENCE|STRONG_BUY": "خرید",
+                r"HOLD": "نگهداری"
+            }
+        },
+        {
+            "pattern": r"فرصت\s+(\w+)\s+مناسب",
+            "mapping": {
+                r"فروش": "فروش",
+                r"خرید": "خرید"
+            }
+        },
+        {
+            "pattern": r"قدرت سیگنال[:\s]*([^\n]+)",
+            "mapping": {
+                r"STRONG SELL|قوی.*فروش": "فروش",
+                r"STRONG BUY|قوی.*خرید": "خرید",
+                r"SELL": "فروش",
+                r"BUY": "خرید"
+            }
+        }
+    ],
+    
+    # الگوهای استخراج قدرت سیگنال
+    "strength_patterns": [
+        {
+            "pattern": r"قدرت سیگنال[:\s]*([^\n]+)",
+            "mapping": {
+                r"STRONG|قوی|بسیار": "قوی",
+                r"WEAK|ضعیف": "ضعیف",
+                r"متوسط|MEDIUM": "متوسط"
+            }
+        },
+        {
+            "pattern": r"قدرت[:\s]*([^)]+)",
+            "mapping": {
+                r"قوی|STRONG": "قوی",
+                r"ضعیف|WEAK": "ضعیف",
+                r"متوسط": "متوسط"
+            }
+        }
+    ],
+    
+    # الگوهای استخراج سطوح معاملاتی
+    "trading_levels": {
+        "entry_price": [
+            r"Entry[:\s]*([0-9,]+\.?[0-9]*)",
+            r"نقطه ورود[:\s]*([0-9,]+\.?[0-9]*)",
+            r"قیمت ورود[:\s]*([0-9,]+\.?[0-9]*)"
+        ],
+        "stop_loss": [
+            r"SL[:\s]*([0-9,]+\.?[0-9]*)",
+            r"حد ضرر[:\s]*([0-9,]+\.?[0-9]*)",
+            r"stop\s*loss[:\s]*([0-9,]+\.?[0-9]*)"
+        ],
+        "take_profit": [
+            r"TP[:\s]*([0-9,]+\.?[0-9]*)",
+            r"هدف قیمتی[:\s]*([0-9,]+\.?[0-9]*)",
+            r"حد سود[:\s]*([0-9,]+\.?[0-9]*)",
+            r"take\s*profit[:\s]*([0-9,]+\.?[0-9]*)"
+        ],
+        "support": [
+            r"سطح حمایت[^:]*[:\s]*([0-9,]+\.?[0-9]*)",
+            r"Support[^:]*[:\s]*([0-9,]+\.?[0-9]*)",
+            r"حمایت[^:]*[:\s]*([0-9,]+\.?[0-9]*)"
+        ],
+        "resistance": [
+            r"سطح مقاومت[^:]*[:\s]*([0-9,]+\.?[0-9]*)",
+            r"Resistance[^:]*[:\s]*([0-9,]+\.?[0-9]*)",
+            r"مقاومت[^:]*[:\s]*([0-9,]+\.?[0-9]*)"
+        ]
+    }
+}
+
+# =========================
+# توابع اصلی استخراج سیگنال
+# =========================
+
+def extract_signal_details(analysis_result: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Parser جامع مبتنی بر پیکربندی برای همه استراتژی‌ها
+    این تابع می‌تواند داده‌های تحلیلی را از هر استراتژی استخراج کند
+    """
+    try:
+        from utils.logger import logger
+        
+        details = {
+            "signal_direction": "نامشخص",
+            "strength": "متوسط", 
+            "confidence": 0.5,
+            "current_price": 0.0,
+            "entry_price": 0.0,
+            "stop_loss": 0.0,
+            "take_profit": 0.0,
+            "support": 0.0,
+            "resistance": 0.0
+        }
+        
+        # 1. استخراج از structured data (اگر موجود باشد)
+        if "analysis" in analysis_result and isinstance(analysis_result["analysis"], dict):
+            details.update(_extract_from_structured_data(analysis_result["analysis"]))
+        
+        # 2. استخراج از محتوای متنی
+        text_content = analysis_result.get("analysis_text") or analysis_result.get("raw_report", "")
+        
+        if text_content:
+            details.update(_extract_from_text_universal(text_content))
+        
+        # 3. استخراج قیمت از فیلدهای اضافی
+        if details["current_price"] == 0.0:
+            details["current_price"] = _extract_price_from_fields(analysis_result)
+        
+        # 4. محاسبه confidence
+        details["confidence"] = _calculate_confidence(details["strength"])
+        
+        # 5. محاسبه سطوح fallback
+        _calculate_fallback_levels(details)
+        
+        return details
+        
+    except Exception as e:
+        try:
+            from utils.logger import logger
+            logger.error(f"Error extracting signal details: {e}")
+        except:
+            print(f"Error extracting signal details: {e}")
+        return _get_default_details()
+
+def _extract_from_structured_data(analysis_data: Dict[str, Any]) -> Dict[str, Any]:
+    """استخراج از داده‌های ساختاریافته JSON"""
+    details = {}
+    
+    # قیمت
+    if "last_price" in analysis_data:
+        details["current_price"] = float(analysis_data["last_price"])
+    
+    # سیگنال
+    if "signal" in analysis_data:
+        signal_mapping = {
+            "BUY": "خرید", "SELL": "فروش", "HOLD": "نگهداری",
+            "خرید": "خرید", "فروش": "فروش", "نگهداری": "نگهداری"
+        }
+        details["signal_direction"] = signal_mapping.get(
+            str(analysis_data["signal"]).upper(), "نامشخص"
+        )
+    
+    # قدرت
+    if "signal_strength" in analysis_data:
+        details["strength"] = str(analysis_data["signal_strength"])
+    
+    return details
+
+def _extract_from_text_universal(text: str) -> Dict[str, Any]:
+    """Parser جامع مبتنی بر patterns برای همه متون"""
+    details = {}
+    
+    # استخراج قیمت
+    for pattern in EXTRACTION_PATTERNS["price_patterns"]:
+        match = re.search(pattern, text, re.IGNORECASE)
+        if match:
+            details["current_price"] = float(match.group(1).replace(',', ''))
+            break
+    
+    # استخراج سیگنال
+    for signal_config in EXTRACTION_PATTERNS["signal_patterns"]:
+        match = re.search(signal_config["pattern"], text, re.IGNORECASE)
+        if match:
+            matched_text = match.group(1).strip() if match.groups() else match.group(0).strip()
+            
+            for pattern_key, signal_value in signal_config["mapping"].items():
+                if re.search(pattern_key, matched_text, re.IGNORECASE):
+                    details["signal_direction"] = signal_value
+                    break
+            
+            if "signal_direction" in details:
+                break
+    
+    # استخراج قدرت
+    for strength_config in EXTRACTION_PATTERNS["strength_patterns"]:
+        match = re.search(strength_config["pattern"], text, re.IGNORECASE)
+        if match:
+            matched_text = match.group(1).strip()
+            
+            for pattern_key, strength_value in strength_config["mapping"].items():
+                if re.search(pattern_key, matched_text, re.IGNORECASE):
+                    details["strength"] = strength_value
+                    break
+            
+            if "strength" in details:
+                break
+    
+    # استخراج سطوح معاملاتی
+    for level_name, patterns in EXTRACTION_PATTERNS["trading_levels"].items():
+        for pattern in patterns:
+            match = re.search(pattern, text, re.IGNORECASE)
+            if match:
+                details[level_name] = float(match.group(1).replace(',', ''))
+                break
+        
+        # اگر پیدا شد، به pattern بعدی برو
+        if level_name in details:
+            continue
+    
+    return details
+
+def _extract_price_from_fields(analysis_result: Dict[str, Any]) -> float:
+    """استخراج قیمت از فیلدهای مختلف"""
+    price_fields = ["current_price", "price", "close", "last_price"]
+    
+    for field in price_fields:
+        if field in analysis_result:
+            try:
+                return float(analysis_result[field])
+            except (ValueError, TypeError):
+                continue
+    
+    return 0.0
+
+def _calculate_confidence(strength: str) -> float:
+    """محاسبه درصد اعتماد بر اساس قدرت"""
+    confidence_map = {
+        "بسیار قوی": 0.9,
+        "قوی": 0.8, 
+        "متوسط": 0.6,
+        "ضعیف": 0.4,
+        "خیلی ضعیف": 0.2
+    }
+    
+    for key, value in confidence_map.items():
+        if key in strength:
+            return value
+    
+    return 0.5
+
+def _calculate_fallback_levels(details: Dict[str, Any]) -> None:
+    """محاسبه سطوح fallback برای فیلدهای خالی"""
+    current_price = details.get("current_price", 0.0)
+    
+    if current_price <= 0:
+        return
+    
+    # Entry price fallback
+    if details.get("entry_price", 0.0) == 0.0:
+        details["entry_price"] = current_price
+    
+    entry_price = details["entry_price"]
+    signal_direction = details.get("signal_direction", "نامشخص")
+    
+    # Stop Loss fallback
+    if details.get("stop_loss", 0.0) == 0.0:
+        if signal_direction == "فروش":
+            details["stop_loss"] = entry_price * 1.02  # 2% بالاتر
+        else:
+            details["stop_loss"] = entry_price * 0.98  # 2% پایین‌تر
+    
+    # Take Profit fallback  
+    if details.get("take_profit", 0.0) == 0.0:
+        if signal_direction == "فروش":
+            details["take_profit"] = entry_price * 0.97  # 3% پایین‌تر
+        else:
+            details["take_profit"] = entry_price * 1.03  # 3% بالاتر
+    
+    # Support/Resistance fallback
+    if details.get("support", 0.0) == 0.0:
+        details["support"] = current_price * 0.995  # 0.5% پایین‌تر
+    
+    if details.get("resistance", 0.0) == 0.0:
+        details["resistance"] = current_price * 1.005  # 0.5% بالاتر
+
+def _get_default_details() -> Dict[str, Any]:
+    """مقادیر پیش‌فرض در صورت خطا"""
+    return {
+        "signal_direction": "نامشخص",
+        "strength": "متوسط",
+        "confidence": 0.5,
+        "current_price": 0.0,
+        "entry_price": 0.0,
+        "stop_loss": 0.0,
+        "take_profit": 0.0,
+        "support": 0.0,
+        "resistance": 0.0
+    }
+
+# تابع کمکی برای اضافه کردن patterns جدید
+def add_extraction_pattern(category: str, pattern: str, mapping: Dict[str, str] = None):
+    """اضافه کردن pattern جدید بدون تغییر کد"""
+    if category == "price":
+        EXTRACTION_PATTERNS["price_patterns"].append(pattern)
+    elif category == "signal":
+        EXTRACTION_PATTERNS["signal_patterns"].append({
+            "pattern": pattern,
+            "mapping": mapping or {}
+        })
+    elif category == "strength":
+        EXTRACTION_PATTERNS["strength_patterns"].append({
+            "pattern": pattern, 
+            "mapping": mapping or {}
+        })
+    elif category in EXTRACTION_PATTERNS["trading_levels"]:
+        EXTRACTION_PATTERNS["trading_levels"][category].append(pattern)
+
+def format_signal_message(signal_details: Dict[str, Any], symbol: str, currency: str, timeframe: str, strategy: str) -> str:
+    """
+    فرمت کامل پیام سیگنال با جزئیات
+    """
+    try:
+        # انتخاب ایموجی بر اساس سیگنال
+        signal_emojis = {
+            "خرید": "🟢⬆️",
+            "فروش": "🔴⬇️", 
+            "نگهداری": "🟡⏸️",
+            "نامشخص": "⚪"
+        }
+        
+        signal_direction = signal_details.get("signal_direction", "نامشخص")
+        emoji = signal_emojis.get(signal_direction, "⚪")
+        current_price = signal_details.get("current_price", 0.0)
+        
+        # ساخت پیام اصلی
+        message = f"🎯 سیگنال معاملاتی {symbol}/{currency}\n"
+        message += "━━━━━━━━━━━━━━━━━━━━━━\n"
+        message += "📊 اطلاعات کلی:\n"
+        message += f"⏱ تایم‌فریم: {timeframe}\n"
+        message += f"💵 قیمت فعلی: {current_price:,.4f} {currency}\n"
+        message += f"🕒 زمان تحلیل: 1404/06/15 - 04:27:29\n"
+        message += f"{emoji} سیگنال: {signal_direction}\n"
+        message += f"👌 قدرت: {signal_details.get('strength', 'متوسط')}\n"
+        
+        # سطوح کلیدی
+        message += "💰 سطوح کلیدی:\n"
+        entry_price = signal_details.get("entry_price", current_price)
+        stop_loss = signal_details.get("stop_loss", 0.0)
+        take_profit = signal_details.get("take_profit", 0.0)
+        
+        message += f"🎯 نقطه ورود: {entry_price:,.4f}\n"
+        message += f"🛑 حد ضرر: {stop_loss:,.4f}\n"
+        message += f"💎 هدف قیمتی: {take_profit:,.4f}\n"
+        
+        # تحلیل تکنیکال
+        message += "📈 تحلیل تکنیکال:\n"
+        support = signal_details.get("support", 0.0)
+        resistance = signal_details.get("resistance", 0.0)
+        confidence = signal_details.get("confidence", 0.5)
+        
+        message += f"🔻 حمایت: {support:,.4f}\n"
+        message += f"🔺 مقاومت: {resistance:,.4f}\n"
+        message += f"📊 اعتماد: {confidence:.0%}\n"
+        
+        # یادآوری
+        message += "\n⚠️ یادآوری مهم: این تحلیل صرفاً جنبه آموزشی دارد و توصیه سرمایه‌گذاری محسوب نمی‌شود."
+        
+        return message
+        
+    except Exception as e:
+        try:
+            from utils.logger import logger
+            logger.error(f"Error formatting signal message: {e}")
+        except:
+            print(f"Error formatting signal message: {e}")
+        return f"❌ خطا در فرمت‌بندی پیام سیگنال {symbol}/{currency}"
+
+# =========================
+# سایر توابع کمکی (بدون تغییر)
+# =========================
 
 def generate_random_string(length: int = 8, 
                          use_uppercase: bool = True,
@@ -134,401 +529,6 @@ def parse_user_input(text: str) -> Dict[str, Any]:
     result["symbols"] = list(set(symbols))
     
     return result
-
-def extract_signal_details(analysis_data: Union[Dict[str, Any], str]) -> Dict[str, Any]:
-    """استخراج جزئیات سیگنال از داده‌های تحلیل (پشتیبانی از انواع مختلف)"""
-    details = {
-        "signal_direction": "neutral",
-        "entry_price": 0.0,
-        "stop_loss": 0.0,
-        "take_profit": 0.0,
-        "support": 0.0,
-        "resistance": 0.0,
-        "strength": "medium",
-        "confidence": 50.0,
-        "strategy_type": "unknown",
-        "pattern_confidence": 0.0,
-        "risk_reward_ratio": 0.0
-    }
-    
-    # دریافت متن تحلیل
-    analysis_text = ""
-    if isinstance(analysis_data, dict):
-        analysis_text = analysis_data.get("analysis_text", str(analysis_data))
-        # بررسی وجود فیلدهای مستقیم در JSON
-        if "signal_direction" in analysis_data:
-            details["signal_direction"] = analysis_data["signal_direction"]
-        if "entry_price" in analysis_data:
-            details["entry_price"] = float(analysis_data["entry_price"])
-        if "stop_loss" in analysis_data:
-            details["stop_loss"] = float(analysis_data["stop_loss"])
-        if "take_profit" in analysis_data:
-            details["take_profit"] = float(analysis_data["take_profit"])
-        if "confidence" in analysis_data:
-            details["confidence"] = float(analysis_data["confidence"])
-    else:
-        analysis_text = str(analysis_data)
-    
-    text = analysis_text.lower()
-    
-    # تشخیص نوع استراتژی بر اساس محتوا
-    if "momentum" in text or "مومنتوم" in text:
-        details["strategy_type"] = "momentum"
-        details.update(_extract_momentum_details(analysis_text))
-    elif "double top" in text or "دو قله" in text or "double bottom" in text or "دو کف" in text:
-        details["strategy_type"] = "pattern"
-        details.update(_extract_pattern_details(analysis_text))
-    elif "ichimoku" in text or "ایچیموکو" in text:
-        details["strategy_type"] = "ichimoku"
-        details.update(_extract_ichimoku_details(analysis_text))
-    elif "fibonacci" in text or "فیبوناچی" in text:
-        details["strategy_type"] = "fibonacci"
-        details.update(_extract_fibonacci_details(analysis_text))
-    elif "bollinger" in text or "بولینگر" in text:
-        details["strategy_type"] = "bollinger"
-        details.update(_extract_bollinger_details(analysis_text))
-    elif "rsi" in text:
-        details["strategy_type"] = "rsi"
-        details.update(_extract_rsi_details(analysis_text))
-    elif "macd" in text:
-        details["strategy_type"] = "macd"
-        details.update(_extract_macd_details(analysis_text))
-    elif "candlestick" in text or "کندل" in text:
-        details["strategy_type"] = "candlestick"
-        details.update(_extract_candlestick_details(analysis_text))
-    elif "triangle" in text or "مثلث" in text:
-        details["strategy_type"] = "triangle"
-        details.update(_extract_triangle_details(analysis_text))
-    elif "wedge" in text or "گوه" in text:
-        details["strategy_type"] = "wedge"
-        details.update(_extract_wedge_details(analysis_text))
-    elif "diamond" in text or "الماس" in text:
-        details["strategy_type"] = "diamond"
-        details.update(_extract_diamond_details(analysis_text))
-    elif "head" in text and "shoulder" in text:
-        details["strategy_type"] = "head_shoulders"
-        details.update(_extract_head_shoulders_details(analysis_text))
-    elif "volume" in text or "حجم" in text:
-        details["strategy_type"] = "volume"
-        details.update(_extract_volume_details(analysis_text))
-    else:
-        # تحلیل عمومی
-        details.update(_extract_general_details(analysis_text))
-    
-    return details
-
-def _extract_momentum_details(analysis_text: str) -> Dict[str, Any]:
-    """استخراج جزئیات مخصوص استراتژی مومنتوم"""
-    details = {}
-    
-    # تشخیص جهت سیگنال
-    if "خرید" in analysis_text or "buy" in analysis_text.lower():
-        details["signal_direction"] = "خرید"
-    elif "فروش" in analysis_text or "sell" in analysis_text.lower():
-        details["signal_direction"] = "فروش"
-    elif "خنثی" in analysis_text or "neutral" in analysis_text.lower():
-        details["signal_direction"] = "خنثی"
-    
-    # استخراج قیمت‌ها با regex بهتر
-    entry_match = re.search(r'entry price:\s*([\d,]+\.?\d*)', analysis_text, re.IGNORECASE)
-    sl_match = re.search(r'sl:\s*([\d,]+\.?\d*)', analysis_text, re.IGNORECASE)
-    tp_match = re.search(r'tp:\s*([\d,]+\.?\d*)', analysis_text, re.IGNORECASE)
-    
-    if entry_match:
-        details["entry_price"] = float(entry_match.group(1).replace(',', ''))
-    if sl_match:
-        details["stop_loss"] = float(sl_match.group(1).replace(',', ''))
-    if tp_match:
-        details["take_profit"] = float(tp_match.group(1).replace(',', ''))
-    
-    # استخراج Risk/Reward
-    rr_match = re.search(r'risk/reward:\s*([\d.]+)', analysis_text, re.IGNORECASE)
-    if rr_match:
-        details["risk_reward_ratio"] = float(rr_match.group(1))
-    
-    # تشخیص قدرت
-    if "قوی" in analysis_text or "strong" in analysis_text.lower():
-        details["strength"] = "قوی"
-        details["confidence"] = 85.0
-    elif "ضعیف" in analysis_text or "weak" in analysis_text.lower():
-        details["strength"] = "ضعیف"
-        details["confidence"] = 35.0
-    else:
-        details["strength"] = "متوسط"
-        details["confidence"] = 60.0
-    
-    return details
-
-def _extract_pattern_details(analysis_text: str) -> Dict[str, Any]:
-    """استخراج جزئیات مخصوص الگوهای قیمتی"""
-    details = {}
-    
-    # استخراج درصد اطمینان الگو
-    confidence_match = re.search(r'اطمینان:\s*(\d+)%', analysis_text)
-    if confidence_match:
-        details["pattern_confidence"] = float(confidence_match.group(1))
-        details["confidence"] = float(confidence_match.group(1))
-    
-    # استخراج تکمیل الگو
-    completion_match = re.search(r'تکمیل الگو:\s*(\d+)%', analysis_text)
-    if completion_match:
-        details["pattern_completion"] = float(completion_match.group(1))
-    
-    # تشخیص سیگنال از وضعیت الگو
-    if "فعال شده" in analysis_text or "شکست" in analysis_text:
-        if "double bottom" in analysis_text.lower() or "دو کف" in analysis_text:
-            details["signal_direction"] = "خرید"
-            details["strength"] = "بسیار قوی"
-        elif "double top" in analysis_text.lower() or "دو قله" in analysis_text:
-            details["signal_direction"] = "فروش"
-            details["strength"] = "بسیار قوی"
-    elif "تشکیل شده" in analysis_text:
-        details["signal_direction"] = "انتظار"
-        details["strength"] = "متوسط"
-    
-    # استخراج هدف قیمتی
-    target_match = re.search(r'هدف قیمتی:\s*([\d,]+\.?\d*)', analysis_text)
-    if target_match:
-        details["take_profit"] = float(target_match.group(1).replace(',', ''))
-    
-    return details
-
-def _extract_ichimoku_details(analysis_text: str) -> Dict[str, Any]:
-    """استخراج جزئیات مخصوص ایچیموکو"""
-    details = {}
-    
-    # تشخیص وضعیت ابر
-    if "بالای ابر" in analysis_text:
-        details["signal_direction"] = "خرید"
-        details["strength"] = "قوی"
-    elif "زیر ابر" in analysis_text:
-        details["signal_direction"] = "فروش"
-        details["strength"] = "قوی"
-    elif "داخل ابر" in analysis_text:
-        details["signal_direction"] = "خنثی"
-        details["strength"] = "ضعیف"
-    
-    # استخراج خطوط ایچیموکو
-    tenkan_match = re.search(r'tenkan[_\s]sen:\s*([\d,]+\.?\d*)', analysis_text, re.IGNORECASE)
-    kijun_match = re.search(r'kijun[_\s]sen:\s*([\d,]+\.?\d*)', analysis_text, re.IGNORECASE)
-    
-    if tenkan_match:
-        details["tenkan_sen"] = float(tenkan_match.group(1).replace(',', ''))
-    if kijun_match:
-        details["kijun_sen"] = float(kijun_match.group(1).replace(',', ''))
-    
-    return details
-
-def _extract_fibonacci_details(analysis_text: str) -> Dict[str, Any]:
-    """استخراج جزئیات مخصوص فیبوناچی"""
-    details = {}
-    
-    # استخراج سطوح فیبوناچی
-    fib_levels = re.findall(r'(\d+\.?\d*)%.*?([\d,]+\.?\d*)', analysis_text)
-    if fib_levels:
-        details["fibonacci_levels"] = fib_levels
-    
-    # تشخیص بازگشت یا شکست
-    if "بازگشت" in analysis_text:
-        details["signal_direction"] = "خرید" if "صعودی" in analysis_text else "فروش"
-        details["strength"] = "متوسط"
-    elif "شکست" in analysis_text:
-        details["signal_direction"] = "ادامه روند"
-        details["strength"] = "قوی"
-    
-    return details
-
-def _extract_bollinger_details(analysis_text: str) -> Dict[str, Any]:
-    """استخراج جزئیات مخصوص باندهای بولینگر"""
-    details = {}
-    
-    if "باند بالا" in analysis_text:
-        details["signal_direction"] = "فروش"
-        details["strength"] = "متوسط"
-    elif "باند پایین" in analysis_text:
-        details["signal_direction"] = "خرید"
-        details["strength"] = "متوسط"
-    elif "باند میانی" in analysis_text:
-        details["signal_direction"] = "خنثی"
-        details["strength"] = "ضعیف"
-    
-    return details
-
-def _extract_rsi_details(analysis_text: str) -> Dict[str, Any]:
-    """استخراج جزئیات مخصوص RSI"""
-    details = {}
-    
-    # استخراج مقدار RSI
-    rsi_match = re.search(r'rsi.*?:\s*(\d+\.?\d*)', analysis_text, re.IGNORECASE)
-    if rsi_match:
-        rsi_value = float(rsi_match.group(1))
-        details["rsi_value"] = rsi_value
-        
-        if rsi_value > 70:
-            details["signal_direction"] = "فروش"
-            details["strength"] = "قوی"
-        elif rsi_value < 30:
-            details["signal_direction"] = "خرید"
-            details["strength"] = "قوی"
-        else:
-            details["signal_direction"] = "خنثی"
-            details["strength"] = "متوسط"
-    
-    return details
-
-def _extract_macd_details(analysis_text: str) -> Dict[str, Any]:
-    """استخراج جزئیات مخصوص MACD"""
-    details = {}
-    
-    if "تقاطع صعودی" in analysis_text or "بالای سیگنال" in analysis_text:
-        details["signal_direction"] = "خرید"
-        details["strength"] = "قوی"
-    elif "تقاطع نزولی" in analysis_text or "زیر سیگنال" in analysis_text:
-        details["signal_direction"] = "فروش"
-        details["strength"] = "قوی"
-    
-    return details
-
-def _extract_candlestick_details(analysis_text: str) -> Dict[str, Any]:
-    """استخراج جزئیات مخصوص کندل استیک"""
-    details = {}
-    
-    # الگوهای کندلی صعودی
-    bullish_patterns = ["hammer", "doji", "engulfing bullish", "morning star"]
-    bearish_patterns = ["shooting star", "engulfing bearish", "evening star", "hanging man"]
-    
-    text_lower = analysis_text.lower()
-    
-    for pattern in bullish_patterns:
-        if pattern in text_lower:
-            details["signal_direction"] = "خرید"
-            details["strength"] = "قوی"
-            details["pattern_name"] = pattern
-            break
-    
-    for pattern in bearish_patterns:
-        if pattern in text_lower:
-            details["signal_direction"] = "فروش"
-            details["strength"] = "قوی"
-            details["pattern_name"] = pattern
-            break
-    
-    return details
-
-def _extract_triangle_details(analysis_text: str) -> Dict[str, Any]:
-    """استخراج جزئیات مخصوص الگوی مثلث"""
-    details = {}
-    
-    if "ascending triangle" in analysis_text.lower() or "مثلث صعودی" in analysis_text:
-        details["signal_direction"] = "خرید"
-        details["triangle_type"] = "ascending"
-    elif "descending triangle" in analysis_text.lower() or "مثلث نزولی" in analysis_text:
-        details["signal_direction"] = "فروش"
-        details["triangle_type"] = "descending"
-    elif "symmetrical triangle" in analysis_text.lower() or "مثلث متقارن" in analysis_text:
-        details["signal_direction"] = "انتظار شکست"
-        details["triangle_type"] = "symmetrical"
-    
-    return details
-
-def _extract_wedge_details(analysis_text: str) -> Dict[str, Any]:
-    """استخراج جزئیات مخصوص الگوی گوه"""
-    details = {}
-    
-    if "rising wedge" in analysis_text.lower() or "گوه صعودی" in analysis_text:
-        details["signal_direction"] = "فروش"
-        details["wedge_type"] = "rising"
-    elif "falling wedge" in analysis_text.lower() or "گوه نزولی" in analysis_text:
-        details["signal_direction"] = "خرید"
-        details["wedge_type"] = "falling"
-    
-    return details
-
-def _extract_diamond_details(analysis_text: str) -> Dict[str, Any]:
-    """استخراج جزئیات مخصوص الگوی الماس"""
-    details = {}
-    
-    if "diamond top" in analysis_text.lower() or "الماس بالا" in analysis_text:
-        details["signal_direction"] = "فروش"
-        details["diamond_type"] = "top"
-    elif "diamond bottom" in analysis_text.lower() or "الماس پایین" in analysis_text:
-        details["signal_direction"] = "خرید"
-        details["diamond_type"] = "bottom"
-    
-    return details
-
-def _extract_head_shoulders_details(analysis_text: str) -> Dict[str, Any]:
-    """استخراج جزئیات مخصوص الگوی سر و شانه"""
-    details = {}
-    
-    if "head and shoulders" in analysis_text.lower() or "سر و شانه" in analysis_text:
-        details["signal_direction"] = "فروش"
-        details["pattern_type"] = "head_shoulders"
-    elif "inverse head and shoulders" in analysis_text.lower() or "سر و شانه معکوس" in analysis_text:
-        details["signal_direction"] = "خرید"
-        details["pattern_type"] = "inverse_head_shoulders"
-    
-    return details
-
-def _extract_volume_details(analysis_text: str) -> Dict[str, Any]:
-    """استخراج جزئیات مخصوص تحلیل حجم"""
-    details = {}
-    
-    if "volume spike" in analysis_text.lower() or "افزایش حجم" in analysis_text:
-        details["volume_status"] = "spike"
-        details["strength"] = "قوی"
-    elif "low volume" in analysis_text.lower() or "حجم کم" in analysis_text:
-        details["volume_status"] = "low"
-        details["strength"] = "ضعیف"
-    
-    return details
-
-def _extract_general_details(analysis_text: str) -> Dict[str, Any]:
-    """استخراج جزئیات عمومی از هر نوع تحلیل"""
-    details = {}
-    
-    # تشخیص جهت کلی
-    buy_words = ["خرید", "buy", "long", "صعودی", "بولیش"]
-    sell_words = ["فروش", "sell", "short", "نزولی", "بریش"]
-    neutral_words = ["خنثی", "neutral", "hold", "انتظار"]
-    
-    text_lower = analysis_text.lower()
-    
-    buy_count = sum(1 for word in buy_words if word in text_lower)
-    sell_count = sum(1 for word in sell_words if word in text_lower)
-    neutral_count = sum(1 for word in neutral_words if word in text_lower)
-    
-    if buy_count > sell_count and buy_count > neutral_count:
-        details["signal_direction"] = "خرید"
-    elif sell_count > buy_count and sell_count > neutral_count:
-        details["signal_direction"] = "فروش"
-    else:
-        details["signal_direction"] = "خنثی"
-    
-    # استخراج قیمت‌ها (روش عمومی)
-    prices = re.findall(r'[\d,]+\.?\d*', analysis_text)
-    if prices:
-        try:
-            price_values = [float(p.replace(',', '')) for p in prices if p.replace(',', '').replace('.', '').isdigit()]
-            if len(price_values) >= 3:
-                details["entry_price"] = price_values[0]
-                details["stop_loss"] = price_values[1] if len(price_values) > 1 else price_values[0] * 0.98
-                details["take_profit"] = price_values[2] if len(price_values) > 2 else price_values[0] * 1.02
-        except (ValueError, IndexError):
-            pass
-    
-    # تشخیص قدرت عمومی
-    if any(word in text_lower for word in ["قوی", "strong", "بسیار", "high"]):
-        details["strength"] = "قوی"
-        details["confidence"] = 80.0
-    elif any(word in text_lower for word in ["ضعیف", "weak", "کم", "low"]):
-        details["strength"] = "ضعیف"
-        details["confidence"] = 40.0
-    else:
-        details["strength"] = "متوسط"
-        details["confidence"] = 60.0
-    
-    return details
 
 def safe_dict_get(dictionary: Dict[str, Any], 
                  key_path: str, 

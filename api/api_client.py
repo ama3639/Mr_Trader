@@ -10,7 +10,6 @@ from datetime import datetime
 import os
 
 from core.config import Config
-from core.cache import cache
 from utils.logger import logger
 from utils.helpers import extract_signal_details
 
@@ -19,10 +18,60 @@ class ApiClient:
     """کلاینت یکپارچه برای تمام API ها"""
     
     def __init__(self):
-        from managers.settings_manager import settings_manager
-        self.settings_manager = settings_manager
         self.session = None
         self._rate_limiter = {}
+        # نقشه‌برداری استراتژی‌ها به URL های API
+        self.strategy_endpoints = {
+            # Demo strategies
+            "demo_price_action": "/analyze_price_action_pandas_ta/",
+            "demo_rsi": "/analyze_RSI_basic/",
+            
+            # Basic Package strategies
+            "cci_analysis": "/analyze_CCI_strategy/",
+            "ema_analysis": "/analyze_EMA_strategy/",
+            "ichimoku": "/analyze_ichimoku_strategy/",
+            "ichimoku_low_signal": "/analyze_ichimoku_strategy/",
+            "macd": "/analyze_MACD_basic/",
+            "price_action_pandas_ta": "/analyze_price_action_pandas_ta/",
+            "project_price_live_binance": "/live_price/",
+            "rsi": "/analyze_RSI_basic/",
+            "williams_r_analysis": "/analyze_WilliamsR/",
+            
+            # Premium Package strategies
+            "a_candlestick": "/analyze_price_action_pandas_ta/",
+            "b_pivot": "/analyze_fibonacci/",
+            "bollinger_bands": "/analyze_bollinger/",
+            "c_trend_lines": "/analyze_price_action_pandas_ta/",
+            "double_top_pattern": "/analyze_double_top_strategy/",
+            "fibonacci_strategy": "/analyze_fibonacci/",
+            "flag_pattern": "/analyze_flag_pattern/",
+            "head_shoulders_analysis": "/analyze_head_shoulders_analysis/",
+            "heikin_ashi": "/analyze_heikin_ashi_strategy/",
+            "macd_divergence": "/analyze_macd_divergence_strategy/",
+            "martingale_low": "/analyze_momentum_strategy/",
+            "momentum": "/analyze_momentum_strategy/",
+            "stochastic": "/analyze_RSI_basic/",
+            "triangle_pattern": "/analyze_double_top_strategy/",
+            "wedge_pattern": "/analyze_double_top_strategy/",
+            "support_resistance": "/analyze_price_action_pandas_ta/",
+            "stoch_rsi": "/analyze_RSI_basic/",
+            "williams_alligator": "/analyze_WilliamsR/",
+            "parabolic_sar": "/analyze_price_action_pandas_ta/",
+            
+            # VIP Package strategies
+            "atr": "/analyze_atr/",
+            "sma_advanced": "/analyze_EMA_strategy/",
+            "volume_profile": "/analyze_price_action_pandas_ta/",
+            "vwap": "/analyze_price_action_pandas_ta/",
+            "diamond_pattern": "/analyze_Diamond_Pattern/",
+            "crt": "/analyze_CRT_strategy/",
+            "p3": "/analyze_momentum_strategy/",
+            "rtm": "/analyze_momentum_strategy/",
+            "multi_resistance": "/analyze_price_action_pandas_ta/"
+        }
+        
+        # Base URL برای API
+        self.base_url = "http://91.198.77.208:8000"
     
     async def _get_session(self) -> aiohttp.ClientSession:
         """دریافت session HTTP"""
@@ -44,11 +93,12 @@ class ApiClient:
         """بستن session"""
         if self.session and not self.session.closed:
             await self.session.close()
+            self.session = None
     
     async def _make_request(
         self, 
         url: str, 
-        method: str = "GET", 
+        method: str = "POST", 
         data: Optional[Dict] = None,
         headers: Optional[Dict] = None,
         max_retries: int = 3,
@@ -57,50 +107,48 @@ class ApiClient:
         """درخواست HTTP با مدیریت خطا و تلاش مجدد"""
         
         last_error = None
+        session = await self._get_session()
         
         for attempt in range(max_retries):
             try:
-                # ایجاد session موقت برای هر درخواست
-                async with aiohttp.ClientSession(
+                request_headers = headers or {}
+                
+                # اضافه کردن API key اگر موجود باشد
+                if hasattr(Config, 'API_KEY') and Config.API_KEY:
+                    request_headers['X-API-Key'] = Config.API_KEY
+                
+                request_headers.update({
+                    'Content-Type': 'application/json',
+                    'User-Agent': f'MrTrader-Bot/{Config.BOT_VERSION}'
+                })
+                
+                async with session.request(
+                    method=method,
+                    url=url,
+                    json=data,
+                    headers=request_headers,
                     timeout=aiohttp.ClientTimeout(total=timeout)
-                ) as session:
-                    request_headers = headers or {}
+                ) as response:
                     
-                    # اضافه کردن API key اگر موجود باشد
-                    if hasattr(Config, 'API_KEY') and Config.API_KEY:
-                        request_headers['X-API-Key'] = Config.API_KEY
+                    if response.status == 200:
+                        result = await response.json()
+                        logger.info(f"API request successful: {method} {url}")
+                        return result
                     
-                    request_headers.update({
-                        'Content-Type': 'application/json',
-                        'User-Agent': f'MrTrader-Bot/{Config.BOT_VERSION}'
-                    })
+                    elif response.status == 429:  # Rate limit
+                        wait_time = 2 ** attempt
+                        logger.warning(f"Rate limited, waiting {wait_time}s before retry {attempt + 1}")
+                        await asyncio.sleep(wait_time)
+                        continue
                     
-                    async with session.request(
-                        method=method,
-                        url=url,
-                        json=data,
-                        headers=request_headers
-                    ) as response:
-                        
-                        if response.status == 200:
-                            result = await response.json()
-                            logger.info(f"API request successful: {method} {url}")
-                            return result
-                        
-                        elif response.status == 429:  # Rate limit
-                            wait_time = 2 ** attempt
-                            logger.warning(f"Rate limited, waiting {wait_time}s before retry {attempt + 1}")
-                            await asyncio.sleep(wait_time)
-                            continue
-                        
-                        else:
-                            error_text = await response.text()
-                            raise aiohttp.ClientResponseError(
-                                request_info=response.request_info,
-                                history=response.history,
-                                status=response.status,
-                                message=error_text
-                            )
+                    else:
+                        error_text = await response.text()
+                        raise aiohttp.ClientResponseError(
+                            request_info=response.request_info,
+                            history=response.history,
+                            status=response.status,
+                            message=error_text
+                        )
             
             except asyncio.TimeoutError as e:
                 last_error = f"Timeout error: {e}"
@@ -122,6 +170,35 @@ class ApiClient:
         logger.error(f"All retry attempts failed for {url}. Last error: {last_error}")
         return {"error": last_error}
     
+    def get_strategy_url(self, strategy: str) -> Optional[str]:
+        """دریافت URL استراتژی"""
+        endpoint = self.strategy_endpoints.get(strategy)
+        if endpoint:
+            return f"{self.base_url}{endpoint}"
+        return None
+    
+    def _convert_timeframe(self, timeframe: str) -> str:
+        """تبدیل تایم‌فریم کاربری به فرمت API"""
+        timeframe_mapping = {
+            # دقیقه‌ای
+            "1m": "histominute",
+            "5m": "histominute", 
+            "15m": "histominute",
+            "30m": "histominute",
+            
+            # ساعتی
+            "1h": "histohour",
+            "4h": "histohour",
+            "12h": "histohour",
+            
+            # روزانه
+            "1d": "histoday",
+            "1w": "histoday",
+            "1M": "histoday"
+        }
+        
+        return timeframe_mapping.get(timeframe, "histohour")  # پیش‌فرض ساعتی
+    
     async def fetch_analysis(
         self, 
         strategy: str, 
@@ -132,66 +209,91 @@ class ApiClient:
     ) -> Dict[str, Any]:
         """
         دریافت تحلیل برای استراتژی مشخص (متد اصلی)
-        
-        Args:
-            strategy: نام استراتژی
-            symbol: نماد ارز
-            currency: ارز مرجع
-            timeframe: تایم‌فریم
-            use_cache: استفاده از کش
-            
-        Returns:
-            Dict شامل نتیجه تحلیل یا خطا
         """
         try:
-            # بررسی کش ابتدا
-            if use_cache:
-                cached_result = cache.get_signal(strategy, symbol, currency, timeframe)
-                if cached_result:
-                    logger.info(f"Cache hit for {strategy} analysis: {symbol}/{currency} @ {timeframe}")
-                    return cached_result
-            
-            # دریافت آدرس API از SettingsManager
-            strategy_url = self.settings_manager.get_strategy_url(strategy)
+            # دریافت آدرس API
+            strategy_url = self.get_strategy_url(strategy)
             if not strategy_url:
                 return {"error": f"URL not found for strategy: {strategy}"}
             
-            # پارامترهای درخواست
+            # تبدیل تایم‌فریم به فرمت API
+            api_timeframe = self._convert_timeframe(timeframe)
+            
+            # پارامترهای درخواست مطابق با مستندات API
             request_data = {
                 "symbol": symbol.upper(),
                 "currency": currency.upper(),
-                "timeframe": timeframe,
-                "strategy": strategy,
-                "timestamp": datetime.now().isoformat()
+                "timeframe": api_timeframe
             }
-            
-            logger.info(f"Requesting {strategy} analysis for {symbol}/{currency} @ {timeframe}")
-            
-            # دریافت تنظیمات استراتژی
-            timeout = self.settings_manager.get_strategy_timeout(strategy)
-            retry_count = self.settings_manager.get_strategy_retry_count(strategy)
+                        
+            logger.info(f"Requesting {strategy} analysis for {symbol}/{currency} @ {timeframe} (API: {api_timeframe})")
             
             # ارسال درخواست
             result = await self._make_request(
                 url=strategy_url,
                 method="POST",
                 data=request_data,
-                max_retries=retry_count,
-                timeout=timeout
+                max_retries=3,
+                timeout=30
             )
             
-            if "error" not in result:
-                # ذخیره در کش
-                cache_duration = self.settings_manager.get_strategy_cache_duration(strategy)
-                cache.set_signal(strategy, symbol, currency, timeframe, result, cache_duration)
-                logger.info(f"Analysis result cached for {strategy} {symbol}/{currency} @ {timeframe}")
+            # بررسی خطا در پاسخ
+            if "error" in result:
+                return result
+            
+            # چک کردن هر دو کلید ممکن برای فایل گزارش
+            report_file_path = result.get('report') or result.get('report_file')
+            
+            if result.get('ok') and report_file_path:
+                try:
+                    logger.info(f"Reading report file via API: {report_file_path}")
+                    
+                    # استفاده از endpoint مخصوص خواندن فایل
+                    read_file_url = f"{self.base_url}/read_report_file/"
+                    file_request_data = {
+                        "file_path": report_file_path
+                    }
+                    
+                    file_response = await self._make_request(
+                        url=read_file_url,
+                        method="POST",
+                        data=file_request_data,
+                        max_retries=2,
+                        timeout=15
+                    )
+                    
+                    if "error" not in file_response and file_response.get('success'):
+                        report_content = file_response.get('content', '')
+                        logger.info(f"=== REPORT CONTENT START ===")
+                        logger.info(f"{report_content}")
+                        logger.info(f"=== REPORT CONTENT END ===")
+                        
+                        # اضافه کردن محتوا به نتیجه
+                        result.update({
+                            "analysis_text": report_content,
+                            "raw_report": report_content,
+                            "symbol": symbol,
+                            "currency": currency,
+                            "timeframe": timeframe,
+                            "strategy": strategy,
+                            "report_size": file_response.get('size', 0)
+                        })
+                        
+                    else:
+                        logger.error(f"Failed to read report file: {file_response}")
+                            
+                except Exception as e:
+                    logger.error(f"Error reading report file: {e}")
+            
+            result["is_cached"] = False
+            logger.info(f"Analysis completed for {strategy} {symbol}/{currency} @ {timeframe}")
             
             return result
             
         except Exception as e:
             logger.error(f"Error in fetch_analysis: {e}")
             return {"error": str(e)}
-    
+        
     async def fetch_strategy_analysis(
         self, 
         strategy: str, 
@@ -220,78 +322,11 @@ class ApiClient:
         use_cache: bool = True
     ) -> float:
         """
-        دریافت قیمت زنده از Binance API یا سرویس محلی
-        
-        Args:
-            symbol: نماد ارز
-            currency: ارز مرجع
-            use_cache: استفاده از کش
-            
-        Returns:
-            float: قیمت فعلی
+        دریافت قیمت زنده - غیرفعال شده
         """
-        try:
-            # بررسی کش
-            if use_cache:
-                cached_price = cache.get_price(symbol, currency)
-                if cached_price:
-                    logger.debug(f"Cache hit for price: {symbol}/{currency} = {cached_price}")
-                    return cached_price
-            
-            # ابتدا تلاش برای استفاده از سرویس محلی
-            live_price_config = self.settings_manager.get_live_price_config()
-            binance_config = live_price_config.get("binance", {})
-            
-            if binance_config.get("url"):
-                # استفاده از سرویس محلی
-                url = binance_config["url"]
-                params = {
-                    "symbol": symbol.upper(),
-                    "currency": currency.upper()
-                }
-                
-                logger.debug(f"Requesting live price from local service: {symbol}/{currency}")
-                
-                result = await self._make_request(
-                    url=f"{url}?symbol={params['symbol']}&currency={params['currency']}",
-                    method="GET",
-                    max_retries=binance_config.get("retry_count", 2)
-                )
-                
-                if "error" not in result and "price" in result:
-                    price = float(result["price"])
-                    if price > 0:
-                        cache.set_price(symbol, currency, price)
-                        logger.debug(f"Price cached from local service: {symbol}/{currency} = {price}")
-                        return price
-            
-            # در صورت عدم دسترسی به سرویس محلی، استفاده از Binance API
-            binance_symbol = f"{symbol.upper()}{currency.upper()}"
-            url = f"https://api.binance.com/api/v3/ticker/price?symbol={binance_symbol}"
-            
-            logger.debug(f"Requesting live price from Binance: {binance_symbol}")
-            
-            result = await self._make_request(
-                url=url,
-                method="GET",
-                max_retries=3
-            )
-            
-            if "error" in result:
-                raise Exception(result["error"])
-            
-            price = float(result.get("price", 0))
-            
-            # ذخیره در کش
-            if price > 0:
-                cache.set_price(symbol, currency, price)
-                logger.debug(f"Price cached from Binance: {symbol}/{currency} = {price}")
-            
-            return price
-            
-        except Exception as e:
-            logger.error(f"Error fetching live price for {symbol}/{currency}: {e}")
-            return 0.0
+        logger.warning(f"fetch_live_price called for {symbol}/{currency} - returning 0.0")
+        return 0.0
+
     
     async def fetch_market_data(
         self, 
@@ -300,76 +335,26 @@ class ApiClient:
         timeframe: str = "1d",
         limit: int = 100
     ) -> Dict[str, Any]:
-        """دریافت داده‌های بازار (کندل‌ها)"""
+        """دریافت داده‌های بازار - استفاده از API تحلیل"""
         try:
-            # استفاده از Binance API مستقیم
-            binance_symbol = f"{symbol.upper()}{currency.upper()}"
-            url = f"https://api.binance.com/api/v3/klines?symbol={binance_symbol}&interval={timeframe}&limit={limit}"
+            logger.info(f"Requesting market data for {symbol}/{currency} @ {timeframe}")
             
-            logger.info(f"Requesting market data for {binance_symbol} @ {timeframe}")
+            # استفاده از API تحلیل برای دریافت داده‌های بازار
+            analysis_result = await self.fetch_analysis("price_action_pandas_ta", symbol, currency, timeframe)
             
-            result = await self._make_request(url=url, method="GET")
-            
-            if "error" in result:
-                return result
-            
-            # پردازش داده‌های کندل
-            processed_data = []
-            if isinstance(result, list):
-                for kline in result:
-                    processed_data.append({
-                        "timestamp": int(kline[0]),
-                        "open": float(kline[1]),
-                        "high": float(kline[2]),
-                        "low": float(kline[3]),
-                        "close": float(kline[4]),
-                        "volume": float(kline[5])
-                    })
-            
-            return {
-                "symbol": binance_symbol,
-                "timeframe": timeframe,
-                "data": processed_data,
-                "count": len(processed_data)
-            }
+            if "error" not in analysis_result:
+                # استخراج داده‌های کندل از نتیجه تحلیل
+                return {
+                    "symbol": f"{symbol.upper()}{currency.upper()}",
+                    "timeframe": timeframe,
+                    "data": analysis_result.get("market_data", []),
+                    "analysis": analysis_result
+                }
+            else:
+                return analysis_result
             
         except Exception as e:
             logger.error(f"Error fetching market data: {e}")
-            return {"error": str(e)}
-    
-    async def fetch_symbol_info(
-        self, 
-        symbol: str, 
-        currency: str
-    ) -> Dict[str, Any]:
-        """دریافت اطلاعات نماد"""
-        try:
-            binance_symbol = f"{symbol.upper()}{currency.upper()}"
-            url = f"https://api.binance.com/api/v3/exchangeInfo?symbol={binance_symbol}"
-            
-            logger.debug(f"Requesting symbol info for {binance_symbol}")
-            
-            result = await self._make_request(url=url, method="GET")
-            
-            if "error" in result:
-                return result
-            
-            # استخراج اطلاعات مفید
-            if "symbols" in result and len(result["symbols"]) > 0:
-                symbol_info = result["symbols"][0]
-                return {
-                    "symbol": symbol_info.get("symbol"),
-                    "status": symbol_info.get("status"),
-                    "base_asset": symbol_info.get("baseAsset"),
-                    "quote_asset": symbol_info.get("quoteAsset"),
-                    "base_precision": symbol_info.get("baseAssetPrecision"),
-                    "quote_precision": symbol_info.get("quotePrecision")
-                }
-            else:
-                return {"error": "Symbol not found"}
-            
-        except Exception as e:
-            logger.error(f"Error fetching symbol info: {e}")
             return {"error": str(e)}
     
     async def validate_symbol_pair(
@@ -379,146 +364,40 @@ class ApiClient:
     ) -> bool:
         """اعتبارسنجی جفت ارز"""
         try:
-            symbol_info = await self.fetch_symbol_info(symbol, currency)
-            return "error" not in symbol_info and symbol_info.get("status") == "TRADING"
+            # بررسی از طریق تحلیل ساده
+            result = await self.fetch_analysis("price_action_pandas_ta", symbol, currency, "1h", use_cache=False)
+            return "error" not in result
             
         except Exception as e:
             logger.error(f"Error validating symbol pair {symbol}/{currency}: {e}")
             return False
-    
-    async def get_top_symbols(self, limit: int = 20) -> List[Dict[str, Any]]:
-        """دریافت نمادهای برتر بر اساس حجم معاملات"""
-        try:
-            url = "https://api.binance.com/api/v3/ticker/24hr"
-            
-            logger.info("Requesting top symbols by volume")
-            
-            result = await self._make_request(url=url, method="GET")
-            
-            if "error" in result:
-                return []
-            
-            if not isinstance(result, list):
-                return []
-            
-            # فیلتر کردن فقط جفت‌های USDT
-            usdt_pairs = [
-                ticker for ticker in result 
-                if ticker["symbol"].endswith("USDT") and float(ticker["quoteVolume"]) > 0
-            ]
-            
-            # مرتب‌سازی بر اساس حجم
-            sorted_pairs = sorted(usdt_pairs, key=lambda x: float(x["quoteVolume"]), reverse=True)
-            
-            # تبدیل به فرمت مورد نیاز
-            top_symbols = []
-            for i, ticker in enumerate(sorted_pairs[:limit]):
-                symbol = ticker["symbol"].replace("USDT", "")
-                top_symbols.append({
-                    "rank": i + 1,
-                    "symbol": symbol,
-                    "currency": "USDT",
-                    "price": float(ticker["lastPrice"]),
-                    "change_percent_24h": float(ticker["priceChangePercent"]),
-                    "volume_24h": float(ticker["volume"]),
-                    "quote_volume_24h": float(ticker["quoteVolume"]),
-                    "high_24h": float(ticker["highPrice"]),
-                    "low_24h": float(ticker["lowPrice"])
-                })
-            
-            logger.info(f"Retrieved top {len(top_symbols)} symbols")
-            return top_symbols
-            
-        except Exception as e:
-            logger.error(f"Error getting top symbols: {e}")
-            return []
-    
-    async def get_24hr_ticker(
-        self, 
-        symbol: str, 
-        currency: str
-    ) -> Dict[str, Any]:
-        """دریافت آمار 24 ساعته"""
-        try:
-            binance_symbol = f"{symbol.upper()}{currency.upper()}"
-            url = f"https://api.binance.com/api/v3/ticker/24hr?symbol={binance_symbol}"
-            
-            logger.debug(f"Requesting 24hr ticker for {binance_symbol}")
-            
-            result = await self._make_request(url=url, method="GET")
-            
-            if "error" in result:
-                return result
-            
-            # تبدیل به فرمت استاندارد
-            return {
-                "symbol": symbol.upper(),
-                "currency": currency.upper(),
-                "price": float(result.get("lastPrice", 0)),
-                "change_24h": float(result.get("priceChange", 0)),
-                "change_percent_24h": float(result.get("priceChangePercent", 0)),
-                "high_24h": float(result.get("highPrice", 0)),
-                "low_24h": float(result.get("lowPrice", 0)),
-                "volume_24h": float(result.get("volume", 0)),
-                "volume_quote_24h": float(result.get("quoteVolume", 0)),
-                "count_24h": int(result.get("count", 0)),
-                "open_price": float(result.get("openPrice", 0)),
-                "prev_close": float(result.get("prevClosePrice", 0)),
-                "bid_price": float(result.get("bidPrice", 0)),
-                "ask_price": float(result.get("askPrice", 0))
-            }
-            
-        except Exception as e:
-            logger.error(f"Error getting 24hr ticker: {e}")
-            return {"error": str(e)}
     
     async def health_check(self) -> Dict[str, Any]:
         """بررسی سلامت سرویس‌ها"""
         try:
             results = {}
             
-            # بررسی تمام استراتژی‌ها
-            all_strategies = self.settings_manager.get_all_strategies()
-            
-            for strategy in all_strategies:
-                try:
-                    strategy_config = self.settings_manager.get_strategy_config(strategy)
-                    health_url = strategy_config.get("health_url") if strategy_config else None
-                    
-                    if health_url:
-                        result = await self._make_request(health_url, max_retries=1, timeout=5)
-                        results[f"strategy_{strategy}"] = "healthy" if "error" not in result else "unhealthy"
-                    else:
-                        # اگر health URL نداریم، URL اصلی را تست کنیم
-                        strategy_url = self.settings_manager.get_strategy_url(strategy)
-                        if strategy_url:
-                            ping_result = await self._make_request(strategy_url, max_retries=1, timeout=5)
-                            results[f"strategy_{strategy}"] = "reachable" if "error" not in ping_result else "unreachable"
-                        else:
-                            results[f"strategy_{strategy}"] = "no_url_configured"
-                        
-                except Exception:
-                    results[f"strategy_{strategy}"] = "unhealthy"
-            
-            # بررسی سرویس قیمت زنده
+            # بررسی سرویس محلی
             try:
-                live_price_config = self.settings_manager.get_live_price_config()
-                binance_config = live_price_config.get("binance", {})
-                
-                if binance_config.get("url"):
-                    # بررسی سرویس محلی
-                    health_url = binance_config["url"].replace("/live_price/", "/health/")
-                    ping_result = await self._make_request(health_url, max_retries=1, timeout=5)
-                    results["live_price_local"] = "healthy" if "error" not in ping_result else "unhealthy"
-                
-                # بررسی Binance API
-                ping_url = "https://api.binance.com/api/v3/ping"
-                ping_result = await self._make_request(ping_url, max_retries=1, timeout=5)
-                results["binance"] = "healthy" if "error" not in ping_result else "unhealthy"
-                
+                health_url = f"{self.base_url}/health/"
+                ping_result = await self._make_request(health_url, method="GET", max_retries=1, timeout=5)
+                results["local_service"] = "healthy" if "error" not in ping_result else "unhealthy"
             except Exception:
-                results["live_price"] = "unhealthy"
-                results["binance"] = "unhealthy"
+                results["local_service"] = "unhealthy"
+            
+            # بررسی چند استراتژی کلیدی
+            key_strategies = ["rsi", "macd", "ema_analysis"]
+            for strategy in key_strategies:
+                try:
+                    strategy_url = self.get_strategy_url(strategy)
+                    if strategy_url:
+                        # تست ساده endpoint
+                        test_result = await self._make_request(strategy_url, method="GET", max_retries=1, timeout=5)
+                        results[f"strategy_{strategy}"] = "reachable" if "error" not in test_result else "unreachable"
+                    else:
+                        results[f"strategy_{strategy}"] = "no_url_configured"
+                except Exception:
+                    results[f"strategy_{strategy}"] = "unreachable"
             
             # محاسبه وضعیت کلی
             healthy_services = sum(1 for status in results.values() if status in ["healthy", "reachable"])
@@ -550,36 +429,6 @@ class ApiClient:
                 "timestamp": datetime.now().isoformat()
             }
     
-    async def batch_price_fetch(self, symbols: List[str], currency: str = "USDT") -> Dict[str, float]:
-        """دریافت دسته‌ای قیمت‌ها"""
-        try:
-            # استفاده از API تک درخواست برای همه قیمت‌ها
-            url = "https://api.binance.com/api/v3/ticker/price"
-            
-            result = await self._make_request(url=url, method="GET")
-            
-            if "error" in result:
-                return {}
-            
-            prices = {}
-            for ticker in result:
-                symbol_name = ticker["symbol"]
-                if symbol_name.endswith(currency.upper()):
-                    base_symbol = symbol_name.replace(currency.upper(), "")
-                    if base_symbol in [s.upper() for s in symbols]:
-                        prices[base_symbol] = float(ticker["price"])
-            
-            # ذخیره در کش
-            for symbol, price in prices.items():
-                cache.set_price(symbol, currency, price)
-            
-            logger.info(f"Batch fetched {len(prices)} prices")
-            return prices
-            
-        except Exception as e:
-            logger.error(f"Error in batch price fetch: {e}")
-            return {}
-    
     async def __aenter__(self):
         """ورود به context manager"""
         return self
@@ -587,16 +436,6 @@ class ApiClient:
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         """خروج از context manager"""
         await self.close()
-    
-    def __del__(self):
-        """تمیزکاری هنگام نابودی شیء"""
-        try:
-            if self.session and not self.session.closed:
-                # نمی‌توانیم await کنیم در __del__
-                # session در garbage collection بسته خواهد شد
-                pass
-        except:
-            pass
 
 
 # ایجاد نمونه سراسری
@@ -640,7 +479,11 @@ def format_analysis_result(analysis_result: Dict[str, Any], symbol: str, currenc
         
         # اضافه کردن متن تحلیل اصلی اگر موجود باشد
         if "analysis_text" in analysis_result:
-            formatted_text += f"\n📝 **جزئیات تحلیل:**\n{analysis_result['analysis_text'][:500]}..."
+            formatted_text += f"\n📄 **جزئیات تحلیل:**\n{analysis_result['analysis_text'][:500]}..."
+        
+        # نمایش کش status
+        if analysis_result.get("is_cached"):
+            formatted_text += f"\n💾 *نتیجه از کش (بروزرسانی: اخیر)*"
         
         return formatted_text
         

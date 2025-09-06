@@ -42,7 +42,13 @@ from handlers.message_handlers import MessageHandler
 # Utils
 from utils.time_manager import TimeManager
 from api.api_client import ApiClient
+import asyncio
+import sys
 
+# حل مشکل Windows Event Loop
+if sys.platform == 'win32':
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+    
 async def maybe_call(func, *args, **kwargs):
     """
     اگر func آسنکرون باشد await می‌کند؛ در غیر این صورت آن را sync فراخوانی می‌کند.

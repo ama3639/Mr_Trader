@@ -34,3 +34,37 @@
 2025-09-05 23:10:05,145 - MrTrader - ERROR - Error processing callback admin_charge_wallet:5089112952: Can't parse entities: character '.' is reserved and must be escaped with the preceding '\'
 2025-09-05 23:12:17,872 - MrTrader - ERROR - Error processing callback admin_charge_wallet:5089112952: Can't parse entities: character '.' is reserved and must be escaped with the preceding '\'
 2025-09-05 23:38:48,518 - MrTrader - ERROR - Error changing package: list index out of range
+2025-09-06 03:07:23,345 - MrTrader - ERROR - Error checking expiry: unconverted data remains: .015353
+2025-09-06 03:07:35,155 - MrTrader - ERROR - Error checking expiry: unconverted data remains: .015353
+2025-09-06 03:09:12,641 - MrTrader - ERROR - Error checking expiry: unconverted data remains: .015353
+2025-09-06 03:11:30,092 - MrTrader - ERROR - Error checking expiry: unconverted data remains: .015353
+2025-09-06 03:11:40,095 - MrTrader - ERROR - Error checking expiry: unconverted data remains: .015353
+2025-09-06 03:18:00,512 - MrTrader - ERROR - Error analyzing strategy: 'Cache' object has no attribute 'get'
+2025-09-06 03:18:12,875 - MrTrader - ERROR - Error analyzing strategy: 'Cache' object has no attribute 'get'
+2025-09-06 03:24:58,544 - MrTrader - ERROR - Error analyzing strategy: 'Cache' object has no attribute 'get'
+2025-09-06 03:25:10,565 - MrTrader - ERROR - Error analyzing strategy: 'Cache' object has no attribute 'get'
+2025-09-06 03:28:22,071 - MrTrader - ERROR - Error in fetch_analysis: 'Cache' object has no attribute 'get'
+2025-09-06 03:28:22,071 - MrTrader - ERROR - API returned error: 'Cache' object has no attribute 'get'
+2025-09-06 03:31:51,305 - MrTrader - ERROR - Error in fetch_analysis: 'Cache' object has no attribute 'get'
+2025-09-06 03:31:51,305 - MrTrader - ERROR - API returned error: 'Cache' object has no attribute 'get'
+2025-09-06 03:38:14,874 - MrTrader - ERROR - Error in fetch_analysis: aiodns needs a SelectorEventLoop on Windows. See more: https://github.com/saghul/aiodns/issues/86
+2025-09-06 03:38:14,876 - MrTrader - ERROR - API returned error: aiodns needs a SelectorEventLoop on Windows. See more: https://github.com/saghul/aiodns/issues/86
+2025-09-06 03:39:20,952 - MrTrader - ERROR - Error in fetch_analysis: aiodns needs a SelectorEventLoop on Windows. See more: https://github.com/saghul/aiodns/issues/86
+2025-09-06 03:39:20,952 - MrTrader - ERROR - API returned error: aiodns needs a SelectorEventLoop on Windows. See more: https://github.com/saghul/aiodns/issues/86
+2025-09-06 03:41:57,135 - MrTrader - ERROR - Error fetching live price for BTC/USDT: 'Cache' object has no attribute 'get'
+2025-09-06 03:50:39,815 - MrTrader - ERROR - Error fetching live price for BTC/USDT: 'Cache' object has no attribute 'get'
+2025-09-06 03:51:41,782 - MrTrader - ERROR - Error checking package expiry for user 5089112952: argument of type 'NoneType' is not iterable
+2025-09-06 03:51:51,294 - MrTrader - ERROR - Error checking package expiry for user 5089112952: argument of type 'NoneType' is not iterable
+2025-09-06 03:52:13,689 - MrTrader - ERROR - Error checking package expiry for user 5089112952: argument of type 'NoneType' is not iterable
+2025-09-06 03:52:17,236 - MrTrader - ERROR - All retry attempts failed for http://91.198.77.208:8000/live_price/. Last error: Client error: 404, message='{"detail":"Not Found"}', url='http://91.198.77.208:8000/live_price/'
+2025-09-06 03:52:17,237 - MrTrader - ERROR - API returned error: Client error: 404, message='{"detail":"Not Found"}', url='http://91.198.77.208:8000/live_price/'
+2025-09-06 03:55:30,408 - MrTrader - ERROR - All retry attempts failed for http://91.198.77.208:8000/analyze_CCI_strategy/. Last error: Client error: 422, message='{"detail":[{"type":"value_error","loc":["body","timeframe"],"msg":"Value error, بازه زمانی باید یکی از موارد [\'histominute\', \'histohour\', \'histoday\'] باشد","input":"1h","ctx":{"error":{}}}]}', url='http://91.198.77.208:8000/analyze_CCI_strategy/'
+2025-09-06 03:55:30,408 - MrTrader - ERROR - API returned error: Client error: 422, message='{"detail":[{"type":"value_error","loc":["body","timeframe"],"msg":"Value error, بازه زمانی باید یکی از موارد [\'histominute\', \'histohour\', \'histoday\'] باشد","input":"1h","ctx":{"error":{}}}]}', url='http://91.198.77.208:8000/analyze_CCI_strategy/'
+2025-09-06 04:01:37,250 - MrTrader - ERROR - All retry attempts failed for http://91.198.77.208:8000/live_price/?symbol=BTC&currency=USDT. Last error: Client error: 404, message='{"detail":"Not Found"}', url='http://91.198.77.208:8000/live_price/?symbol=BTC&currency=USDT'
+2025-09-06 04:02:43,669 - MrTrader - ERROR - All retry attempts failed for https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT. Last error: Client error: Cannot connect to host api.binance.com:443 ssl:default [None]
+2025-09-06 04:02:43,670 - MrTrader - ERROR - Error fetching live price for BTC/USDT: Client error: Cannot connect to host api.binance.com:443 ssl:default [None]
+2025-09-06 04:38:31,963 - MrTrader - ERROR - Failed to download report file. Status: 404
+2025-09-06 04:43:27,186 - MrTrader - ERROR - All retry attempts failed for http://91.198.77.208:8000/analyze_MACD_basic/. Last error: Client error: 500, message='Internal Server Error', url='http://91.198.77.208:8000/analyze_MACD_basic/'
+2025-09-06 04:43:27,187 - MrTrader - ERROR - API returned error: Client error: 500, message='Internal Server Error', url='http://91.198.77.208:8000/analyze_MACD_basic/'
+2025-09-06 05:15:23,195 - MrTrader - ERROR - All retry attempts failed for http://91.198.77.208:8000/analyze_MACD_basic/. Last error: Client error: 500, message='Internal Server Error', url='http://91.198.77.208:8000/analyze_MACD_basic/'
+2025-09-06 05:15:23,196 - MrTrader - ERROR - API returned error: Client error: 500, message='Internal Server Error', url='http://91.198.77.208:8000/analyze_MACD_basic/'

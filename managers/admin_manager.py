@@ -504,7 +504,46 @@ class AdminManager:
         except Exception as e:
             logger.error(f"Error logging admin activity: {e}")
 
+    @classmethod
+    def grant_package_to_user(cls, admin_id: int, target_user_id: int, package_type: str, 
+                              duration: str, expiry_date: datetime) -> bool:
+        """
+        پکیج را به کاربر اعطا می‌کند (با استفاده از تابع متمرکز).
+        پارامتر expiry_date دیگر مستقیماً استفاده نمی‌شود و محاسبه آن به تابع مرکزی سپرده می‌شود.
+        """
+        try:
+            # محاسبه duration_days از روی duration string
+            duration_map = {
+                'monthly': 30,
+                'quarterly': 90,
+                'yearly': 365,
+                'lifetime': 365 * 100
+            }
+            duration_days = duration_map.get(duration, 30)
 
+            # فراخوانی تابع متمرکز جدید
+            from managers.user_manager import UserManager
+            success = UserManager.set_user_package(
+                target_user_id,
+                package_type,
+                duration_days
+            )
+
+            if success:
+                log_admin_action(
+                    admin_id, 
+                    "package_granted",
+                    str(target_user_id),
+                    f"Package: {package_type}, Duration: {duration}"
+                )
+                logger.info(f"Admin {admin_id} granted package {package_type} to user {target_user_id}.")
+            
+            return success
+            
+        except Exception as e:
+            logger.error(f"Error in grant_package_to_user for user {target_user_id}: {e}", exc_info=True)
+            return False
+        
 # توابع کمکی برای سازگاری با کد قبلی
 def is_admin(telegram_id: int) -> bool:
     """بررسی ادمین بودن (تابع کمکی)"""

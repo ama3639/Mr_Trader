@@ -8,14 +8,13 @@ from datetime import datetime, timedelta
 import json
 import os
 from typing import List, Dict, Any, Optional
-
 from core.config import Config
 from managers.admin_manager import AdminManager
 from managers.user_manager import UserManager
 from managers.backup_manager import BackupManager
 from managers.report_manager import ReportManager
 from managers.security_manager import SecurityManager
-from utils.logger import UserLogger, AdminLogger
+from utils.logger import UserLogger, AdminLogger, logger
 from utils.time_manager import TimeManager
 from utils.validators import Validators, ValidationError
 
@@ -413,7 +412,7 @@ class AdminHandlers:
     
     @staticmethod
     async def handle_admin_duration_selection(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """پردازش انتخاب مدت پکیج"""
+        """پردازش انتخاب مدت پکیج (نسخه اصلاح شده با محاسبه تاریخ انقضا)"""
         query = update.callback_query
         admin_id = query.from_user.id
         
@@ -422,56 +421,48 @@ class AdminHandlers:
                 await query.answer("⛔ دسترسی غیرمجاز!", show_alert=True)
                 return ConversationHandler.END
             
-            # استخراج اطلاعات
             duration = query.data.replace('admin_dur_', '')
             target_user_id = context.user_data.get('target_user_id')
             package_type = context.user_data.get('selected_package')
             
             if not all([target_user_id, package_type, duration]):
-                await query.edit_message_text("❌ خطا: اطلاعات ناقص")
+                await query.edit_message_text("❌ خطا: اطلاعات ناقص است.")
                 return ConversationHandler.END
-            
-            # اعطای پکیج
+
+            # محاسبه تاریخ انقضای جدید بر اساس مدت انتخاب شده
+            duration_map = {
+                'monthly': timedelta(days=30),
+                'quarterly': timedelta(days=90),
+                'yearly': timedelta(days=365),
+                'lifetime': timedelta(days=365 * 100)  # 100 سال برای مادام‌العمر
+            }
+            duration_delta = duration_map.get(duration, timedelta(days=30))
+            new_expiry_date = datetime.now() + duration_delta
+
+            # اعطای پکیج همراه با تاریخ انقضای جدید
             success = AdminManager.grant_package_to_user(
                 admin_id=admin_id,
                 target_user_id=target_user_id,
                 package_type=package_type,
-                duration=duration
+                duration=duration,
+                expiry_date=new_expiry_date  # ارسال پارامتر جدید تاریخ انقضا
             )
             
             if success:
                 # ارسال اطلاعیه به کاربر
                 try:
-                    package_names = {
-                        'basic': 'پایه',
-                        'premium': 'ویژه', 
-                        'vip': 'VIP',
-                        'ghost': 'شبح'
-                    }
-                    
-                    duration_names = {
-                        'monthly': '1 ماهه',
-                        'quarterly': '3 ماهه',
-                        'yearly': '1 ساله',
-                        'lifetime': 'مادام‌العمر'
-                    }
-                    
+                    package_names = {'basic': 'پایه', 'premium': 'ویژه', 'vip': 'VIP', 'ghost': 'شبح'}
+                    duration_names = {'monthly': '1 ماهه', 'quarterly': '3 ماهه', 'yearly': '1 ساله', 'lifetime': 'مادام‌العمر'}
                     notification_text = (
-                        f"🎉 **تبریک! پکیج رایگان دریافت کردید**\n"
+                        f"🎉 **تبریک! یک پکیج از طرف مدیریت دریافت کردید**\n"
                         f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
-                        f"📦 **پکیج اعطایی:** {package_names.get(package_type, package_type)}\n"
+                        f"📦 **پکیج:** {package_names.get(package_type, package_type)}\n"
                         f"⏰ **مدت زمان:** {duration_names.get(duration, duration)}\n"
-                        f"🕒 **زمان فعال‌سازی:** {TimeManager.to_shamsi(datetime.now())}\n\n"
-                        f"✨ از امکانات جدید لذت ببرید!"
+                        f"📅 **تاریخ انقضا:** {TimeManager.to_shamsi(new_expiry_date)}"
                     )
-                    
-                    await context.bot.send_message(
-                        chat_id=target_user_id,
-                        text=notification_text,
-                        parse_mode="Markdown"
-                    )
-                except Exception:
-                    pass  # اگر ارسال به کاربر ممکن نباشد
+                    await context.bot.send_message(chat_id=target_user_id, text=notification_text, parse_mode="Markdown")
+                except Exception as notify_error:
+                    logger.warning(f"Failed to send package grant notification to {target_user_id}: {notify_error}")
                 
                 # پیام موفقیت برای ادمین
                 success_text = (
@@ -479,46 +470,31 @@ class AdminHandlers:
                     f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
                     f"👤 کاربر: `{target_user_id}`\n"
                     f"📦 پکیج: `{package_type.upper()}`\n"
-                    f"⏰ مدت: `{duration}`\n"
-                    f"🕒 زمان: `{TimeManager.to_shamsi(datetime.now())}`\n\n"
+                    f"⏰ تاریخ انقضا: `{TimeManager.to_shamsi(new_expiry_date)}`\n\n"
                     f"📤 اطلاعیه به کاربر ارسال شد."
                 )
-                
                 keyboard = [
                     [InlineKeyboardButton("🎁 اعطای پکیج دیگر", callback_data="admin_grant_package")],
-                    [InlineKeyboardButton("⬅️ بازگشت", callback_data="admin_users")]
+                    [InlineKeyboardButton("⬅️ بازگشت به مدیریت کاربران", callback_data="admin_users")]
                 ]
-                
             else:
-                success_text = (
-                    f"❌ **خطا در اعطای پکیج**\n\n"
-                    f"متأسفانه در فرآیند اعطای پکیج مشکلی پیش آمد.\n"
-                    f"لطفاً دوباره تلاش کنید."
-                )
-                
+                success_text = "❌ **خطا در اعطای پکیج**\n\nمتأسفانه در فرآیند اعطای پکیج مشکلی پیش آمد."
                 keyboard = [
                     [InlineKeyboardButton("🔄 تلاش مجدد", callback_data="admin_grant_package")],
                     [InlineKeyboardButton("⬅️ بازگشت", callback_data="admin_users")]
                 ]
             
-            await query.edit_message_text(
-                success_text,
-                reply_markup=InlineKeyboardMarkup(keyboard),
-                parse_mode="Markdown"
-            )
+            await query.edit_message_text(success_text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="Markdown")
             
-            # پاک کردن داده‌های موقت
-            context.user_data.pop('admin_action', None)
-            context.user_data.pop('target_user_id', None)
-            context.user_data.pop('selected_package', None)
-            
+            context.user_data.clear()
             return ConversationHandler.END
             
         except Exception as e:
             UserLogger.log_error(admin_id, f"Error in handle_admin_duration_selection: {e}")
             await query.edit_message_text("❌ خطا در تکمیل فرآیند")
             return ConversationHandler.END
-    
+        
+            
     @staticmethod
     async def admin_backup_management(update: Update, context: ContextTypes.DEFAULT_TYPE):
         """مدیریت پشتیبان‌گیری"""

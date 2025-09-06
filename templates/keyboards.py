@@ -13,6 +13,7 @@ class KeyboardTemplates:
         """کیبورد منوی اصلی"""
         keyboard = [
             [
+                
                 InlineKeyboardButton("📊 استراتژی‌ها", callback_data="menu_strategy"),
                 InlineKeyboardButton("💰 قیمت لایو", callback_data="menu_live_prices")
             ],
@@ -42,308 +43,273 @@ class KeyboardTemplates:
     
     @staticmethod
     def strategy_menu(user_package: str = "free") -> InlineKeyboardMarkup:
-        """کیبورد منوی استراتژی‌ها - سازمان‌دهی کامل 35 استراتژی"""
+        """کیبورد منوی استراتژی‌ها - کامل با callback_data استاندارد شده"""
         keyboard = []
         
+        # پیشوند استاندارد برای همه استراتژی‌ها جهت پردازش ساده‌تر
+        prefix = "select_strategy:"
+
         # استراتژی‌های دمو برای کاربران رایگان
         if user_package == "free":
             keyboard.extend([
                 [InlineKeyboardButton("🆓 === استراتژی‌های دمو ===", callback_data="info_demo")],
                 [
-                    InlineKeyboardButton("🆓 دمو پرایس اکشن", callback_data="strategy_demo_price_action"),
-                    InlineKeyboardButton("🆓 دمو RSI", callback_data="strategy_demo_rsi")
+                    InlineKeyboardButton("🎯 دمو پرایس اکشن", callback_data=f"{prefix}demo_price_action"),
+                    InlineKeyboardButton("📈 دمو RSI", callback_data=f"{prefix}demo_rsi")
                 ]
             ])
         
-        # استراتژی‌های BASIC (9 استراتژی - برای پکیج basic و بالاتر)
+        # استراتژی‌های BASIC (9 استراتژی)
         if user_package in ["basic", "premium", "vip", "ghost"]:
             keyboard.extend([
                 [InlineKeyboardButton("🥉 === پکیج بیسیک (9 استراتژی) ===", callback_data="info_basic")],
                 [
-                    InlineKeyboardButton("📊 CCI Analysis", callback_data="strategy_cci_analysis"),
-                    InlineKeyboardButton("📈 EMA Analysis", callback_data="strategy_ema_analysis")
+                    InlineKeyboardButton("📊 تحلیل CCI", callback_data=f"{prefix}cci_analysis"),
+                    InlineKeyboardButton("📈 تحلیل EMA", callback_data=f"{prefix}ema_analysis")
                 ],
                 [
-                    InlineKeyboardButton("☁️ Ichimoku", callback_data="strategy_ichimoku"),
-                    InlineKeyboardButton("📉 Ichimoku Low", callback_data="strategy_ichimoku_low_signal")
+                    InlineKeyboardButton("☁️ ابر ایچیموکو", callback_data=f"{prefix}ichimoku"),
+                    InlineKeyboardButton("📉 ایچیموکو سیگنال پایین", callback_data=f"{prefix}ichimoku_low_signal")
                 ],
                 [
-                    InlineKeyboardButton("⚡ MACD", callback_data="strategy_macd"),
-                    InlineKeyboardButton("📊 Price Action TA", callback_data="strategy_price_action_pandas_ta")
+                    InlineKeyboardButton("🌊 تحلیل MACD", callback_data=f"{prefix}macd"),
+                    InlineKeyboardButton("🎯 پرایس اکشن TA", callback_data=f"{prefix}price_action_pandas_ta")
                 ],
                 [
-                    InlineKeyboardButton("💰 Live Binance", callback_data="strategy_project_price_live_binance"),
-                    InlineKeyboardButton("📈 RSI", callback_data="strategy_rsi")
+                    InlineKeyboardButton("🔴 قیمت زنده بایننس", callback_data=f"{prefix}project_price_live_binance"),
+                    InlineKeyboardButton("📊 تحلیل RSI", callback_data=f"{prefix}rsi")
                 ],
                 [
-                    InlineKeyboardButton("📊 Williams R", callback_data="strategy_williams_r_analysis")
+                    InlineKeyboardButton("📉 تحلیل Williams R", callback_data=f"{prefix}williams_r_analysis")
                 ]
             ])
         
-        # استراتژی‌های PREMIUM (17 استراتژی اضافی - برای پکیج premium و بالاتر)
+        # استراتژی‌های PREMIUM (17 استراتژی اضافی)
         if user_package in ["premium", "vip", "ghost"]:
             keyboard.extend([
                 [InlineKeyboardButton("🥈 === پکیج پریمیوم (+17 استراتژی) ===", callback_data="info_premium")],
-                
-                # الگوهای کندلی و پرایس اکشن
                 [
-                    InlineKeyboardButton("🕯️ Candlestick", callback_data="strategy_a_candlestick"),
-                    InlineKeyboardButton("🕯️ Heikin Ashi", callback_data="strategy_heikin_ashi")
+                    InlineKeyboardButton("🕯️ تحلیل کندل استیک", callback_data=f"{prefix}a_candlestick"),
+                    InlineKeyboardButton("🕯️ کندل هایکن آشی", callback_data=f"{prefix}heikin_ashi")
                 ],
                 [
-                    InlineKeyboardButton("📈 Price Action Hi", callback_data="strategy_price_action_hi")
-                ],
-                
-                # اندیکاتورهای تکنیکال
-                [
-                    InlineKeyboardButton("📊 Bollinger Bands", callback_data="strategy_bollinger_bands"),
-                    InlineKeyboardButton("📊 Stochastic", callback_data="strategy_stochastic")
+                    InlineKeyboardButton("📊 باندهای بولینگر", callback_data=f"{prefix}bollinger_bands"),
+                    InlineKeyboardButton("📈 تحلیل استوکاستیک", callback_data=f"{prefix}stochastic")
                 ],
                 [
-                    InlineKeyboardButton("📊 MACD Divergence", callback_data="strategy_macd_divergence")
-                ],
-                
-                # تحلیل روند
-                [
-                    InlineKeyboardButton("📍 Pivot Points", callback_data="strategy_b_pivot"),
-                    InlineKeyboardButton("📈 Trend Lines", callback_data="strategy_c_trend_lines")
+                    InlineKeyboardButton("🌊 واگرایی MACD", callback_data=f"{prefix}macd_divergence"),
+                    InlineKeyboardButton("🚀 تحلیل مومنتوم", callback_data=f"{prefix}momentum")
                 ],
                 [
-                    InlineKeyboardButton("☁️ Ichimoku Hi", callback_data="strategy_ichimoku_hi_signal"),
-                    InlineKeyboardButton("🌊 Fibonacci", callback_data="strategy_fibonacci_strategy")
-                ],
-                
-                # الگوهای قیمتی
-                [
-                    InlineKeyboardButton("🔺 Double Top", callback_data="strategy_double_top_pattern"),
-                    InlineKeyboardButton("🔺 Triangle", callback_data="strategy_triangle_pattern")
+                    InlineKeyboardButton("🎯 نقاط محوری", callback_data=f"{prefix}b_pivot"),
+                    InlineKeyboardButton("📐 خطوط روند", callback_data=f"{prefix}c_trend_lines")
                 ],
                 [
-                    InlineKeyboardButton("📐 Wedge", callback_data="strategy_wedge_pattern"),
-                    InlineKeyboardButton("🏁 Flag Pattern", callback_data="strategy_flag_pattern")
+                    InlineKeyboardButton("🌀 استراتژی فیبوناچی", callback_data=f"{prefix}fibonacci_strategy"),
+                    InlineKeyboardButton("🛡️ حمایت و مقاومت", callback_data=f"{prefix}support_resistance")
                 ],
                 [
-                    InlineKeyboardButton("☕ Cup & Handle", callback_data="strategy_cup_handle"),
-                    InlineKeyboardButton("👤 Head & Shoulders", callback_data="strategy_head_shoulders_analysis")
+                    InlineKeyboardButton("⛰️ الگوی دو قله", callback_data=f"{prefix}double_top_pattern"),
+                    InlineKeyboardButton("📐 الگوی مثلث", callback_data=f"{prefix}triangle_pattern")
                 ],
-                
-                # سیستم‌های پیشرفته
                 [
-                    InlineKeyboardButton("⚡ Momentum", callback_data="strategy_momentum"),
-                    InlineKeyboardButton("🎯 Martingale Low", callback_data="strategy_martingale_low")
+                    InlineKeyboardButton("📊 الگوی گوه", callback_data=f"{prefix}wedge_pattern"),
+                    InlineKeyboardButton("🏁 الگوی پرچم", callback_data=f"{prefix}flag_pattern")
+                ],
+                [
+                    InlineKeyboardButton("👤 الگوی سر و شانه", callback_data=f"{prefix}head_shoulders_analysis"),
+                    InlineKeyboardButton("🐊 تمساح ویلیامز", callback_data=f"{prefix}williams_alligator")
+                ],
+                [
+                    InlineKeyboardButton("🎰 مارتینگل پایین", callback_data=f"{prefix}martingale_low"),
+                    InlineKeyboardButton("📈 سار پارابولیک", callback_data=f"{prefix}parabolic_sar")
                 ]
             ])
         
-        # استراتژی‌های VIP (9 استراتژی اضافی - برای پکیج vip و ghost)
+        # استراتژی‌های VIP (9 استراتژی اضافی)
         if user_package in ["vip", "ghost"]:
             keyboard.extend([
                 [InlineKeyboardButton("👑 === پکیج وی‌آی‌پی (+9 استراتژی) ===", callback_data="info_vip")],
-                
-                # اندیکاتورهای پیشرفته
                 [
-                    InlineKeyboardButton("📊 ATR", callback_data="strategy_atr"),
-                    InlineKeyboardButton("📊 SMA Advanced", callback_data="strategy_sma")
-                ],
-                
-                # تحلیل حجم
-                [
-                    InlineKeyboardButton("📊 Volume Profile", callback_data="strategy_volume_profile"),
-                    InlineKeyboardButton("📊 VWAP", callback_data="strategy_vwap")
-                ],
-                
-                # الگوهای نادر
-                [
-                    InlineKeyboardButton("💎 Diamond Pattern", callback_data="strategy_diamond_pattern")
-                ],
-                
-                # سیستم‌های تخصصی
-                [
-                    InlineKeyboardButton("📈 CRT Analysis", callback_data="strategy_crt"),
-                    InlineKeyboardButton("📊 P3 Analysis", callback_data="strategy_p3")
+                    InlineKeyboardButton("📊 تحلیل ATR", callback_data=f"{prefix}atr"),
+                    InlineKeyboardButton("📈 SMA پیشرفته", callback_data=f"{prefix}sma_advanced")
                 ],
                 [
-                    InlineKeyboardButton("📈 RTM Analysis", callback_data="strategy_rtm"),
-                    InlineKeyboardButton("🔄 Multi Resistance", callback_data="strategy_multi_level_resistance")
+                    InlineKeyboardButton("📊 پروفایل حجم", callback_data=f"{prefix}volume_profile"),
+                    InlineKeyboardButton("💎 تحلیل VWAP", callback_data=f"{prefix}vwap")
+                ],
+                [
+                    InlineKeyboardButton("💎 الگوی الماس", callback_data=f"{prefix}diamond_pattern"),
+                    InlineKeyboardButton("🎯 تحلیل CRT", callback_data=f"{prefix}crt")
+                ],
+                [
+                    InlineKeyboardButton("🎯 سیستم P3", callback_data=f"{prefix}p3"),
+                    InlineKeyboardButton("🔄 تحلیل RTM", callback_data=f"{prefix}rtm")
+                ],
+                [
+                    InlineKeyboardButton("🛡️ مقاومت چندگانه", callback_data=f"{prefix}multi_resistance")
                 ]
             ])
         
         # دکمه‌های عمومی
         keyboard.extend([
-            [InlineKeyboardButton("💎 ارتقا پکیج", callback_data="menu_packages")],
+            [InlineKeyboardButton("💎 ارتقا پکیج", callback_data="packages_menu")],
             [InlineKeyboardButton("🏠 منوی اصلی", callback_data="main_menu")]
         ])
         
         return InlineKeyboardMarkup(keyboard)
     
+        
     @staticmethod
     def symbol_selection(strategy: str) -> InlineKeyboardMarkup:
-        """کیبورد انتخاب نماد ارز - بهبود یافته"""
+        """کیبورد انتخاب نماد ارز - بهبود یافته و استاندارد شده"""
+        prefix = "select_symbol:"
         keyboard = [
             # ارزهای اصلی
             [
-                InlineKeyboardButton("₿ BTC", callback_data=f"symbol_{strategy}|BTC"),
-                InlineKeyboardButton("♦️ ETH", callback_data=f"symbol_{strategy}|ETH"),
-                InlineKeyboardButton("🔶 BNB", callback_data=f"symbol_{strategy}|BNB")
+                InlineKeyboardButton("₿ BTC", callback_data=f"{prefix}{strategy}|BTC"),
+                InlineKeyboardButton("♦️ ETH", callback_data=f"{prefix}{strategy}|ETH"),
+                InlineKeyboardButton("🔶 BNB", callback_data=f"{prefix}{strategy}|BNB")
             ],
-            
             # ارزهای محبوب
             [
-                InlineKeyboardButton("🔷 ADA", callback_data=f"symbol_{strategy}|ADA"),
-                InlineKeyboardButton("☀️ SOL", callback_data=f"symbol_{strategy}|SOL"),
-                InlineKeyboardButton("💧 XRP", callback_data=f"symbol_{strategy}|XRP")
+                InlineKeyboardButton("🔷 ADA", callback_data=f"{prefix}{strategy}|ADA"),
+                InlineKeyboardButton("☀️ SOL", callback_data=f"{prefix}{strategy}|SOL"),
+                InlineKeyboardButton("💧 XRP", callback_data=f"{prefix}{strategy}|XRP")
             ],
-            
             # ارزهای مم و محبوب
             [
-                InlineKeyboardButton("🐕 DOGE", callback_data=f"symbol_{strategy}|DOGE"),
-                InlineKeyboardButton("🔥 SHIB", callback_data=f"symbol_{strategy}|SHIB"),
-                InlineKeyboardButton("⚪ DOT", callback_data=f"symbol_{strategy}|DOT")
+                InlineKeyboardButton("🐕 DOGE", callback_data=f"{prefix}{strategy}|DOGE"),
+                InlineKeyboardButton("🔥 SHIB", callback_data=f"{prefix}{strategy}|SHIB"),
+                InlineKeyboardButton("⚪ DOT", callback_data=f"{prefix}{strategy}|DOT")
             ],
-            
             # DeFi و Web3
             [
-                InlineKeyboardButton("🔗 LINK", callback_data=f"symbol_{strategy}|LINK"),
-                InlineKeyboardButton("🔄 UNI", callback_data=f"symbol_{strategy}|UNI"),
-                InlineKeyboardButton("🚀 AVAX", callback_data=f"symbol_{strategy}|AVAX")
+                InlineKeyboardButton("🔗 LINK", callback_data=f"{prefix}{strategy}|LINK"),
+                InlineKeyboardButton("🔄 UNI", callback_data=f"{prefix}{strategy}|UNI"),
+                InlineKeyboardButton("🚀 AVAX", callback_data=f"{prefix}{strategy}|AVAX")
             ],
-            
             # Layer 1 و 2
             [
-                InlineKeyboardButton("🔷 MATIC", callback_data=f"symbol_{strategy}|MATIC"),
-                InlineKeyboardButton("🌙 LUNA", callback_data=f"symbol_{strategy}|LUNA"),
-                InlineKeyboardButton("⚫ ATOM", callback_data=f"symbol_{strategy}|ATOM")
+                InlineKeyboardButton("🔷 MATIC", callback_data=f"{prefix}{strategy}|MATIC"),
+                InlineKeyboardButton("🌙 LUNA", callback_data=f"{prefix}{strategy}|LUNA"),
+                InlineKeyboardButton("⚫ ATOM", callback_data=f"{prefix}{strategy}|ATOM")
             ],
-            
             # سایر ارزهای محبوب
             [
-                InlineKeyboardButton("🔴 ALGO", callback_data=f"symbol_{strategy}|ALGO"),
-                InlineKeyboardButton("🟦 FTM", callback_data=f"symbol_{strategy}|FTM"),
-                InlineKeyboardButton("🔵 NEAR", callback_data=f"symbol_{strategy}|NEAR")
+                InlineKeyboardButton("🔴 ALGO", callback_data=f"{prefix}{strategy}|ALGO"),
+                InlineKeyboardButton("🟦 FTM", callback_data=f"{prefix}{strategy}|FTM"),
+                InlineKeyboardButton("🔵 NEAR", callback_data=f"{prefix}{strategy}|NEAR")
             ],
-            
             # مجموعه دوم
             [
-                InlineKeyboardButton("💎 ICP", callback_data=f"symbol_{strategy}|ICP"),
-                InlineKeyboardButton("🟢 VET", callback_data=f"symbol_{strategy}|VET"),
-                InlineKeyboardButton("🎭 THETA", callback_data=f"symbol_{strategy}|THETA")
+                InlineKeyboardButton("💎 ICP", callback_data=f"{prefix}{strategy}|ICP"),
+                InlineKeyboardButton("🟢 VET", callback_data=f"{prefix}{strategy}|VET"),
+                InlineKeyboardButton("🎭 THETA", callback_data=f"{prefix}{strategy}|THETA")
             ],
-            
             # کیبورد ورود دستی و بازگشت
-            [InlineKeyboardButton("🔤 ورود دستی نماد", callback_data=f"manual_symbol_{strategy}")],
-            [InlineKeyboardButton("⬅️ بازگشت به استراتژی‌ها", callback_data="menu_strategy")],
+            [InlineKeyboardButton("🔤 ورود دستی نماد", callback_data=f"manual_symbol:{strategy}")],
+            [InlineKeyboardButton("⬅️ بازگشت به استراتژی‌ها", callback_data="analysis_menu")],
             [InlineKeyboardButton("🏠 منوی اصلی", callback_data="main_menu")]
         ]
-        
         return InlineKeyboardMarkup(keyboard)
-    
+
     @staticmethod
     def currency_selection(strategy: str, symbol: str) -> InlineKeyboardMarkup:
-        """کیبورد انتخاب ارز مرجع"""
+        """کیبورد انتخاب ارز مرجع - استاندارد شده"""
+        prefix = "select_currency:"
         keyboard = [
             # ارزهای اصلی
             [
-                InlineKeyboardButton("💵 USDT", callback_data=f"currency_{strategy}|{symbol}|USDT"),
-                InlineKeyboardButton("💵 BUSD", callback_data=f"currency_{strategy}|{symbol}|BUSD")
+                InlineKeyboardButton("💵 USDT", callback_data=f"{prefix}{strategy}|{symbol}|USDT"),
+                InlineKeyboardButton("💵 BUSD", callback_data=f"{prefix}{strategy}|{symbol}|BUSD")
             ],
             [
-                InlineKeyboardButton("💰 USDC", callback_data=f"currency_{strategy}|{symbol}|USDC")
+                InlineKeyboardButton("💰 USDC", callback_data=f"{prefix}{strategy}|{symbol}|USDC")
             ],
-            
             # ارزهای کریپتو
             [
-                InlineKeyboardButton("₿ BTC", callback_data=f"currency_{strategy}|{symbol}|BTC"),
-                InlineKeyboardButton("♦️ ETH", callback_data=f"currency_{strategy}|{symbol}|ETH")
+                InlineKeyboardButton("₿ BTC", callback_data=f"{prefix}{strategy}|{symbol}|BTC"),
+                InlineKeyboardButton("♦️ ETH", callback_data=f"{prefix}{strategy}|{symbol}|ETH")
             ],
             [
-                InlineKeyboardButton("🔶 BNB", callback_data=f"currency_{strategy}|{symbol}|BNB")
+                InlineKeyboardButton("🔶 BNB", callback_data=f"{prefix}{strategy}|{symbol}|BNB")
             ],
-            
             # ورود دستی و بازگشت
-            [InlineKeyboardButton("🔤 ورود دستی ارز مرجع", callback_data=f"manual_currency_{strategy}|{symbol}")],
-            [InlineKeyboardButton("⬅️ بازگشت به انتخاب نماد", callback_data=f"strategy_{strategy}")],
+            [InlineKeyboardButton("🔤 ورود دستی ارز مرجع", callback_data=f"manual_currency:{strategy}|{symbol}")],
+            [InlineKeyboardButton("⬅️ بازگشت به انتخاب نماد", callback_data=f"select_strategy:{strategy}")],
             [InlineKeyboardButton("🏠 منوی اصلی", callback_data="main_menu")]
         ]
-        
         return InlineKeyboardMarkup(keyboard)
-    
+
     @staticmethod
     def timeframe_selection(strategy: str, symbol: str, currency: str) -> InlineKeyboardMarkup:
-        """کیبورد انتخاب تایم‌فریم - کامل و سازمان‌دهی شده"""
+        """کیبورد انتخاب تایم‌فریم - کامل و استاندارد شده"""
+        prefix = "select_timeframe:"
         keyboard = [
             # تایم‌فریم‌های کوتاه‌مدت
             [
-                InlineKeyboardButton("1️⃣ دقیقه", callback_data=f"timeframe_{strategy}|{symbol}|{currency}|1m"),
-                InlineKeyboardButton("3️⃣ دقیقه", callback_data=f"timeframe_{strategy}|{symbol}|{currency}|3m"),
-                InlineKeyboardButton("5️⃣ دقیقه", callback_data=f"timeframe_{strategy}|{symbol}|{currency}|5m")
+                InlineKeyboardButton("1️⃣ دقیقه", callback_data=f"{prefix}{strategy}|{symbol}|{currency}|1m"),
+                InlineKeyboardButton("3️⃣ دقیقه", callback_data=f"{prefix}{strategy}|{symbol}|{currency}|3m"),
+                InlineKeyboardButton("5️⃣ دقیقه", callback_data=f"{prefix}{strategy}|{symbol}|{currency}|5m")
             ],
             [
-                InlineKeyboardButton("1️⃣5️⃣ دقیقه", callback_data=f"timeframe_{strategy}|{symbol}|{currency}|15m"),
-                InlineKeyboardButton("3️⃣0️⃣ دقیقه", callback_data=f"timeframe_{strategy}|{symbol}|{currency}|30m")
+                InlineKeyboardButton("1️⃣5️⃣ دقیقه", callback_data=f"{prefix}{strategy}|{symbol}|{currency}|15m"),
+                InlineKeyboardButton("3️⃣0️⃣ دقیقه", callback_data=f"{prefix}{strategy}|{symbol}|{currency}|30m")
             ],
-            
             # تایم‌فریم‌های ساعتی
             [
-                InlineKeyboardButton("1️⃣ ساعت", callback_data=f"timeframe_{strategy}|{symbol}|{currency}|1h"),
-                InlineKeyboardButton("2️⃣ ساعت", callback_data=f"timeframe_{strategy}|{symbol}|{currency}|2h"),
-                InlineKeyboardButton("4️⃣ ساعت", callback_data=f"timeframe_{strategy}|{symbol}|{currency}|4h")
+                InlineKeyboardButton("1️⃣ ساعت", callback_data=f"{prefix}{strategy}|{symbol}|{currency}|1h"),
+                InlineKeyboardButton("2️⃣ ساعت", callback_data=f"{prefix}{strategy}|{symbol}|{currency}|2h"),
+                InlineKeyboardButton("4️⃣ ساعت", callback_data=f"{prefix}{strategy}|{symbol}|{currency}|4h")
             ],
             [
-                InlineKeyboardButton("6️⃣ ساعت", callback_data=f"timeframe_{strategy}|{symbol}|{currency}|6h"),
-                InlineKeyboardButton("8️⃣ ساعت", callback_data=f"timeframe_{strategy}|{symbol}|{currency}|8h"),
-                InlineKeyboardButton("1️⃣2️⃣ ساعت", callback_data=f"timeframe_{strategy}|{symbol}|{currency}|12h")
+                InlineKeyboardButton("6️⃣ ساعت", callback_data=f"{prefix}{strategy}|{symbol}|{currency}|6h"),
+                InlineKeyboardButton("8️⃣ ساعت", callback_data=f"{prefix}{strategy}|{symbol}|{currency}|8h"),
+                InlineKeyboardButton("1️⃣2️⃣ ساعت", callback_data=f"{prefix}{strategy}|{symbol}|{currency}|12h")
             ],
-            
             # تایم‌فریم‌های بلندمدت
             [
-                InlineKeyboardButton("1️⃣ روز", callback_data=f"timeframe_{strategy}|{symbol}|{currency}|1d"),
-                InlineKeyboardButton("3️⃣ روز", callback_data=f"timeframe_{strategy}|{symbol}|{currency}|3d"),
-                InlineKeyboardButton("1️⃣ هفته", callback_data=f"timeframe_{strategy}|{symbol}|{currency}|1w")
+                InlineKeyboardButton("1️⃣ روز", callback_data=f"{prefix}{strategy}|{symbol}|{currency}|1d"),
+                InlineKeyboardButton("3️⃣ روز", callback_data=f"{prefix}{strategy}|{symbol}|{currency}|3d"),
+                InlineKeyboardButton("1️⃣ هفته", callback_data=f"{prefix}{strategy}|{symbol}|{currency}|1w")
             ],
             [
-                InlineKeyboardButton("1️⃣ ماه", callback_data=f"timeframe_{strategy}|{symbol}|{currency}|1M")
+                InlineKeyboardButton("1️⃣ ماه", callback_data=f"{prefix}{strategy}|{symbol}|{currency}|1M")
             ],
-            
             # بازگشت
-            [InlineKeyboardButton("⬅️ بازگشت به انتخاب ارز مرجع", callback_data=f"currency_{strategy}|{symbol}")],
+            [InlineKeyboardButton("⬅️ بازگشت به انتخاب ارز مرجع", callback_data=f"select_symbol:{strategy}|{symbol}")],
             [InlineKeyboardButton("🏠 منوی اصلی", callback_data="main_menu")]
         ]
-        
         return InlineKeyboardMarkup(keyboard)
-    
+
     @staticmethod
     def analysis_result_actions(strategy: str, symbol: str, currency: str, timeframe: str) -> InlineKeyboardMarkup:
-        """کیبورد اقدامات پس از تحلیل"""
+        """کیبورد اقدامات پس از تحلیل - استاندارد شده"""
         keyboard = [
             # اقدامات اصلی
-            [InlineKeyboardButton("🔄 به‌روزرسانی تحلیل", callback_data=f"timeframe_{strategy}|{symbol}|{currency}|{timeframe}")],
-            
+            [InlineKeyboardButton("🔄 به‌روزرسانی تحلیل", callback_data=f"select_timeframe:{strategy}|{symbol}|{currency}|{timeframe}")],
             # تغییرات
             [
-                InlineKeyboardButton("⏱ تغییر تایم‌فریم", callback_data=f"currency_{strategy}|{symbol}|{currency}"),
-                InlineKeyboardButton("💱 تغییر ارز مرجع", callback_data=f"symbol_{strategy}|{symbol}")
+                InlineKeyboardButton("⏱ تغییر تایم‌فریم", callback_data=f"select_currency:{strategy}|{symbol}|{currency}"),
+                InlineKeyboardButton("💱 تغییر ارز مرجع", callback_data=f"select_symbol:{strategy}|{symbol}")
             ],
             [
-                InlineKeyboardButton("🪙 تغییر نماد", callback_data=f"strategy_{strategy}"),
-                InlineKeyboardButton("📊 استراتژی دیگر", callback_data="menu_strategy")
+                InlineKeyboardButton("🪙 تغییر نماد", callback_data=f"select_strategy:{strategy}"),
+                InlineKeyboardButton("📊 استراتژی دیگر", callback_data="analysis_menu")
             ],
-            
-            # ابزارهای اضافی
-            [
-                InlineKeyboardButton("💾 ذخیره گزارش", callback_data=f"save_report_{strategy}|{symbol}|{currency}|{timeframe}"),
-                InlineKeyboardButton("📤 اشتراک‌گذاری", callback_data=f"share_analysis_{strategy}|{symbol}|{currency}|{timeframe}")
-            ],
-            [
-                InlineKeyboardButton("🔔 تنظیم هشدار", callback_data=f"set_alert_{strategy}|{symbol}|{currency}|{timeframe}"),
-                InlineKeyboardButton("📈 نمودار تکمیلی", callback_data=f"show_chart_{strategy}|{symbol}|{currency}|{timeframe}")
-            ],
-            
+            # ابزارهای اضافی (در صورت پیاده‌سازی)
+            # [
+            #     InlineKeyboardButton("💾 ذخیره گزارش", callback_data=f"save_report:{strategy}|{symbol}|{currency}|{timeframe}"),
+            #     InlineKeyboardButton("📤 اشتراک‌گذاری", callback_data=f"share_analysis:{strategy}|{symbol}|{currency}|{timeframe}")
+            # ],
             # بازگشت
-            [InlineKeyboardButton("⬅️ بازگشت به استراتژی‌ها", callback_data="menu_strategy")],
+            [InlineKeyboardButton("⬅️ بازگشت به استراتژی‌ها", callback_data="analysis_menu")],
             [InlineKeyboardButton("🏠 منوی اصلی", callback_data="main_menu")]
         ]
-        
         return InlineKeyboardMarkup(keyboard)
     
+        
     @staticmethod
     def packages_menu() -> InlineKeyboardMarkup:
         """کیبورد منوی پکیج‌ها"""

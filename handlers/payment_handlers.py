@@ -17,6 +17,8 @@ from models.transaction import TransactionManager, TransactionType, PaymentMetho
 from utils.logger import UserLogger, PaymentLogger
 from utils.time_manager import TimeManager
 from utils.validators import Validators, ValidationError
+from datetime import datetime, timedelta
+from managers.user_manager import UserManager
 
 # States for conversation handlers
 PAYMENT_WAITING_PACKAGE = 1

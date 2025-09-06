@@ -7,8 +7,7 @@ import uuid
 import random
 import string
 from typing import Dict, List, Optional, Any, Tuple
-from datetime import datetime
-
+from datetime import datetime, timedelta
 from core.config import Config
 from utils.logger import logger, log_payment_action
 from utils.time_manager import TimeManager
@@ -316,27 +315,18 @@ class PaymentManager:
     
     @classmethod
     def _process_package_payment(cls, telegram_id: int, package: str, payment_code: str) -> bool:
-        """پردازش پرداخت پکیج
-        
-        Args:
-            telegram_id: شناسه کاربر
-            package: نوع پکیج
-            payment_code: کد پیگیری
-            
-        Returns:
-            موفقیت عملیات
-        """
+        """پردازش پرداخت پکیج (با استفاده از تابع متمرکز)"""
         try:
-            # دریافت تنظیمات پکیج
-            package_info = Config.PACKAGES.get(package.split('_')[0])  # حذف پسوند احتمالی
+            package_key = package.split('_')[0]
+            package_info = Config.PACKAGES.get(package_key)
             if not package_info:
                 logger.error(f"Package info not found for: {package}")
                 return False
             
-            duration_days = package_info['duration_days']
+            duration_days = package_info.get('duration_days', 30)
             
-            # تنظیم پکیج برای کاربر
-            success = UserManager.set_user_package(telegram_id, package.split('_')[0], duration_days)
+            # فراخوانی تابع متمرکز جدید برای تنظیم پکیج و تاریخ انقضا
+            success = UserManager.set_user_package(telegram_id, package_key, duration_days)
             
             if success:
                 log_payment_action(
@@ -344,7 +334,7 @@ class PaymentManager:
                     "package_activated", 
                     0, 
                     payment_code, 
-                    f"Package: {package}, Duration: {duration_days} days"
+                    f"Package: {package_key}, Duration: {duration_days} days"
                 )
             
             return success
@@ -352,7 +342,8 @@ class PaymentManager:
         except Exception as e:
             logger.error(f"Error processing package payment: {e}")
             return False
-    
+        
+                    
     @classmethod
     def _process_balance_charge(cls, telegram_id: int, amount: float, payment_code: str) -> bool:
         """پردازش شارژ حساب

@@ -353,6 +353,24 @@ class UserManager:
                 return False, 999  # ✅ دمو هیچوقت منقضی نمی‌شود
             
             expiry_date = user.get('package_expiry', '')
+            
+            # ✅ اضافه کردن این خط
+            if '.' in expiry_date:
+                expiry_date = expiry_date.split('.')[0]
+
+            if not expiry_date and package in ['basic', 'premium', 'vip', 'ghost']:
+                logger.warning(f"User {telegram_id} with package '{package}' has no expiry date. Setting default expiry.")
+
+                # تنظیم 30 روز از امروز (بدون microseconds)
+                from datetime import datetime, timedelta
+                new_expiry = datetime.now().replace(microsecond=0) + timedelta(days=30)
+                
+                # آپدیت کردن کاربر
+                UserManager.update_user(telegram_id, package_expiry=new_expiry)
+                
+                # بازگشت با 30 روز اعتبار
+                return False, 30
+            
             if not expiry_date:
                 return True, 0
             
@@ -376,7 +394,7 @@ class UserManager:
         except Exception as e:
             logger.error(f"Error checking package expiry for user {telegram_id}: {e}")
             return False, 0  # ✅ در صورت خطا، منقضی نشده فرض کن
-    
+        
     @staticmethod
     def is_user_blocked(telegram_id: int) -> bool:
         """بررسی مسدودیت کاربر
@@ -484,6 +502,45 @@ class UserManager:
         except Exception as e:
             logger.error(f"Error adding balance for user {telegram_id}: {e}")
             return False
+    @staticmethod
+    def set_user_package(telegram_id: int, package_type: str, duration_days: int = 30) -> bool:
+        """
+        یک پکیج را به کاربر اختصاص داده و تاریخ انقضا را به طور هوشمند تنظیم می‌کند.
+        این تابع، نقطه مرکزی برای تغییر پکیج است.
+        
+        Args:
+            telegram_id: شناسه تلگرام کاربر
+            package_type: نوع پکیج (مثلاً 'vip', 'basic')
+            duration_days: مدت زمان پکیج به روز
+            
+        Returns:
+            موفقیت عملیات
+        """
+        try:
+            if package_type in ['demo', 'none']:
+                # برای پکیج‌های رایگان، تاریخ انقضا را خالی می‌کنیم
+                expiry_date = None
+            else:
+                # برای پکیج‌های پولی، تاریخ انقضا را محاسبه می‌کنیم
+                expiry_date = datetime.now().replace(microsecond=0) + timedelta(days=duration_days)
+
+
+            # آپدیت همزمان پکیج و تاریخ انقضا
+            success = UserManager.update_user(
+                telegram_id,
+                package=package_type,
+                package_expiry=expiry_date
+            )
+
+            if success:
+                logger.info(f"Package for user {telegram_id} set to '{package_type}' with expiry on {expiry_date}")
+            
+            return success
+
+        except Exception as e:
+            logger.error(f"Error in set_user_package for user {telegram_id}: {e}", exc_info=True)
+            return False
+    
     
     # ✅ متدهای کمکی اضافی برای error handling
     @staticmethod
@@ -566,6 +623,50 @@ class UserManager:
         except Exception as e:
             logger.error(f"Error unblocking user {telegram_id}: {e}")
             return False
+
+
+    @staticmethod
+    def fix_missing_expiry_dates() -> int:
+        """
+        تنظیم تاریخ انقضا برای کاربرانی که پکیج پولی دارند اما expiry_date ندارند
+        
+        Returns:
+            تعداد کاربران اصلاح شده
+        """
+        try:
+            fixed_count = 0
+            
+            # دریافت تمام کاربران از دیتابیس
+            if hasattr(database_manager, 'fetch_all'):
+                users = database_manager.fetch_all(
+                    "SELECT telegram_id, package, package_expiry FROM users WHERE package IN ('basic', 'premium', 'vip', 'ghost') AND (package_expiry IS NULL OR package_expiry = '')"
+                )
+            else:
+                # fallback به CSV
+                users = []
+                logger.warning("Database query not available, skipping expiry fix")
+                return 0
+            
+            for user in users:
+                telegram_id = user.get('telegram_id')
+                package = user.get('package')
+                
+                if telegram_id and package in ['basic', 'premium', 'vip', 'ghost']:
+                    # تنظیم 30 روز از امروز
+                    from datetime import datetime, timedelta
+                    new_expiry = datetime.now() + timedelta(days=30)
+                    
+                    success = UserManager.update_user(telegram_id, package_expiry=new_expiry)
+                    if success:
+                        fixed_count += 1
+                        logger.info(f"Fixed expiry for user {telegram_id} with package {package}")
+            
+            logger.info(f"Fixed expiry dates for {fixed_count} users")
+            return fixed_count
+            
+        except Exception as e:
+            logger.error(f"Error fixing missing expiry dates: {e}")
+            return 0
 
 # Export برای استفاده آسان‌تر
 __all__ = ['UserManager']

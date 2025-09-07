@@ -647,33 +647,29 @@ class StrategyManager:
             return False, "❌ خطا در اعتبارسنجی پارامترها"
     
     @classmethod
-    async def analyze_strategy(cls, user_id: int, strategy: str, symbol: str, currency: str, timeframe: str) -> Optional[Dict[str, Any]]:
-        """انجام تحلیل استراتژی بدون کش"""
+    async def analyze_strategy(cls, user_id: int, strategy: str, symbol: str, currency: str, timeframe: str, generate_file: bool = True) -> Optional[Dict[str, Any]]:
+        """تحلیل استراتژی با پردازش بهتر API response"""
         try:
             logger.info(f"Starting analysis for user {user_id}: {strategy} {symbol}/{currency} @ {timeframe}")
             
             # بررسی دسترسی
             has_access, access_message = cls.check_strategy_access(user_id, strategy)
             if not has_access:
-                logger.warning(f"Access denied for user {user_id} to strategy {strategy}")
                 return {"error": access_message}
             
             # بررسی تایم‌فریم
             timeframe_allowed, timeframe_message = cls.check_timeframe_access(user_id, timeframe)
             if not timeframe_allowed:
-                logger.warning(f"Timeframe {timeframe} not allowed for user {user_id}")
                 return {"error": timeframe_message}
             
             # بررسی محدودیت دمو
             if strategy.startswith('demo_'):
                 can_use_demo, demo_message, usage_count = cls.check_demo_usage_limit(user_id)
                 if not can_use_demo:
-                    logger.warning(f"Demo limit exceeded for user {user_id}")
                     return {"error": demo_message}
             
-            # فراخوانی API مستقیم (بدون کش)
+            # فراخوانی API
             try:
-                # وارد کردن api_client در اینجا برای جلوگیری از circular import
                 from api.api_client import api_client
                 
                 logger.info(f"Calling API for {strategy} analysis: {symbol}/{currency} @ {timeframe}")
@@ -683,28 +679,154 @@ class StrategyManager:
                 )
                 
                 if analysis_data and "error" not in analysis_data:
-                    # تنظیم flag برای نشان دادن که از کش نیست
-                    analysis_data["is_cached"] = False
+                    # بررسی و تصحیح محتوای analysis_text
+                    if not analysis_data.get("analysis_text") and not analysis_data.get("raw_report"):
+                        # اگر محتوای تحلیل در response اصلی موجود است، آن را استخراج کن
+                        if isinstance(analysis_data, dict):
+                            # جستجو برای محتوای تحلیل در کلیدهای مختلف
+                            for key, value in analysis_data.items():
+                                if isinstance(value, str) and len(value) > 100 and ("تحلیل" in value or "سیگنال" in value):
+                                    analysis_data["analysis_text"] = value
+                                    break
                     
-                    # ثبت آمار استفاده
+                    # تولید فایل گزارش در صورت درخواست
+                    if generate_file:
+                        file_info = await cls._generate_report_file(
+                            analysis_data, strategy, symbol, currency, timeframe, user_id
+                        )
+                        analysis_data["report_file"] = file_info
+                    
+                    # ثبت آمار
                     if strategy.startswith('demo_'):
                         cls.increment_demo_usage(user_id)
-                        logger.info(f"Demo usage incremented for user {user_id}")
                     
+                    analysis_data["is_cached"] = False
                     logger.info(f"Analysis successful for {strategy} {symbol}/{currency}")
                     return analysis_data
                 else:
                     error_msg = analysis_data.get("error", "خطای ناشناخته") if analysis_data else "پاسخ خالی از API"
                     logger.error(f"API returned error: {error_msg}")
-                    return {"error": f"❌ خطا در دریافت داده‌ها: {error_msg}"}
+                    return {"error": f"خطا در دریافت داده‌ها: {error_msg}"}
                     
             except Exception as api_error:
                 logger.error(f"API error for {strategy}: {api_error}", exc_info=True)
-                return {"error": f"❌ خطای ارتباط با سرور: {str(api_error)}"}
+                return {"error": f"خطای ارتباط با سرور: {str(api_error)}"}
                 
         except Exception as e:
             logger.error(f"Error analyzing strategy {strategy}: {e}", exc_info=True)
-            return {"error": "❌ خطای غیرمنتظره در تحلیل. لطفاً دوباره تلاش کنید."}
+            return {"error": "خطای غیرمنتظره در تحلیل. لطفاً دوباره تلاش کنید."}
+
+    # 3. تابع تولید فایل گزارش
+    @classmethod
+    async def _generate_report_file(cls, analysis_result: Dict[str, Any], strategy_key: str,
+                                symbol: str, currency: str, timeframe: str, user_id: int) -> Dict[str, Any]:
+        """تولید فایل گزارش کامل برای دانلود"""
+        try:
+            from utils.helpers import extract_signal_details, format_signal_message
+            from datetime import datetime
+            import os
+            
+            # استخراج جزئیات سیگنال
+            signal_details = extract_signal_details(strategy_key, analysis_result)
+            
+            # نام نمایشی استراتژی
+            strategy_display = cls.get_strategy_display_name(strategy_key)
+            
+            # محتوای فایل گزارش
+            report_content = f"""
+                        🤖 MrTrader Bot - گزارش تحلیل                    
+                        مهندس محسن اسدی تحلیلگر و مدرس بازارهای مالی
+
+    📊 اطلاعات کلی:
+    ─────────────────────────────────────────────────────────────────────────────────
+    • نماد: {symbol}/{currency}
+    • استراتژی: {strategy_display}
+    • تایم‌فریم: {timeframe}
+    • زمان تحلیل: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+    • شناسه کاربر: {user_id}
+
+    🎯 نتایج تحلیل:
+    ─────────────────────────────────────────────────────────────────────────────────
+    • سیگنال: {signal_details.get('signal_direction', 'نامشخص')}
+    • قدرت سیگنال: {signal_details.get('strength', 'متوسط')}
+    • درصد اطمینان: {signal_details.get('confidence', 0.5):.1%}
+
+    💰 سطوح معاملاتی:
+    ─────────────────────────────────────────────────────────────────────────────────"""
+
+            # اضافه کردن قیمت‌ها اگر موجود باشد
+            if signal_details.get("entry_price"):
+                report_content += f"\n• قیمت ورود: ${signal_details['entry_price']:,.4f}"
+            if signal_details.get("stop_loss"):
+                report_content += f"\n• حد ضرر: ${signal_details['stop_loss']:,.4f}"
+            if signal_details.get("take_profit"):
+                report_content += f"\n• هدف سود: ${signal_details['take_profit']:,.4f}"
+            if signal_details.get("risk_reward_ratio"):
+                report_content += f"\n• نسبت ریسک/ریوارد: 1:{signal_details['risk_reward_ratio']}"
+
+            report_content += f"""
+
+    📋 تحلیل تفصیلی:
+    ─────────────────────────────────────────────────────────────────────────────────
+    {analysis_result.get('analysis_text', analysis_result.get('raw_report', 'گزارش دریافت نشد'))}
+
+    ⚠️ اخطارها:
+    ─────────────────────────────────────────────────────────────────────────────────
+    • این تحلیل صرفاً جنبه آموزشی و اطلاعاتی دارد
+    • هیچ‌گونه توصیه سرمایه‌گذاری محسوب نمی‌شود
+    • لطفاً قبل از هر تصمیم معاملاتی، تحقیقات تکمیلی انجام دهید
+    • ریسک سرمایه‌گذاری در همهء باراهای مالی همواره وجود دارد
+
+                MrTrader Bot v2.0                           
+    """
+            
+            # ایجاد پوشه گزارش‌ها
+            reports_dir = "temp_reports"
+            os.makedirs(reports_dir, exist_ok=True)
+            
+            # نام فایل منحصربفرد
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            filename = f"{strategy_key}_{symbol}_{currency}_{timeframe}_{timestamp}.txt"
+            filepath = os.path.join(reports_dir, filename)
+            
+            # نوشتن فایل
+            with open(filepath, 'w', encoding='utf-8') as f:
+                f.write(report_content)
+            
+            return {
+                "filename": filename,
+                "filepath": filepath,
+                "size": os.path.getsize(filepath),
+                "generated_at": datetime.now().isoformat()
+            }
+            
+        except Exception as e:
+            logger.error(f"Error generating report file: {e}")
+            return {"error": f"خطا در تولید فایل: {str(e)}"}
+
+    @classmethod
+    def _get_strategy_display_name(cls, strategy_key: str) -> str:
+        """نام نمایشی استراتژی"""
+        if strategy_key in cls.ALL_STRATEGIES:
+            return cls.ALL_STRATEGIES[strategy_key]["name"]
+        
+        # fallback mapping
+        strategy_names = {
+            "cci_analysis": "CCI (شاخص کانال کالا)",
+            "rsi": "RSI (شاخص قدرت نسبی)",
+            "macd": "MACD (همگرایی واگرایی)",
+            "ema_analysis": "EMA (میانگین متحرک نمایی)",
+            "williams_r_analysis": "Williams %R",
+            "ichimoku": "Ichimoku (ابر ایچی‌موکو)",
+            "wedge_pattern": "الگوی گوه (Wedge Pattern)",
+            "head_shoulders_analysis": "سر و شانه",
+            "double_top_pattern": "دو قله/دو کف",
+            "fibonacci_strategy": "فیبوناچی",
+            "macd_divergence": "واگرایی MACD",
+            "price_action_pandas_ta": "Price Action"
+        }
+        return strategy_names.get(strategy_key, strategy_key.replace('_', ' ').title())
+
     
         
     @classmethod
@@ -797,6 +919,79 @@ class StrategyManager:
             logger.error(f"Error getting strategy statistics: {e}")
             return {}
     
+    def get_analysis_endpoint(self, strategy_key: str) -> str:
+        """دریافت endpoint صحیح برای هر استراتژی"""
+        
+        # mapping صحیح استراتژی‌ها به endpoints
+        strategy_endpoints = {
+            # استراتژی‌های اصلی
+            "cci_analysis": "analyze_CCI_strategy",
+            "rsi": "analyze_RSI_basic", 
+            "macd": "analyze_MACD_basic",
+            "ema_analysis": "analyze_EMA_strategy",
+            "williams_r_analysis": "analyze_WilliamsR",
+            "ichimoku": "analyze_ichimoku_strategy",  # ✅ اصلاح شده
+            "ichimoku_low_signal": "analyze_ichimoku_strategy",
+            
+            # استراتژی‌های الگویی
+            "wedge_pattern": "analyze_wedge_pattern_strategy",  # ✅ اصلاح شده - جدا از double_top
+            "head_shoulders_analysis": "analyze_head_shoulders_analysis",
+            "double_top_pattern": "analyze_double_top_strategy",
+            "triangle_pattern": "analyze_double_top_strategy",  # استفاده موقت
+            "cup_handle": "analyze_cup_handle_strategy",
+            "flag_pattern": "analyze_flag_pattern",
+            "diamond_pattern": "analyze_Diamond_Pattern",
+            
+            # استراتژی‌های تکنیکال پیشرفته
+            "fibonacci_strategy": "analyze_fibonacci",
+            "bollinger_bands": "analyze_bollinger",
+            "macd_divergence": "analyze_macd_divergence_strategy",
+            "price_action_pandas_ta": "analyze_price_action_pandas_ta",
+            "support_resistance": "analyze_price_action_pandas_ta",
+            "parabolic_sar": "analyze_price_action_pandas_ta",
+            
+            # استراتژی‌های VIP
+            "atr": "analyze_atr",
+            "volume_profile": "analyze_price_action_pandas_ta",
+            "vwap": "analyze_price_action_pandas_ta",
+            "crt": "analyze_CRT_strategy",
+            "momentum": "analyze_momentum_strategy",
+            "stochastic": "analyze_RSI_basic",
+            "stoch_rsi": "analyze_RSI_basic",
+            
+            # دمو
+            "demo_price_action": "analyze_price_action_pandas_ta",
+            "demo_rsi": "analyze_RSI_basic",
+            
+            # سایر استراتژی‌ها
+            "project_price_live_binance": "live_price",
+            "heikin_ashi": "analyze_heikin_ashi_strategy",
+            "williams_alligator": "analyze_WilliamsR",
+            "martingale_low": "analyze_momentum_strategy",
+            "sma_advanced": "analyze_EMA_strategy",
+            "multi_resistance": "analyze_price_action_pandas_ta",
+            "p3": "analyze_momentum_strategy",
+            "rtm": "analyze_momentum_strategy"
+        }
+        
+        endpoint = strategy_endpoints.get(strategy_key)
+        if not endpoint:
+            logger.warning(f"No endpoint found for strategy: {strategy_key}")
+            return "analyze_price_action_pandas_ta"  # fallback
+        
+        return endpoint
+
+    @classmethod  
+    def is_package_expired(cls, user_id: int) -> bool:
+        """بررسی انقضای پکیج کاربر"""
+        try:
+            from managers.user_manager import UserManager
+            is_expired, days_left = UserManager.is_package_expired(user_id)
+            return is_expired
+        except Exception as e:
+            logger.error(f"Error checking package expiration: {e}")
+            return False
+        
     @classmethod
     def is_strategy_available(cls, strategy: str) -> bool:
         """بررسی در دسترس بودن استراتژی"""

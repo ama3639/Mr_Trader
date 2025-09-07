@@ -476,7 +476,7 @@ class MrTraderBot:
     🔧 <b>نسخه:</b> {getattr(Config, 'BOT_VERSION', '1.0.0')}
     🌐 <b>محیط:</b> {'Production' if getattr(Config, 'PRODUCTION', False) else 'Development'}
 
-    ✅ سیستم آماده خدمات‌رسانی است.
+    ✅ سیستم با /start آماده خدمات‌رسانی است.
     """
 
             sent = False

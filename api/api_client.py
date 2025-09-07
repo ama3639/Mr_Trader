@@ -40,7 +40,7 @@ class ApiClient:
             # Premium Package strategies
             "a_candlestick": "/analyze_price_action_pandas_ta/",
             "b_pivot": "/analyze_fibonacci/",
-            "bollinger_bands": "/analyze_bollinger/",
+            "bollinger_bands": "/analyze_bollinger_bands_strategy/",
             "c_trend_lines": "/analyze_price_action_pandas_ta/",
             "double_top_pattern": "/analyze_double_top_strategy/",
             "fibonacci_strategy": "/analyze_fibonacci/",
@@ -268,7 +268,7 @@ class ApiClient:
                         logger.info(f"{report_content}")
                         logger.info(f"=== REPORT CONTENT END ===")
                         
-                        # اضافه کردن محتوا به نتیجه
+                        # اضافه کردن محتوا و سایر اطلاعات به نتیجه
                         result.update({
                             "analysis_text": report_content,
                             "raw_report": report_content,
@@ -284,6 +284,11 @@ class ApiClient:
                             
                 except Exception as e:
                     logger.error(f"Error reading report file: {e}")
+            
+            # اضافه کردن لینک چارت از پاسخ API (اصلاح جدید)
+            if 'chart_url' in result and result['chart_url']:
+                logger.info(f"Chart URL found in API response: {result['chart_url']}")
+                result['chart_url'] = result['chart_url']
             
             result["is_cached"] = False
             logger.info(f"Analysis completed for {strategy} {symbol}/{currency} @ {timeframe}")
@@ -449,48 +454,24 @@ def format_analysis_result(analysis_result: Dict[str, Any], symbol: str, currenc
         if "error" in analysis_result:
             return f"❌ خطا در تحلیل {symbol}/{currency}:\n{analysis_result['error']}"
         
-        details = extract_signal_details(analysis_result)
+        # استفاده از توابع جدید
+        from utils.helpers import extract_signal_details, format_signal_message
         
-        # انتخاب ایموجی بر اساس سیگنال
-        signal_emojis = {
-            "خرید": "🟢⬆️",
-            "فروش": "🔴⬇️", 
-            "نگهداری": "🟡⏸️",
-            "خنثی": "⚪"
-        }
+        # استخراج جزئیات سیگنال
+        strategy_type = analysis_result.get('strategy', 'unknown')
+        signal_details = extract_signal_details(strategy_type, analysis_result)
         
-        signal_direction = details.get("signal_direction", "خنثی")
-        emoji = signal_emojis.get(signal_direction, "⚪")
+        # فرمت‌بندی پیام
+        timeframe = analysis_result.get('timeframe', '1h')
+        formatted_message = format_signal_message(
+            signal_details, symbol, currency, timeframe, strategy_type
+        )
         
-        # ساخت پیام فرمت شده
-        formatted_text = f"{emoji} **تحلیل {symbol}/{currency}**\n\n"
-        formatted_text += f"📊 **سیگنال:** {signal_direction}\n"
-        formatted_text += f"💪 **قدرت:** {details.get('strength', 'متوسط')}\n"
-        formatted_text += f"🎯 **اعتماد:** {details.get('confidence', 0.5):.1%}\n"
-        
-        if details.get("entry_price", 0) > 0:
-            formatted_text += f"💰 **قیمت ورود:** ${details['entry_price']:,.4f}\n"
-        
-        if details.get("stop_loss", 0) > 0:
-            formatted_text += f"🛑 **حد ضرر:** ${details['stop_loss']:,.4f}\n"
-            
-        if details.get("take_profit", 0) > 0:
-            formatted_text += f"🎯 **هدف سود:** ${details['take_profit']:,.4f}\n"
-        
-        # اضافه کردن متن تحلیل اصلی اگر موجود باشد
-        if "analysis_text" in analysis_result:
-            formatted_text += f"\n📄 **جزئیات تحلیل:**\n{analysis_result['analysis_text'][:500]}..."
-        
-        # نمایش کش status
-        if analysis_result.get("is_cached"):
-            formatted_text += f"\n💾 *نتیجه از کش (بروزرسانی: اخیر)*"
-        
-        return formatted_text
+        return formatted_message
         
     except Exception as e:
         logger.error(f"Error formatting analysis result: {e}")
         return f"❌ خطا در فرمت‌بندی تحلیل {symbol}/{currency}"
-
 
 # Export
 __all__ = ['ApiClient', 'api_client', 'format_analysis_result']

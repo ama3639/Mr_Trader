@@ -223,21 +223,32 @@ class SignalFormatter:
         return emoji_map.get(trend, "➡️")
     
     @staticmethod
-    def format_signal_summary(signal: Signal) -> str:
-        """خلاصه سیگنال"""
-        signal_emoji = SignalFormatter.format_signal_emoji(signal.signal_type)
-        risk_emoji = SignalFormatter.format_risk_emoji(signal.risk_level)
-        trend_emoji = SignalFormatter.format_trend_emoji(signal.trend_direction)
+    def format_signal_summary(signal_details: Dict[str, Any]) -> str:
+        """خلاصه سیگنال برای نمایش سریع"""
+        try:
+            signal_type = signal_details.get("signal_type", "NEUTRAL")
+            signal_direction = signal_details.get("signal_direction", "نامشخص")
+            strength = signal_details.get("strength", "متوسط")
+            confidence = signal_details.get("confidence", 0.5)
+            
+            emoji_map = {
+                "BUY": "🟢📈",
+                "SELL": "🔴📉",
+                "NEUTRAL": "🟡➡️",
+                "ERROR": "❌⚠️"
+            }
+            
+            emoji = emoji_map.get(signal_type, "🟡")
+            
+            summary = f"{emoji} <b>{signal_direction}</b>\n"
+            summary += f"💪 قدرت: {strength}\n"
+            summary += f"🎯 اطمینان: {confidence:.1%}"
+            
+            return summary
+            
+        except Exception as e:
+            return f"❌ خطا در نمایش سیگنال: {str(e)}"    
         
-        return f"""
-{signal_emoji} <b>{signal.signal_type.value.upper()}</b>
-💰 قیمت: {NumberFormatter.format_price(signal.current_price)}
-💪 قدرت: {signal.strength.value}/5
-🎯 اطمینان: {NumberFormatter.format_percentage(signal.confidence * 100)}
-{trend_emoji} ترند: {signal.trend_direction.value}
-{risk_emoji} ریسک: {signal.risk_level.value}
-"""
-    
     @staticmethod
     def format_signal_detailed(signal: Signal) -> str:
         """سیگنال تفصیلی"""

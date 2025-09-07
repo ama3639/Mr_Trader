@@ -31,6 +31,7 @@ from templates.keyboards import KeyboardTemplates
 from templates.messages import MessageTemplates
 from core.cache import cache
 from utils.helpers import extract_signal_details, format_signal_message
+
 class CallbackHandler:
     """هندلر اصلی Callback Query ها"""
     
@@ -84,6 +85,56 @@ class CallbackHandler:
             except:
                 pass
 
+
+    async def handle_download_report(self, query: CallbackQuery, context: ContextTypes.DEFAULT_TYPE, filename: str):
+        """پردازش درخواست دانلود گزارش"""
+        try:
+            user_id = query.from_user.id
+            
+            # بررسی وجود فایل در context
+            file_key = f"report_{filename}"
+            if file_key not in context.user_data:
+                await query.answer("❌ فایل گزارش منقضی شده است.", show_alert=True)
+                return
+            
+            filepath = context.user_data[file_key]
+            
+            # بررسی وجود فایل فیزیکی
+            import os
+            if not os.path.exists(filepath):
+                await query.answer("❌ فایل گزارش یافت نشد.", show_alert=True)
+                return
+            
+            await query.answer("📤 در حال ارسال فایل گزارش...")
+            
+            # ویرایش پیام اصلی برای حذف دکمه دانلود
+            edited_keyboard = InlineKeyboardMarkup([
+                [InlineKeyboardButton("🔄 تحلیل جدید", callback_data="analysis_menu")],
+                [InlineKeyboardButton("📈 استراتژی دیگر", callback_data="select_strategy")],
+                [InlineKeyboardButton("🏠 منوی اصلی", callback_data="main_menu")]
+            ])
+            
+            # ارسال فایل به عنوان پاسخ به پیام فعلی
+            with open(filepath, 'rb') as file:
+                await query.message.reply_document(
+                    document=file,
+                    filename=filename,
+                    caption=f"📊 <b>گزارش تحلیل تکمیلی</b>\n\n📄 فایل: {filename}\n\n⚠️ این تحلیل جنبه آموزشی دارد.",
+                    parse_mode=ParseMode.HTML
+                )
+            
+            # پاک کردن فایل موقت پس از ارسال
+            try:
+                os.remove(filepath)
+                del context.user_data[file_key]
+            except Exception as file_error:
+                logger.error(f"Error removing report file: {file_error}")
+            
+        except Exception as e:
+            logger.error(f"Error downloading report {filename}: {e}", exc_info=True)
+            await query.answer("❌ خطا در ارسال فایل گزارش.", show_alert=True)
+                
+        
     async def _process_callback(self, query: CallbackQuery, context: ContextTypes.DEFAULT_TYPE, callback_data: str):
         """پردازش callback بر اساس نوع"""
         try:
@@ -151,6 +202,8 @@ class CallbackHandler:
                 await self.handle_currency_selection(query, context, param)
             elif action == "select_timeframe":
                 await self.handle_timeframe_selection(query, context, param)
+            elif action == "download_report":  # ✅ اضافه شده
+                await self.handle_download_report(query, context, param)
 
             else:
                 # سایر callback های ساده
@@ -158,7 +211,7 @@ class CallbackHandler:
                     
         except Exception as e:
             logger.error(f"Error processing callback {callback_data}: {e}")
-            await query.edit_message_text("⛔ خطا در پردازش درخواست.")
+            await query.edit_message_text("❌ خطا در پردازش درخواست.")
 
     # =========================
     # توابع منوهای اصلی
@@ -313,7 +366,7 @@ class CallbackHandler:
             )
         except Exception as e:
             logger.error(f"Error in handle_strategy_selection for {strategy_key}: {e}")
-            await query.edit_message_text("⛔ خطا در پردازش استراتژی.")
+            await query.edit_message_text("⛔/start \n  خطا در پردازش استراتژی.")
 
     async def handle_symbol_selection(self, query: CallbackQuery, context: ContextTypes.DEFAULT_TYPE, param: str):
         """مرحله 2: کاربر نماد را انتخاب کرده است. حالا ارز مرجع را می‌پرسیم."""
@@ -355,6 +408,7 @@ class CallbackHandler:
         except Exception as e:
             logger.error(f"Error in handle_currency_selection for {param}: {e}")
 
+
     async def handle_timeframe_selection(self, query: CallbackQuery, context: ContextTypes.DEFAULT_TYPE, param: str):
         """مرحله نهایی: کاربر تایم‌فریم را انتخاب کرده است. تحلیل را انجام می‌دهیم."""
         try:
@@ -363,62 +417,64 @@ class CallbackHandler:
             
             # نمایش پیام "در حال پردازش"
             await query.edit_message_text(
-                text=MessageTemplates.processing_message("analyzing", symbol),
+                text=f"⏳ <b>در حال تحلیل...</b>\n\n📊 استراتژی: {strategy_key}\n💰 نماد: {symbol}/{currency}\n⏰ تایم‌فریم: {timeframe}",
                 parse_mode=ParseMode.HTML
             )
 
-            # فراخوانی API برای تحلیل
+            # فراخوانی API برای تحلیل با تولید فایل گزارش
             analysis_result = await self.strategy_manager.analyze_strategy(
-                user_id, strategy_key, symbol, currency, timeframe
+                user_id, strategy_key, symbol, currency, timeframe, generate_file=True
             )
-            logger.info(f"Raw API response: {analysis_result}")
-
+            
             if "error" in analysis_result:
+                # در صورت خطا، پیام خطا را با یک کیبورد کامل نمایش بده
                 await query.edit_message_text(
-                    text=f"❌ **خطا در تحلیل**\n\n{analysis_result['error']}",
-                    reply_markup=KeyboardTemplates.back_to_menu("analysis_menu", "📊 بازگشت به استراتژی‌ها"),
+                    text=f"❌ <b>خطا در تحلیل</b>\n\n{html.escape(analysis_result['error'])}",
+                    reply_markup=KeyboardTemplates.analysis_result_actions(strategy_key, symbol, currency, timeframe),
                     parse_mode=ParseMode.HTML
                 )
                 return
 
-            # دریافت قیمت فعلی از نتیجه تحلیل (API خودش قیمت لایو برمی‌گرداند)
-            current_price = analysis_result.get('current_price', analysis_result.get('price', 0.0))
-            if current_price == 0.0:
-                # اگر در نتیجه API قیمت نبود، سعی کن از فیلدهای دیگر استخراج کن
-                current_price = analysis_result.get('close', analysis_result.get('last_price', 0.0))
-            # فرمت‌بندی نتیجه نهایی با error handling
+            # فرمت‌بندی نتیجه
             try:
-                # استخراج جزئیات سیگنال با تابع بهبود یافته
-                signal_details = extract_signal_details(analysis_result)
-
-                # استفاده از تابع جدید فرمت‌بندی  
+                # استخراج سیگنال
+                signal_details = extract_signal_details(strategy_key, analysis_result)
+                
+                # دریافت chart_url از پاسخ API و اضافه کردن آن به signal_details
+                if 'chart_url' in analysis_result:
+                    signal_details['chart_url'] = analysis_result['chart_url']
+                
+                # فرمت‌بندی پیام با استفاده از توابع جدید
                 formatted_message = format_signal_message(
                     signal_details, symbol, currency, timeframe, strategy_key
                 )
+                formatted_message = self._convert_markdown_to_html(formatted_message)
+                
             except Exception as format_error:
                 logger.error(f"Error formatting message: {format_error}")
-                # پیام ساده در صورت خطا در فرمت
-                formatted_message = f"""✅ **تحلیل {symbol}/{currency} @ {timeframe} کامل شد!**
-
-    📊 **نتیجه تحلیل:**
-    {analysis_result.get('signal_direction', 'نامشخص')}
-
-    💰 **قیمت فعلی:** {current_price:,.4f} {currency}
-
-    🕒 **زمان:** {TimeManager.to_shamsi(datetime.now()) if hasattr(self, 'time_manager') else 'اکنون'}
-
-    ⚠️ **یادآوری:** این تحلیل جنبه آموزشی دارد."""
+                formatted_message = f"""
+    ✅ <b>تحلیل {html.escape(symbol)}/{html.escape(currency)} کامل شد!</b>
+    📊 <b>استراتژی:</b> {html.escape(strategy_key)}
+    ⏰ <b>تایم‌فریم:</b> {html.escape(timeframe)}
+    🎯 <b>نتیجه:</b> {html.escape(analysis_result.get('signal_direction', 'تحلیل انجام شد'))}
+    ⚠️ <b>یادآوری:</b> این تحلیل جنبه آموزشی دارد.
+    """
             
-            # کیبورد اقدامات بعدی
-            try:
-                keyboard = KeyboardTemplates.analysis_result_actions(strategy_key, symbol, currency, timeframe)
-            except Exception as keyboard_error:
-                logger.error(f"Error creating keyboard: {keyboard_error}")
-                # کیبورد ساده در صورت خطا
-                keyboard = InlineKeyboardMarkup([
-                    [InlineKeyboardButton("📊 تحلیل جدید", callback_data="analysis_menu")],
-                    [InlineKeyboardButton("🏠 منوی اصلی", callback_data="main_menu")]
-                ])
+            # کیبورد اقدامات بعدی با دکمه دانلود
+            keyboard_buttons = [
+                [InlineKeyboardButton("📄 دانلود گزارش", callback_data=f"download_report:{analysis_result['report_file'].get('filename', '')}")],
+                [
+                    InlineKeyboardButton("🔄 تحلیل جدید", callback_data="analysis_menu"),
+                    InlineKeyboardButton("📈 استراتژی دیگر", callback_data=f"select_strategy:{strategy_key}")
+                ],
+                [InlineKeyboardButton("🏠 منوی اصلی", callback_data="main_menu")]
+            ]
+            keyboard = InlineKeyboardMarkup(keyboard_buttons)
+            
+            # ذخیره اطلاعات فایل در context برای دانلود
+            report_file = analysis_result.get("report_file")
+            if report_file and not report_file.get("error"):
+                context.user_data[f"report_{report_file.get('filename', '')}"] = report_file.get('filepath', '')
             
             await query.edit_message_text(
                 text=formatted_message,
@@ -427,13 +483,10 @@ class CallbackHandler:
             )
 
         except Exception as e:
-            logger.error(f"Error in handle_timeframe_selection for {param}: {e}", exc_info=True)
+            logger.error(f"Error in handle_timeframe_selection: {e}", exc_info=True)
             await query.edit_message_text(
-                text="❌ خطایی نهایی در اجرای تحلیل رخ داد. لطفاً دوباره تلاش کنید.",
-                reply_markup=InlineKeyboardMarkup([
-                    [InlineKeyboardButton("📊 بازگشت به استراتژی‌ها", callback_data="analysis_menu")],
-                    [InlineKeyboardButton("🏠 منوی اصلی", callback_data="main_menu")]
-                ]),
+                text="❌ خطایی در اجرای تحلیل رخ داد. لطفاً دوباره تلاش کنید.",
+                reply_markup=KeyboardTemplates.analysis_result_actions(strategy_key, symbol, currency, timeframe),
                 parse_mode=ParseMode.HTML
             )
         finally:
@@ -441,8 +494,44 @@ class CallbackHandler:
             keys_to_clear = ['selected_strategy', 'selected_symbol', 'selected_currency']
             for key in keys_to_clear:
                 if key in context.user_data:
-                    del context.user_data[key]
+                    del context.user_data[key]                
                 
+    def _convert_markdown_to_html(self, text: str) -> str:
+        """تبدیل markdown syntax به HTML و escape کردن کاراکترهای خاص"""
+        try:
+            if not text:
+                return ""
+            
+            # escape کردن کاراکترهای خاص HTML
+            text = html.escape(text)
+            
+            # تبدیل markdown syntax به HTML
+            # Bold: **text** -> <b>text</b>
+            text = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', text)
+            
+            # Headers: ## text -> <b>text</b>
+            text = re.sub(r'^## (.*?)$', r'<b>\1</b>', text, flags=re.MULTILINE)
+            
+            # Italic: *text* -> <i>text</i>
+            text = re.sub(r'\*(.*?)\*', r'<i>\1</i>', text)
+            
+            # Code: `text` -> <code>text</code>
+            text = re.sub(r'`(.*?)`', r'<code>\1</code>', text)
+            
+            # پاک کردن خطوط جداکننده markdown
+            text = re.sub(r'^-{3,}$', '', text, flags=re.MULTILINE)
+            text = re.sub(r'^─+$', '', text, flags=re.MULTILINE)
+            
+            # پاک کردن خطوط خالی اضافی
+            text = re.sub(r'\n{3,}', '\n\n', text)
+            
+            return text.strip()
+            
+        except Exception as e:
+            logger.error(f"Error converting markdown to HTML: {e}")
+            # در صورت خطا، فقط escape کردن کاراکترهای HTML
+            return html.escape(str(text)) if text else ""
+                                    
     # =========================
     # توابع پنل ادمین
     # =========================
@@ -783,7 +872,7 @@ class CallbackHandler:
             await query.edit_message_text("⛔ خطا در نمایش کیف پول.")
 
     async def show_strategy_menu(self, query: CallbackQuery, context: ContextTypes.DEFAULT_TYPE):
-        """نمایش منوی استراتژی‌ها"""
+        """نمایش منوی استراتژی‌ها با timeout handling بهبود یافته"""
         try:
             user = query.from_user
             user_data = self.user_manager.get_user_by_telegram_id(user.id) or {}
@@ -791,18 +880,21 @@ class CallbackHandler:
             
             message = f"""📊 <b>استراتژی‌های تحلیل MrTrader</b>
 
-🎯 <b>پکیج فعلی شما:</b> {user_package.upper()}
+    🎯 <b>پکیج فعلی شما:</b> {user_package.upper()}
 
-📈 <b>انتخاب استراتژی مورد نظر:</b>"""
+    📈 <b>انتخاب استراتژی مورد نظر:</b>"""
             
             try:
-                if hasattr(KeyboardTemplates, "strategy_menu"):
-                    keyboard = KeyboardTemplates.strategy_menu(user_package)
-                else:
-                    keyboard = self._build_strategy_keyboard_fallback(user_package)
-            except Exception as e:
-                logger.error(f"Failed to build strategy keyboard: {e}")
-                keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("🏠 منوی اصلی", callback_data="main_menu")]])
+                # تلاش برای استفاده از KeyboardTemplates با timeout کوتاه‌تر
+                import asyncio
+                keyboard = await asyncio.wait_for(
+                    self._build_strategy_keyboard_safe(user_package), 
+                    timeout=2.0  # کاهش timeout به 2 ثانیه
+                )
+            except (asyncio.TimeoutError, Exception) as e:
+                logger.warning(f"Strategy keyboard generation failed: {e}")
+                # استفاده از کیبورد ساده fallback
+                keyboard = self._build_simple_strategy_keyboard(user_package)
 
             await query.edit_message_text(
                 message,
@@ -812,8 +904,111 @@ class CallbackHandler:
             
         except Exception as e:
             logger.error(f"Error showing strategy menu: {e}")
-            await query.edit_message_text("⛔ خطا در نمایش استراتژی‌ها.")
+            # در صورت هر خطایی، نمایش پیام ساده
+            await query.edit_message_text(
+                "❌ خطا در نمایش استراتژی‌ها. لطفاً دوباره تلاش کنید.",
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("🔄 تلاش مجدد", callback_data="analysis_menu")],
+                    [InlineKeyboardButton("🏠 منوی اصلی", callback_data="main_menu")]
+                ]),
+                parse_mode=ParseMode.HTML
+            )
 
+    async def _build_strategy_keyboard_safe(self, user_package: str) -> InlineKeyboardMarkup:
+        """ساخت کیبورد استراتژی با error handling بهبود یافته"""
+        try:
+            # تلاش برای استفاده از KeyboardTemplates
+            if hasattr(KeyboardTemplates, "strategy_menu"):
+                return KeyboardTemplates.strategy_menu(user_package)
+            else:
+                return self._build_simple_strategy_keyboard(user_package)
+        except Exception as e:
+            logger.warning(f"KeyboardTemplates failed: {e}")
+            return self._build_simple_strategy_keyboard(user_package)
+
+    def _build_simple_strategy_keyboard(self, user_package: str = "demo") -> InlineKeyboardMarkup:
+        """کیبورد ساده و سریع برای استراتژی‌ها - بهینه‌سازی شده"""
+        try:
+            # استراتژی‌های پایه برای هر پکیج - ساده‌تر و سریع‌تر
+            if user_package in ["demo", "free"]:
+                strategies = [
+                    ("📊 تحلیل CCI", "select_strategy:cci_analysis"),
+                    ("📈 تحلیل RSI", "select_strategy:rsi"),
+                    ("🌊 تحلیل MACD", "select_strategy:macd"),
+                    ("☁️ ابر ایچیموکو", "select_strategy:ichimoku")
+                ]
+            elif user_package == "basic":
+                strategies = [
+                    ("📊 تحلیل CCI", "select_strategy:cci_analysis"),
+                    ("📈 تحلیل RSI", "select_strategy:rsi"),
+                    ("🌊 تحلیل MACD", "select_strategy:macd"),
+                    ("☁️ ابر ایچیموکو", "select_strategy:ichimoku"),
+                    ("📈 تحلیل EMA", "select_strategy:ema_analysis"),
+                    ("📉 Williams R", "select_strategy:williams_r_analysis")
+                ]
+            elif user_package == "premium":
+                strategies = [
+                    ("📊 تحلیل CCI", "select_strategy:cci_analysis"),
+                    ("📈 تحلیل RSI", "select_strategy:rsi"),
+                    ("🌊 تحلیل MACD", "select_strategy:macd"),
+                    ("☁️ ابر ایچیموکو", "select_strategy:ichimoku"),
+                    ("📈 تحلیل EMA", "select_strategy:ema_analysis"),
+                    ("📉 Williams R", "select_strategy:williams_r_analysis"),
+                    ("🕯️ تحلیل کندل استیک", "select_strategy:a_candlestick"),
+                    ("⛰️ الگوی دو قله", "select_strategy:double_top_pattern"),
+                    ("🌀 استراتژی فیبوناچی", "select_strategy:fibonacci_strategy"),
+                    ("📊 باندهای بولینگر", "select_strategy:bollinger_bands")
+                ]
+            else:  # vip, ghost
+                strategies = [
+                    ("📊 تحلیل CCI", "select_strategy:cci_analysis"),
+                    ("📈 تحلیل RSI", "select_strategy:rsi"),
+                    ("🌊 تحلیل MACD", "select_strategy:macd"),
+                    ("☁️ ابر ایچیموکو", "select_strategy:ichimoku"),
+                    ("📈 تحلیل EMA", "select_strategy:ema_analysis"),
+                    ("📉 Williams R", "select_strategy:williams_r_analysis"),
+                    ("🕯️ تحلیل کندل استیک", "select_strategy:a_candlestick"),
+                    ("⛰️ الگوی دو قله", "select_strategy:double_top_pattern"),
+                    ("🌀 استراتژی فیبوناچی", "select_strategy:fibonacci_strategy"),
+                    ("📊 باندهای بولینگر", "select_strategy:bollinger_bands"),
+                    ("📊 تحلیل ATR", "select_strategy:atr"),
+                    ("💎 الگوی الماس", "select_strategy:diamond_pattern"),
+                    ("💎 تحلیل VWAP", "select_strategy:vwap"),
+                    ("🎯 تحلیل CRT", "select_strategy:crt")
+                ]
+            
+            # ساخت کیبورد به صورت 2 تا در هر ردیف
+            keyboard = []
+            for i in range(0, len(strategies), 2):
+                row = []
+                for j in range(2):
+                    if i + j < len(strategies):
+                        name, callback = strategies[i + j]
+                        row.append(InlineKeyboardButton(name, callback_data=callback))
+                if row:
+                    keyboard.append(row)
+            
+            # دکمه‌های اضافی
+            keyboard.append([
+                InlineKeyboardButton("💎 ارتقا پکیج", callback_data="packages_menu"),
+                InlineKeyboardButton("ℹ️ راهنما", callback_data="help_menu")
+            ])
+            keyboard.append([
+                InlineKeyboardButton("🏠 منوی اصلی", callback_data="main_menu")
+            ])
+            
+            return InlineKeyboardMarkup(keyboard)
+            
+        except Exception as e:
+            logger.error(f"Error building simple strategy keyboard: {e}")
+            # حتی در fallback نیز خطا، کیبورد بسیار ساده
+            return InlineKeyboardMarkup([
+                [InlineKeyboardButton("📊 تحلیل CCI", callback_data="select_strategy:cci_analysis")],
+                [InlineKeyboardButton("📈 تحلیل RSI", callback_data="select_strategy:rsi")],
+                [InlineKeyboardButton("🏠 منوی اصلی", callback_data="main_menu")]
+            ])
+        
+        
     def _build_strategy_keyboard_fallback(self, user_package: str = "free") -> InlineKeyboardMarkup:
         """Fallback برای زمانی که KeyboardTemplates.strategy_menu قابل استفاده نباشد"""
         kb = []

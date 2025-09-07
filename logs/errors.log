@@ -68,3 +68,138 @@
 2025-09-06 04:43:27,187 - MrTrader - ERROR - API returned error: Client error: 500, message='Internal Server Error', url='http://91.198.77.208:8000/analyze_MACD_basic/'
 2025-09-06 05:15:23,195 - MrTrader - ERROR - All retry attempts failed for http://91.198.77.208:8000/analyze_MACD_basic/. Last error: Client error: 500, message='Internal Server Error', url='http://91.198.77.208:8000/analyze_MACD_basic/'
 2025-09-06 05:15:23,196 - MrTrader - ERROR - API returned error: Client error: 500, message='Internal Server Error', url='http://91.198.77.208:8000/analyze_MACD_basic/'
+2025-09-07 23:28:59,526 - MrTrader - ERROR - All retry attempts failed for http://91.198.77.208:8000/read_report_file/. Last error: Client error: 400, message='{"detail":"دسترسی فقط به فایل\u200cهای save مجاز است"}', url='http://91.198.77.208:8000/read_report_file/'
+2025-09-07 23:28:59,535 - MrTrader - ERROR - Failed to read report file: {'error': 'Client error: 400, message=\'{"detail":"دسترسی فقط به فایل\\u200cهای save مجاز است"}\', url=\'http://91.198.77.208:8000/read_report_file/\''}
+2025-09-07 23:49:06,703 - MrTrader - ERROR - All retry attempts failed for http://91.198.77.208:8000/read_report_file/. Last error: Client error: 400, message='{"detail":"دسترسی فقط به فایل\u200cهای save مجاز است"}', url='http://91.198.77.208:8000/read_report_file/'
+2025-09-07 23:49:06,704 - MrTrader - ERROR - Failed to read report file: {'error': 'Client error: 400, message=\'{"detail":"دسترسی فقط به فایل\\u200cهای save مجاز است"}\', url=\'http://91.198.77.208:8000/read_report_file/\''}
+2025-09-08 00:11:40,282 - MrTrader - ERROR - All retry attempts failed for http://91.198.77.208:8000/read_report_file/. Last error: Client error: 400, message='{"detail":"دسترسی فقط به فایل\u200cهای save مجاز است"}', url='http://91.198.77.208:8000/read_report_file/'
+2025-09-08 00:11:40,284 - MrTrader - ERROR - Failed to read report file: {'error': 'Client error: 400, message=\'{"detail":"دسترسی فقط به فایل\\u200cهای save مجاز است"}\', url=\'http://91.198.77.208:8000/read_report_file/\''}
+2025-09-08 00:11:40,286 - MrTrader - ERROR - API error for ichimoku: StrategyManager._generate_report_file() missing 1 required positional argument: 'user_id'
+Traceback (most recent call last):
+  File "D:\phonix coin\mr.trader\st\telegram_bot\MR-TRADER-BOT-01_git\managers\strategy_manager.py", line 694, in analyze_strategy
+    file_info = await cls._generate_report_file(
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: StrategyManager._generate_report_file() missing 1 required positional argument: 'user_id'
+2025-09-08 00:13:44,655 - MrTrader - ERROR - API error for cci_analysis: StrategyManager._generate_report_file() missing 1 required positional argument: 'user_id'
+Traceback (most recent call last):
+  File "D:\phonix coin\mr.trader\st\telegram_bot\MR-TRADER-BOT-01_git\managers\strategy_manager.py", line 694, in analyze_strategy
+    file_info = await cls._generate_report_file(
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: StrategyManager._generate_report_file() missing 1 required positional argument: 'user_id'
+2025-09-08 00:17:50,537 - MrTrader - ERROR - API error for cci_analysis: StrategyManager._generate_report_file() missing 1 required positional argument: 'user_id'
+Traceback (most recent call last):
+  File "D:\phonix coin\mr.trader\st\telegram_bot\MR-TRADER-BOT-01_git\managers\strategy_manager.py", line 694, in analyze_strategy
+    file_info = await cls._generate_report_file(
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: StrategyManager._generate_report_file() missing 1 required positional argument: 'user_id'
+2025-09-08 00:21:08,261 - MrTrader - ERROR - Error in handle_timeframe_selection: Can't parse entities: unsupported start tag "" at byte offset 308
+Traceback (most recent call last):
+  File "D:\phonix coin\mr.trader\st\telegram_bot\MR-TRADER-BOT-01_git\handlers\callback_handlers.py", line 484, in handle_timeframe_selection
+    await query.edit_message_text(
+  File "c:\Users\pc city\AppData\Local\Programs\Python\Python312\Lib\site-packages\telegram\_callbackquery.py", line 265, in edit_message_text
+    return await self._get_message().edit_text(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\pc city\AppData\Local\Programs\Python\Python312\Lib\site-packages\telegram\_message.py", line 3755, in edit_text
+    return await self.get_bot().edit_message_text(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\pc city\AppData\Local\Programs\Python\Python312\Lib\site-packages\telegram\ext\_extbot.py", line 1711, in edit_message_text
+    return await super().edit_message_text(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\pc city\AppData\Local\Programs\Python\Python312\Lib\site-packages\telegram\_bot.py", line 4285, in edit_message_text
+    return await self._send_message(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\pc city\AppData\Local\Programs\Python\Python312\Lib\site-packages\telegram\ext\_extbot.py", line 618, in _send_message
+    result = await super()._send_message(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\pc city\AppData\Local\Programs\Python\Python312\Lib\site-packages\telegram\_bot.py", line 803, in _send_message
+    result = await self._post(
+             ^^^^^^^^^^^^^^^^^
+  File "c:\Users\pc city\AppData\Local\Programs\Python\Python312\Lib\site-packages\telegram\_bot.py", line 691, in _post
+    return await self._do_post(
+           ^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\pc city\AppData\Local\Programs\Python\Python312\Lib\site-packages\telegram\ext\_extbot.py", line 362, in _do_post
+    return await super()._do_post(
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\pc city\AppData\Local\Programs\Python\Python312\Lib\site-packages\telegram\_bot.py", line 720, in _do_post
+    result = await request.post(
+             ^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\pc city\AppData\Local\Programs\Python\Python312\Lib\site-packages\telegram\request\_baserequest.py", line 197, in post
+    result = await self._request_wrapper(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\pc city\AppData\Local\Programs\Python\Python312\Lib\site-packages\telegram\request\_baserequest.py", line 353, in _request_wrapper
+    raise BadRequest(message)
+telegram.error.BadRequest: Can't parse entities: unsupported start tag "" at byte offset 308
+2025-09-08 00:24:54,494 - MrTrader - ERROR - Error showing strategy menu: Timed out
+2025-09-08 01:22:11,097 - MrTrader - ERROR - All retry attempts failed for http://91.198.77.208:8000/analyze_bollinger/. Last error: Client error: 404, message='{"detail":"Not Found"}', url='http://91.198.77.208:8000/analyze_bollinger/'
+2025-09-08 01:22:11,098 - MrTrader - ERROR - API returned error: Client error: 404, message='{"detail":"Not Found"}', url='http://91.198.77.208:8000/analyze_bollinger/'
+2025-09-08 01:27:00,051 - MrTrader - ERROR - Error in handle_strategy_selection for diamond_pattern: Timed out
+2025-09-08 01:30:49,592 - MrTrader - ERROR - Failed to set bot commands (initial): Timed out
+2025-09-08 01:31:09,675 - MrTrader - ERROR - Critical error in bot execution: Timed out
+2025-09-08 01:31:14,707 - MrTrader - ERROR - Failed to start bot: Timed out
+2025-09-08 01:31:19,728 - MrTrader - ERROR - Bot finished with errors
+2025-09-08 01:32:31,336 - MrTrader - ERROR - Error showing strategy menu: Timed out
+2025-09-08 01:32:55,080 - MrTrader - ERROR - Error showing strategy menu: Timed out
+2025-09-08 01:38:01,262 - MrTrader - ERROR - All retry attempts failed for http://91.198.77.208:8000/read_report_file/. Last error: Client error: 400, message='{"detail":"دسترسی فقط به فایل\u200cهای save مجاز است"}', url='http://91.198.77.208:8000/read_report_file/'
+2025-09-08 01:38:01,263 - MrTrader - ERROR - Failed to read report file: {'error': 'Client error: 400, message=\'{"detail":"دسترسی فقط به فایل\\u200cهای save مجاز است"}\', url=\'http://91.198.77.208:8000/read_report_file/\''}
+2025-09-08 01:38:04,182 - MrTrader - ERROR - Error in handle_timeframe_selection: Button_data_invalid
+Traceback (most recent call last):
+  File "D:\phonix coin\mr.trader\st\telegram_bot\MR-TRADER-BOT-01_git\handlers\callback_handlers.py", line 473, in handle_timeframe_selection
+    await query.edit_message_text(
+  File "c:\Users\pc city\AppData\Local\Programs\Python\Python312\Lib\site-packages\telegram\_callbackquery.py", line 265, in edit_message_text
+    return await self._get_message().edit_text(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\pc city\AppData\Local\Programs\Python\Python312\Lib\site-packages\telegram\_message.py", line 3755, in edit_text
+    return await self.get_bot().edit_message_text(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\pc city\AppData\Local\Programs\Python\Python312\Lib\site-packages\telegram\ext\_extbot.py", line 1711, in edit_message_text
+    return await super().edit_message_text(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\pc city\AppData\Local\Programs\Python\Python312\Lib\site-packages\telegram\_bot.py", line 4285, in edit_message_text
+    return await self._send_message(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\pc city\AppData\Local\Programs\Python\Python312\Lib\site-packages\telegram\ext\_extbot.py", line 618, in _send_message
+    result = await super()._send_message(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\pc city\AppData\Local\Programs\Python\Python312\Lib\site-packages\telegram\_bot.py", line 803, in _send_message
+    result = await self._post(
+             ^^^^^^^^^^^^^^^^^
+  File "c:\Users\pc city\AppData\Local\Programs\Python\Python312\Lib\site-packages\telegram\_bot.py", line 691, in _post
+    return await self._do_post(
+           ^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\pc city\AppData\Local\Programs\Python\Python312\Lib\site-packages\telegram\ext\_extbot.py", line 362, in _do_post
+    return await super()._do_post(
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\pc city\AppData\Local\Programs\Python\Python312\Lib\site-packages\telegram\_bot.py", line 720, in _do_post
+    result = await request.post(
+             ^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\pc city\AppData\Local\Programs\Python\Python312\Lib\site-packages\telegram\request\_baserequest.py", line 197, in post
+    result = await self._request_wrapper(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\pc city\AppData\Local\Programs\Python\Python312\Lib\site-packages\telegram\request\_baserequest.py", line 353, in _request_wrapper
+    raise BadRequest(message)
+telegram.error.BadRequest: Button_data_invalid
+2025-09-08 02:24:10,511 - MrTrader - ERROR - All retry attempts failed for http://91.198.77.208:8000/analyze_atr/. Last error: Client error: 404, message='{"detail":"Not Found"}', url='http://91.198.77.208:8000/analyze_atr/'
+2025-09-08 02:24:10,511 - MrTrader - ERROR - API returned error: Client error: 404, message='{"detail":"Not Found"}', url='http://91.198.77.208:8000/analyze_atr/'
+2025-09-08 02:28:08,768 - MrTrader - ERROR - Error handling callback query: 'CallbackHandler' object has no attribute '_process_callback'
+Traceback (most recent call last):
+  File "D:\phonix coin\mr.trader\st\telegram_bot\MR-TRADER-BOT-01_git\handlers\callback_handlers.py", line 78, in handle_callback_query
+    await self._process_callback(query, context, callback_data)
+          ^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'CallbackHandler' object has no attribute '_process_callback'
+2025-09-08 02:30:41,217 - MrTrader - ERROR - Failed to set bot commands (initial): Timed out
+2025-09-08 02:31:24,210 - MrTrader - ERROR - Error showing strategy menu: Timed out
+2025-09-08 02:34:04,553 - MrTrader - ERROR - Timeout while setting bot commands (initial): 
+2025-09-08 02:36:53,029 - MrTrader - ERROR - Timeout while setting bot commands (initial): 
+2025-09-08 02:54:43,452 - MrTrader - ERROR - Failed to set bot commands (initial): Timed out
+2025-09-08 02:57:59,635 - MrTrader - ERROR - Error showing main menu: Timed out
+2025-09-08 02:59:20,199 - MrTrader - ERROR - Failed to initialize bot: 'MrTraderBot' object has no attribute '_setup_bot_commands'
+2025-09-08 02:59:20,199 - MrTrader - ERROR - Critical error in bot execution: 'MrTraderBot' object has no attribute '_setup_bot_commands'
+2025-09-08 02:59:25,233 - MrTrader - ERROR - Failed to start bot: 'MrTraderBot' object has no attribute '_setup_bot_commands'
+2025-09-08 02:59:29,832 - MrTrader - ERROR - Bot finished with errors
+2025-09-08 03:02:02,312 - MrTrader - ERROR - Failed to set bot commands (initial): Timed out
+2025-09-08 03:02:15,453 - MrTrader - ERROR - Critical error in bot execution: Timed out
+2025-09-08 03:02:19,486 - MrTrader - ERROR - Failed to start bot: Timed out
+2025-09-08 03:02:20,445 - MrTrader - ERROR - Bot finished with errors
+2025-09-08 03:03:06,001 - MrTrader - ERROR - Error showing strategy menu: Timed out
+2025-09-08 03:03:33,302 - MrTrader - ERROR - Error in handle_strategy_selection for diamond_pattern: Timed out
+2025-09-08 03:05:06,720 - MrTrader - ERROR - Failed to set bot commands (initial): Timed out

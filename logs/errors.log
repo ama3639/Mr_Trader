@@ -203,3 +203,20 @@ AttributeError: 'CallbackHandler' object has no attribute '_process_callback'
 2025-09-08 03:03:06,001 - MrTrader - ERROR - Error showing strategy menu: Timed out
 2025-09-08 03:03:33,302 - MrTrader - ERROR - Error in handle_strategy_selection for diamond_pattern: Timed out
 2025-09-08 03:05:06,720 - MrTrader - ERROR - Failed to set bot commands (initial): Timed out
+2025-09-08 03:09:13,917 - MrTrader - ERROR - Timeout while setting bot commands (initial): 
+2025-09-08 04:28:00,675 - MrTrader - ERROR - API error for cci_analysis: 'ApiClient' object has no attribute 'fetch_strategy_analysis'
+Traceback (most recent call last):
+  File "D:\phonix coin\mr.trader\st\telegram_bot\MR-TRADER-BOT-01_git\managers\strategy_manager.py", line 677, in analyze_strategy
+    analysis_data = await api_client.fetch_strategy_analysis(
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'ApiClient' object has no attribute 'fetch_strategy_analysis'
+2025-09-08 04:29:22,415 - MrTrader - ERROR - API error for macd_divergence: 'ApiClient' object has no attribute 'fetch_strategy_analysis'
+Traceback (most recent call last):
+  File "D:\phonix coin\mr.trader\st\telegram_bot\MR-TRADER-BOT-01_git\managers\strategy_manager.py", line 677, in analyze_strategy
+    analysis_data = await api_client.fetch_strategy_analysis(
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'ApiClient' object has no attribute 'fetch_strategy_analysis'
+2025-09-08 04:35:36,956 - MrTrader - ERROR - All retry attempts failed for http://91.198.77.208:8000/analyze_atr/. Last error: Client error: 404, message='{"detail":"Not Found"}', url='http://91.198.77.208:8000/analyze_atr/'
+2025-09-08 04:35:36,957 - MrTrader - ERROR - API returned error: Client error: 404, message='{"detail":"Not Found"}', url='http://91.198.77.208:8000/analyze_atr/'
+2025-09-08 04:49:40,358 - MrTrader - ERROR - All retry attempts failed for http://91.198.77.208:8000/read_report_file/. Last error: Client error: 400, message='{"detail":"دسترسی فقط به فایل\u200cهای save مجاز است"}', url='http://91.198.77.208:8000/read_report_file/'
+2025-09-08 04:49:40,359 - MrTrader - ERROR - Failed to read report file: {'error': 'Client error: 400, message=\'{"detail":"دسترسی فقط به فایل\\u200cهای save مجاز است"}\', url=\'http://91.198.77.208:8000/read_report_file/\''}

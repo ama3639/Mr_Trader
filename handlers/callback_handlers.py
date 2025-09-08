@@ -26,11 +26,10 @@ from managers.strategy_manager import StrategyManager
 from managers.report_manager import ReportManager
 from api.api_client import api_client
 from utils.time_manager import TimeManager
-from utils.helpers import extract_signal_details
+from utils.helpers import extract_signal_details, format_signal_message
 from templates.keyboards import KeyboardTemplates
 from templates.messages import MessageTemplates
 from core.cache import cache
-from utils.helpers import extract_signal_details, format_signal_message
 
 class CallbackHandler:
     """هندلر اصلی Callback Query ها"""
@@ -87,32 +86,24 @@ class CallbackHandler:
 
 
     async def handle_download_report(self, query: CallbackQuery, context: ContextTypes.DEFAULT_TYPE, filename: str):
-        """پردازش درخواست دانلود گزارش"""
+        """پردازش درخواست دانلود گزارش - اصلاح شده"""
         try:
             user_id = query.from_user.id
             
             # بررسی وجود فایل در context
             file_key = f"report_{filename}"
             if file_key not in context.user_data:
-                await query.answer("❌ فایل گزارش منقضی شده است.", show_alert=True)
+                await query.answer("⚠️ فایل گزارش منقضی شده است. لطفاً تحلیل جدیدی انجام دهید.", show_alert=True)
                 return
             
             filepath = context.user_data[file_key]
             
             # بررسی وجود فایل فیزیکی
-            import os
             if not os.path.exists(filepath):
-                await query.answer("❌ فایل گزارش یافت نشد.", show_alert=True)
+                await query.answer("⚠️ فایل گزارش یافت نشد.", show_alert=True)
                 return
             
             await query.answer("📤 در حال ارسال فایل گزارش...")
-            
-            # ویرایش پیام اصلی برای حذف دکمه دانلود
-            edited_keyboard = InlineKeyboardMarkup([
-                [InlineKeyboardButton("🔄 تحلیل جدید", callback_data="analysis_menu")],
-                [InlineKeyboardButton("📈 استراتژی دیگر", callback_data="select_strategy")],
-                [InlineKeyboardButton("🏠 منوی اصلی", callback_data="main_menu")]
-            ])
             
             # ارسال فایل به عنوان پاسخ به پیام فعلی
             with open(filepath, 'rb') as file:
@@ -123,17 +114,17 @@ class CallbackHandler:
                     parse_mode=ParseMode.HTML
                 )
             
-            # پاک کردن فایل موقت پس از ارسال
+            # حذف فوری فایل بعد از ارسال
             try:
                 os.remove(filepath)
                 del context.user_data[file_key]
-            except Exception as file_error:
-                logger.error(f"Error removing report file: {file_error}")
+                logger.info(f"فایل بعد از ارسال حذف شد: {filepath}")
+            except Exception as cleanup_error:
+                logger.warning(f"خطا در حذف فایل بعد از ارسال: {cleanup_error}")
             
         except Exception as e:
-            logger.error(f"Error downloading report {filename}: {e}", exc_info=True)
-            await query.answer("❌ خطا در ارسال فایل گزارش.", show_alert=True)
-                
+            logger.error(f"خطا در دانلود گزارش {filename}: {e}", exc_info=True)
+            await query.answer("⚠️ خطا در ارسال فایل گزارش.", show_alert=True)                
         
     async def _process_callback(self, query: CallbackQuery, context: ContextTypes.DEFAULT_TYPE, callback_data: str):
         """پردازش callback بر اساس نوع"""
@@ -429,13 +420,16 @@ class CallbackHandler:
             if "error" in analysis_result:
                 # در صورت خطا، پیام خطا را با یک کیبورد کامل نمایش بده
                 await query.edit_message_text(
-                    text=f"❌ <b>خطا در تحلیل</b>\n\n{html.escape(analysis_result['error'])}",
-                    reply_markup=KeyboardTemplates.analysis_result_actions(strategy_key, symbol, currency, timeframe),
+                    text=f"⚠️ <b>خطا در تحلیل</b>\n\n{analysis_result['error']}",
+                    reply_markup=InlineKeyboardMarkup([
+                        [InlineKeyboardButton("🔄 تحلیل جدید", callback_data="analysis_menu")],
+                        [InlineKeyboardButton("🏠 منوی اصلی", callback_data="main_menu")]
+                    ]),
                     parse_mode=ParseMode.HTML
                 )
                 return
 
-            # فرمت‌بندی نتیجه
+            # فرمت‌بندی نتیجه با استفاده از توابع جدید
             try:
                 # استخراج سیگنال
                 signal_details = extract_signal_details(strategy_key, analysis_result)
@@ -444,37 +438,46 @@ class CallbackHandler:
                 if 'chart_url' in analysis_result:
                     signal_details['chart_url'] = analysis_result['chart_url']
                 
-                # فرمت‌بندی پیام با استفاده از توابع جدید
+                # فرمت‌بندی پیام با استفاده از تابع جدید
                 formatted_message = format_signal_message(
                     signal_details, symbol, currency, timeframe, strategy_key
                 )
-                formatted_message = self._convert_markdown_to_html(formatted_message)
                 
             except Exception as format_error:
-                logger.error(f"Error formatting message: {format_error}")
-                formatted_message = f"""
-    ✅ <b>تحلیل {html.escape(symbol)}/{html.escape(currency)} کامل شد!</b>
-    📊 <b>استراتژی:</b> {html.escape(strategy_key)}
-    ⏰ <b>تایم‌فریم:</b> {html.escape(timeframe)}
-    🎯 <b>نتیجه:</b> {html.escape(analysis_result.get('signal_direction', 'تحلیل انجام شد'))}
-    ⚠️ <b>یادآوری:</b> این تحلیل جنبه آموزشی دارد.
-    """
+                logger.error(f"خطا در فرمت‌بندی پیام: {format_error}")
+                formatted_message = f"""✅ <b>تحلیل {symbol}/{currency} کامل شد!</b>
+    📊 <b>استراتژی:</b> {strategy_key}
+    ⏰ <b>تایم‌فریم:</b> {timeframe}
+    🎯 <b>نتیجه:</b> {analysis_result.get('signal_direction', 'تحلیل انجام شد')}
+    ⚠️ <b>یادآوری:</b> این تحلیل جنبه آموزشی دارد."""
             
-            # کیبورد اقدامات بعدی با دکمه دانلود
-            keyboard_buttons = [
-                [InlineKeyboardButton("📄 دانلود گزارش", callback_data=f"download_report:{analysis_result['report_file'].get('filename', '')}")],
+            # کیبورد اقدامات بعدی
+            keyboard_buttons = []
+            
+            # دکمه دانلود گزارش در صورت وجود فایل
+            report_file = analysis_result.get("report_file")
+            if report_file and not report_file.get("error"):
+                keyboard_buttons.append([
+                    InlineKeyboardButton("📄 دانلود گزارش", callback_data=f"download_report:{report_file.get('filename', '')}")
+                ])
+                
+                # ذخیره اطلاعات فایل در context برای دانلود
+                file_key = f"report_{report_file.get('filename', '')}"
+                context.user_data[file_key] = report_file.get('filepath', '')
+                
+                # تنظیم تایمر حذف فایل بعد از 30 ثانیه
+                asyncio.create_task(self._schedule_file_cleanup(context, file_key, 30))
+            
+            # دکمه‌های اقدامات
+            keyboard_buttons.extend([
                 [
                     InlineKeyboardButton("🔄 تحلیل جدید", callback_data="analysis_menu"),
                     InlineKeyboardButton("📈 استراتژی دیگر", callback_data=f"select_strategy:{strategy_key}")
                 ],
                 [InlineKeyboardButton("🏠 منوی اصلی", callback_data="main_menu")]
-            ]
-            keyboard = InlineKeyboardMarkup(keyboard_buttons)
+            ])
             
-            # ذخیره اطلاعات فایل در context برای دانلود
-            report_file = analysis_result.get("report_file")
-            if report_file and not report_file.get("error"):
-                context.user_data[f"report_{report_file.get('filename', '')}"] = report_file.get('filepath', '')
+            keyboard = InlineKeyboardMarkup(keyboard_buttons)
             
             await query.edit_message_text(
                 text=formatted_message,
@@ -483,10 +486,13 @@ class CallbackHandler:
             )
 
         except Exception as e:
-            logger.error(f"Error in handle_timeframe_selection: {e}", exc_info=True)
+            logger.error(f"خطا در handle_timeframe_selection: {e}", exc_info=True)
             await query.edit_message_text(
-                text="❌ خطایی در اجرای تحلیل رخ داد. لطفاً دوباره تلاش کنید.",
-                reply_markup=KeyboardTemplates.analysis_result_actions(strategy_key, symbol, currency, timeframe),
+                text="⚠️ خطایی در اجرای تحلیل رخ داد. لطفاً دوباره تلاش کنید.",
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("🔄 تحلیل جدید", callback_data="analysis_menu")],
+                    [InlineKeyboardButton("🏠 منوی اصلی", callback_data="main_menu")]
+                ]),
                 parse_mode=ParseMode.HTML
             )
         finally:
@@ -494,7 +500,31 @@ class CallbackHandler:
             keys_to_clear = ['selected_strategy', 'selected_symbol', 'selected_currency']
             for key in keys_to_clear:
                 if key in context.user_data:
-                    del context.user_data[key]                
+                    del context.user_data[key]
+
+
+    async def _schedule_file_cleanup(self, context: ContextTypes.DEFAULT_TYPE, file_key: str, delay_seconds: int):
+        """برنامه‌ریزی حذف فایل بعد از مدت زمان مشخص"""
+        try:
+            await asyncio.sleep(delay_seconds)
+            
+            if file_key in context.user_data:
+                filepath = context.user_data[file_key]
+                
+                # حذف فایل فیزیکی در صورت وجود
+                try:
+                    if filepath and os.path.exists(filepath):
+                        os.remove(filepath)
+                        logger.info(f"فایل حذف شد: {filepath}")
+                except Exception as file_error:
+                    logger.warning(f"خطا در حذف فایل {filepath}: {file_error}")
+                
+                # حذف از context
+                del context.user_data[file_key]
+                logger.info(f"اطلاعات فایل از context حذف شد: {file_key}")
+                
+        except Exception as e:
+            logger.error(f"خطا در برنامه‌ریزی حذف فایل: {e}")
                 
     def _convert_markdown_to_html(self, text: str) -> str:
         """تبدیل markdown syntax به HTML و escape کردن کاراکترهای خاص"""

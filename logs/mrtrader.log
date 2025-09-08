@@ -8173,3 +8173,605 @@ TP: 216.77
 2025-09-08 03:09:02,652 - MrTrader - INFO - All handlers initialized successfully
 2025-09-08 03:09:02,652 - MrTrader - INFO - MrTrader Bot initialized successfully
 2025-09-08 03:09:02,652 - MrTrader - INFO - Starting MrTrader Bot...
+2025-09-08 03:09:13,917 - MrTrader - ERROR - Timeout while setting bot commands (initial): 
+2025-09-08 03:09:16,229 - MrTrader - INFO - Bot commands set successfully on retry
+2025-09-08 03:09:16,230 - MrTrader - INFO - Start handlers registered manually
+2025-09-08 03:09:16,230 - MrTrader - INFO - Callback handlers registered successfully
+2025-09-08 03:09:16,230 - MrTrader - INFO - Message handlers registered successfully
+2025-09-08 03:09:16,231 - MrTrader - INFO - All handlers registered successfully
+2025-09-08 03:09:16,231 - MrTrader - INFO - Bot application initialized successfully
+2025-09-08 03:09:16,231 - MrTrader - INFO - Starting bot startup tasks...
+2025-09-08 03:09:16,232 - MrTrader - INFO - Database health check: OK
+2025-09-08 03:09:16,233 - MrTrader - INFO - API ping check skipped - method not available
+2025-09-08 03:09:16,233 - MrTrader - INFO - System settings loading skipped - method not available
+2025-09-08 03:09:16,233 - MrTrader - INFO - Scheduled tasks configured:
+2025-09-08 03:09:16,233 - MrTrader - INFO - - Backup: Daily at 2:00 AM
+2025-09-08 03:09:16,234 - MrTrader - INFO - - Reports: Daily at 1:00 AM
+2025-09-08 03:09:16,234 - MrTrader - INFO - - Cleanup: Weekly on Sunday
+2025-09-08 03:09:16,234 - MrTrader - INFO - - Analytics: Hourly
+2025-09-08 03:09:16,925 - MrTrader - INFO - Startup notification sent successfully
+2025-09-08 03:09:16,926 - MrTrader - INFO - All startup tasks completed successfully
+2025-09-08 03:09:18,266 - MrTrader - INFO - Bot is running... Press Ctrl+C to stop
+2025-09-08 03:09:20,960 - MrTrader - INFO - Start command received from user 1517662886
+2025-09-08 03:09:20,962 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: start_command | Details: User started bot: am369ap
+2025-09-08 03:09:25,185 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: signals_menu
+2025-09-08 03:09:28,146 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: main_menu
+2025-09-08 03:09:40,067 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: user_profile
+2025-09-08 03:59:12,647 - MrTrader - INFO - DB_MIGRATION | Version: initial | Status: completed
+2025-09-08 03:59:12,648 - MrTrader - INFO - DB_CONNECTION | Status: initialized | Details: D:\phonix coin\mr.trader\st\telegram_bot\MR-TRADER-BOT-01_git\data\mrtrader.db
+2025-09-08 03:59:12,654 - MrTrader - INFO - API configuration reloaded
+2025-09-08 03:59:12,891 - MrTrader - INFO - Logging system initialized
+2025-09-08 03:59:12,892 - MrTrader - INFO - Initialized 1 main managers
+2025-09-08 03:59:12,892 - MrTrader - INFO - AdminManager initialized with managers: [1517662886]
+2025-09-08 03:59:12,895 - MrTrader - INFO - Symbol manager initialized successfully
+2025-09-08 03:59:12,897 - MrTrader - INFO - Referral system initialized successfully
+2025-09-08 03:59:12,897 - MrTrader - INFO - API configuration reloaded
+2025-09-08 03:59:12,899 - MrTrader - INFO - Report system initialized successfully
+2025-09-08 03:59:12,901 - MrTrader - INFO - Backup system initialized successfully
+2025-09-08 03:59:12,901 - MrTrader - INFO - All managers initialized successfully
+2025-09-08 03:59:12,904 - MrTrader - INFO - Referral system initialized successfully
+2025-09-08 03:59:12,904 - MrTrader - INFO - API configuration reloaded
+2025-09-08 03:59:12,906 - MrTrader - INFO - Symbol manager initialized successfully
+2025-09-08 03:59:12,909 - MrTrader - INFO - Report system initialized successfully
+2025-09-08 03:59:12,910 - MrTrader - INFO - Symbol manager initialized successfully
+2025-09-08 03:59:12,912 - MrTrader - INFO - All handlers initialized successfully
+2025-09-08 03:59:12,913 - MrTrader - INFO - MrTrader Bot initialized successfully
+2025-09-08 03:59:12,915 - MrTrader - INFO - Starting MrTrader Bot...
+2025-09-08 03:59:17,179 - MrTrader - INFO - Bot commands set successfully (initial attempt)
+2025-09-08 03:59:17,181 - MrTrader - INFO - Start handlers registered manually
+2025-09-08 03:59:17,181 - MrTrader - INFO - Callback handlers registered successfully
+2025-09-08 03:59:17,182 - MrTrader - INFO - Message handlers registered successfully
+2025-09-08 03:59:17,182 - MrTrader - INFO - All handlers registered successfully
+2025-09-08 03:59:17,182 - MrTrader - INFO - Bot application initialized successfully
+2025-09-08 03:59:17,182 - MrTrader - INFO - Starting bot startup tasks...
+2025-09-08 03:59:17,183 - MrTrader - INFO - Database health check: OK
+2025-09-08 03:59:17,183 - MrTrader - INFO - API ping check skipped - method not available
+2025-09-08 03:59:17,183 - MrTrader - INFO - System settings loading skipped - method not available
+2025-09-08 03:59:17,184 - MrTrader - INFO - Scheduled tasks configured:
+2025-09-08 03:59:17,184 - MrTrader - INFO - - Backup: Daily at 2:00 AM
+2025-09-08 03:59:17,184 - MrTrader - INFO - - Reports: Daily at 1:00 AM
+2025-09-08 03:59:17,185 - MrTrader - INFO - - Cleanup: Weekly on Sunday
+2025-09-08 03:59:17,185 - MrTrader - INFO - - Analytics: Hourly
+2025-09-08 03:59:17,410 - MrTrader - INFO - Startup notification sent successfully
+2025-09-08 03:59:17,410 - MrTrader - INFO - All startup tasks completed successfully
+2025-09-08 03:59:17,738 - MrTrader - INFO - Bot is running... Press Ctrl+C to stop
+2025-09-08 03:59:25,418 - MrTrader - INFO - Start command received from user 1517662886
+2025-09-08 03:59:25,422 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: start_command | Details: User started bot: am369ap
+2025-09-08 03:59:28,086 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: analysis_menu
+2025-09-08 03:59:30,408 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_strategy:volume_profile
+2025-09-08 03:59:34,507 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_symbol:volume_profile|UNI
+2025-09-08 03:59:37,249 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_currency:volume_profile|UNI|USDT
+2025-09-08 03:59:40,932 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_timeframe:volume_profile|UNI|USDT|4h
+2025-09-08 03:59:41,340 - MrTrader - INFO - Starting analysis for user 1517662886: volume_profile UNI/USDT @ 4h
+2025-09-08 03:59:41,344 - MrTrader - INFO - Calling API for volume_profile analysis: UNI/USDT @ 4h
+2025-09-08 03:59:41,345 - MrTrader - INFO - Requesting volume_profile analysis for UNI/USDT @ 4h (API: histohour)
+2025-09-08 03:59:44,094 - MrTrader - INFO - API request successful: POST http://91.198.77.208:8000/analyze_price_action_pandas_ta/
+2025-09-08 03:59:44,094 - MrTrader - INFO - Reading report file via API: save/price_action_pandas_ta/PriceAction_TXT/UNI_histohour_20250908_002945.txt
+2025-09-08 03:59:44,247 - MrTrader - INFO - API request successful: POST http://91.198.77.208:8000/read_report_file/
+2025-09-08 03:59:44,248 - MrTrader - INFO - === REPORT CONTENT START ===
+2025-09-08 03:59:44,248 - MrTrader - INFO - 💰 قیمت لایو: 9.39600000  ⏰ زمان: 2025-09-08 00:29:45
+------------------------------------------------
+📊 تحلیل بازار UNI/USDT
+🤞 تایم فریم تحلیل: histohour
+
+--------------------------------------------------
+[اندیکاتورها]
+- RSI (14 دوره‌ای): 55.65
+   توضیح: وضعیت تعادل
+- MACD: 0.00
+   توضیح: اندیکاتور تغییر جهت روند؛ اگر MACD زیر Signal باشد، روند نزولی است.
+- MACD Signal: -0.00
+- SMA 50: 9.35
+   توضیح: میانگین متحرک 50 دوره؛ بالاتر از قیمت نشان‌دهنده روند کوتاه‌مدت است.
+- SMA 200: 9.494090000000002
+   توضیح: میانگین متحرک 200 دوره؛ برای تحلیل روند بلندمدت به کار می‌رود.
+- آخرین قیمت بسته شدن: 9.40
+
+[سطوح حمایت و مقاومت]
+- سطح حمایت (Support 1): 9.23
+- سطح مقاومت (Resistance 1): 9.73
+
+[تحلیل کلی]
+با توجه به اینکه:
+- RSI در سطح 55.65 (وضعیت تعادل)
+- MACD (0.00) نسبت به Signal (-0.00) به سمت صعودی حرکت می‌کند.
+- قیمت بسته شدن (9.40) بالاتر از SMA 50 (9.35) است.
+
+نتیجه نهایی تحلیل: HOLD ( سیگنال صعودی (BUY) )
+قدرت سیگنال: BUY/قوی
+
+[جزییات معامله احتمالی]
+Entry: 9.40
+SL: 9.30
+TP: 9.55
+
+2025-09-08 03:59:44,251 - MrTrader - INFO - === REPORT CONTENT END ===
+2025-09-08 03:59:44,251 - MrTrader - INFO - Analysis completed for volume_profile UNI/USDT @ 4h
+2025-09-08 03:59:44,265 - MrTrader - INFO - Analysis successful for volume_profile UNI/USDT
+2025-09-08 03:59:59,637 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: download_report:volume_profile_UNI_USDT_4h_20250908_035944.txt
+2025-09-08 04:27:17,901 - MrTrader - INFO - DB_MIGRATION | Version: initial | Status: completed
+2025-09-08 04:27:17,902 - MrTrader - INFO - DB_CONNECTION | Status: initialized | Details: D:\phonix coin\mr.trader\st\telegram_bot\MR-TRADER-BOT-01_git\data\mrtrader.db
+2025-09-08 04:27:17,909 - MrTrader - INFO - API configuration reloaded
+2025-09-08 04:27:18,135 - MrTrader - INFO - Logging system initialized
+2025-09-08 04:27:18,136 - MrTrader - INFO - Initialized 1 main managers
+2025-09-08 04:27:18,136 - MrTrader - INFO - AdminManager initialized with managers: [1517662886]
+2025-09-08 04:27:18,138 - MrTrader - INFO - Symbol manager initialized successfully
+2025-09-08 04:27:18,142 - MrTrader - INFO - Referral system initialized successfully
+2025-09-08 04:27:18,142 - MrTrader - INFO - API configuration reloaded
+2025-09-08 04:27:18,143 - MrTrader - INFO - Report system initialized successfully
+2025-09-08 04:27:18,145 - MrTrader - INFO - Backup system initialized successfully
+2025-09-08 04:27:18,145 - MrTrader - INFO - All managers initialized successfully
+2025-09-08 04:27:18,148 - MrTrader - INFO - Referral system initialized successfully
+2025-09-08 04:27:18,148 - MrTrader - INFO - API configuration reloaded
+2025-09-08 04:27:18,150 - MrTrader - INFO - Symbol manager initialized successfully
+2025-09-08 04:27:18,152 - MrTrader - INFO - Report system initialized successfully
+2025-09-08 04:27:18,154 - MrTrader - INFO - Symbol manager initialized successfully
+2025-09-08 04:27:18,154 - MrTrader - INFO - All handlers initialized successfully
+2025-09-08 04:27:18,155 - MrTrader - INFO - MrTrader Bot initialized successfully
+2025-09-08 04:27:18,155 - MrTrader - INFO - Starting MrTrader Bot...
+2025-09-08 04:27:21,768 - MrTrader - INFO - Bot commands set successfully (initial attempt)
+2025-09-08 04:27:21,768 - MrTrader - INFO - Start handlers registered manually
+2025-09-08 04:27:21,769 - MrTrader - INFO - Callback handlers registered successfully
+2025-09-08 04:27:21,769 - MrTrader - INFO - Message handlers registered successfully
+2025-09-08 04:27:21,769 - MrTrader - INFO - All handlers registered successfully
+2025-09-08 04:27:21,769 - MrTrader - INFO - Bot application initialized successfully
+2025-09-08 04:27:21,770 - MrTrader - INFO - Starting bot startup tasks...
+2025-09-08 04:27:21,770 - MrTrader - INFO - Database health check: OK
+2025-09-08 04:27:21,770 - MrTrader - INFO - API ping check skipped - method not available
+2025-09-08 04:27:21,771 - MrTrader - INFO - System settings loading skipped - method not available
+2025-09-08 04:27:21,771 - MrTrader - INFO - Scheduled tasks configured:
+2025-09-08 04:27:21,771 - MrTrader - INFO - - Backup: Daily at 2:00 AM
+2025-09-08 04:27:21,771 - MrTrader - INFO - - Reports: Daily at 1:00 AM
+2025-09-08 04:27:21,772 - MrTrader - INFO - - Cleanup: Weekly on Sunday
+2025-09-08 04:27:21,772 - MrTrader - INFO - - Analytics: Hourly
+2025-09-08 04:27:21,991 - MrTrader - INFO - Startup notification sent successfully
+2025-09-08 04:27:21,992 - MrTrader - INFO - All startup tasks completed successfully
+2025-09-08 04:27:22,308 - MrTrader - INFO - Bot is running... Press Ctrl+C to stop
+2025-09-08 04:27:47,613 - MrTrader - INFO - Start command received from user 1517662886
+2025-09-08 04:27:47,615 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: start_command | Details: User started bot: am369ap
+2025-09-08 04:27:50,468 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: analysis_menu
+2025-09-08 04:27:54,032 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_strategy:cci_analysis
+2025-09-08 04:27:56,409 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_symbol:cci_analysis|ADA
+2025-09-08 04:27:58,151 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_currency:cci_analysis|ADA|USDT
+2025-09-08 04:28:00,391 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_timeframe:cci_analysis|ADA|USDT|5m
+2025-09-08 04:28:00,671 - MrTrader - INFO - Starting analysis for user 1517662886: cci_analysis ADA/USDT @ 5m
+2025-09-08 04:28:00,674 - MrTrader - INFO - Calling API for cci_analysis analysis: ADA/USDT @ 5m
+2025-09-08 04:28:00,675 - MrTrader - ERROR - API error for cci_analysis: 'ApiClient' object has no attribute 'fetch_strategy_analysis'
+Traceback (most recent call last):
+  File "D:\phonix coin\mr.trader\st\telegram_bot\MR-TRADER-BOT-01_git\managers\strategy_manager.py", line 677, in analyze_strategy
+    analysis_data = await api_client.fetch_strategy_analysis(
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'ApiClient' object has no attribute 'fetch_strategy_analysis'
+2025-09-08 04:29:12,351 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: analysis_menu
+2025-09-08 04:29:16,389 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_strategy:macd_divergence
+2025-09-08 04:29:17,908 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_symbol:macd_divergence|DOGE
+2025-09-08 04:29:20,277 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_currency:macd_divergence|DOGE|USDT
+2025-09-08 04:29:22,212 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_timeframe:macd_divergence|DOGE|USDT|5m
+2025-09-08 04:29:22,412 - MrTrader - INFO - Starting analysis for user 1517662886: macd_divergence DOGE/USDT @ 5m
+2025-09-08 04:29:22,415 - MrTrader - INFO - Calling API for macd_divergence analysis: DOGE/USDT @ 5m
+2025-09-08 04:29:22,415 - MrTrader - ERROR - API error for macd_divergence: 'ApiClient' object has no attribute 'fetch_strategy_analysis'
+Traceback (most recent call last):
+  File "D:\phonix coin\mr.trader\st\telegram_bot\MR-TRADER-BOT-01_git\managers\strategy_manager.py", line 677, in analyze_strategy
+    analysis_data = await api_client.fetch_strategy_analysis(
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'ApiClient' object has no attribute 'fetch_strategy_analysis'
+2025-09-08 04:35:16,803 - MrTrader - INFO - DB_MIGRATION | Version: initial | Status: completed
+2025-09-08 04:35:16,804 - MrTrader - INFO - DB_CONNECTION | Status: initialized | Details: D:\phonix coin\mr.trader\st\telegram_bot\MR-TRADER-BOT-01_git\data\mrtrader.db
+2025-09-08 04:35:16,811 - MrTrader - INFO - API configuration reloaded
+2025-09-08 04:35:17,023 - MrTrader - INFO - Logging system initialized
+2025-09-08 04:35:17,024 - MrTrader - INFO - Initialized 1 main managers
+2025-09-08 04:35:17,024 - MrTrader - INFO - AdminManager initialized with managers: [1517662886]
+2025-09-08 04:35:17,027 - MrTrader - INFO - Symbol manager initialized successfully
+2025-09-08 04:35:17,029 - MrTrader - INFO - Referral system initialized successfully
+2025-09-08 04:35:17,030 - MrTrader - INFO - API configuration reloaded
+2025-09-08 04:35:17,032 - MrTrader - INFO - Report system initialized successfully
+2025-09-08 04:35:17,034 - MrTrader - INFO - Backup system initialized successfully
+2025-09-08 04:35:17,035 - MrTrader - INFO - All managers initialized successfully
+2025-09-08 04:35:17,039 - MrTrader - INFO - Referral system initialized successfully
+2025-09-08 04:35:17,040 - MrTrader - INFO - API configuration reloaded
+2025-09-08 04:35:17,041 - MrTrader - INFO - Symbol manager initialized successfully
+2025-09-08 04:35:17,044 - MrTrader - INFO - Report system initialized successfully
+2025-09-08 04:35:17,046 - MrTrader - INFO - Symbol manager initialized successfully
+2025-09-08 04:35:17,047 - MrTrader - INFO - All handlers initialized successfully
+2025-09-08 04:35:17,047 - MrTrader - INFO - MrTrader Bot initialized successfully
+2025-09-08 04:35:17,047 - MrTrader - INFO - Starting MrTrader Bot...
+2025-09-08 04:35:20,631 - MrTrader - INFO - Bot commands set successfully (initial attempt)
+2025-09-08 04:35:20,632 - MrTrader - INFO - Start handlers registered manually
+2025-09-08 04:35:20,632 - MrTrader - INFO - Callback handlers registered successfully
+2025-09-08 04:35:20,632 - MrTrader - INFO - Message handlers registered successfully
+2025-09-08 04:35:20,633 - MrTrader - INFO - All handlers registered successfully
+2025-09-08 04:35:20,633 - MrTrader - INFO - Bot application initialized successfully
+2025-09-08 04:35:20,633 - MrTrader - INFO - Starting bot startup tasks...
+2025-09-08 04:35:20,634 - MrTrader - INFO - Database health check: OK
+2025-09-08 04:35:20,634 - MrTrader - INFO - API ping check skipped - method not available
+2025-09-08 04:35:20,634 - MrTrader - INFO - System settings loading skipped - method not available
+2025-09-08 04:35:20,634 - MrTrader - INFO - Scheduled tasks configured:
+2025-09-08 04:35:20,635 - MrTrader - INFO - - Backup: Daily at 2:00 AM
+2025-09-08 04:35:20,635 - MrTrader - INFO - - Reports: Daily at 1:00 AM
+2025-09-08 04:35:20,635 - MrTrader - INFO - - Cleanup: Weekly on Sunday
+2025-09-08 04:35:20,635 - MrTrader - INFO - - Analytics: Hourly
+2025-09-08 04:35:20,835 - MrTrader - INFO - Startup notification sent successfully
+2025-09-08 04:35:20,835 - MrTrader - INFO - All startup tasks completed successfully
+2025-09-08 04:35:21,222 - MrTrader - INFO - Bot is running... Press Ctrl+C to stop
+2025-09-08 04:35:24,040 - MrTrader - INFO - Start command received from user 1517662886
+2025-09-08 04:35:24,042 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: start_command | Details: User started bot: am369ap
+2025-09-08 04:35:25,952 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: analysis_menu
+2025-09-08 04:35:28,675 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_strategy:atr
+2025-09-08 04:35:30,062 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_symbol:atr|LINK
+2025-09-08 04:35:31,542 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_currency:atr|LINK|USDT
+2025-09-08 04:35:33,208 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_timeframe:atr|LINK|USDT|1m
+2025-09-08 04:35:33,404 - MrTrader - INFO - Starting analysis for user 1517662886: atr LINK/USDT @ 1m
+2025-09-08 04:35:33,409 - MrTrader - INFO - Calling API for atr analysis: LINK/USDT @ 1m
+2025-09-08 04:35:33,409 - MrTrader - INFO - Requesting atr analysis for LINK/USDT @ 1m (API: histominute)
+2025-09-08 04:35:33,680 - MrTrader - WARNING - Client error (attempt 1): 404, message='{"detail":"Not Found"}', url='http://91.198.77.208:8000/analyze_atr/'
+2025-09-08 04:35:34,822 - MrTrader - WARNING - Client error (attempt 2): 404, message='{"detail":"Not Found"}', url='http://91.198.77.208:8000/analyze_atr/'
+2025-09-08 04:35:36,955 - MrTrader - WARNING - Client error (attempt 3): 404, message='{"detail":"Not Found"}', url='http://91.198.77.208:8000/analyze_atr/'
+2025-09-08 04:35:36,956 - MrTrader - ERROR - All retry attempts failed for http://91.198.77.208:8000/analyze_atr/. Last error: Client error: 404, message='{"detail":"Not Found"}', url='http://91.198.77.208:8000/analyze_atr/'
+2025-09-08 04:35:36,957 - MrTrader - ERROR - API returned error: Client error: 404, message='{"detail":"Not Found"}', url='http://91.198.77.208:8000/analyze_atr/'
+2025-09-08 04:36:17,082 - MrTrader - INFO - DB_MIGRATION | Version: initial | Status: completed
+2025-09-08 04:36:17,083 - MrTrader - INFO - DB_CONNECTION | Status: initialized | Details: D:\phonix coin\mr.trader\st\telegram_bot\MR-TRADER-BOT-01_git\data\mrtrader.db
+2025-09-08 04:36:17,089 - MrTrader - INFO - API configuration reloaded
+2025-09-08 04:36:17,309 - MrTrader - INFO - Logging system initialized
+2025-09-08 04:36:17,310 - MrTrader - INFO - Initialized 1 main managers
+2025-09-08 04:36:17,310 - MrTrader - INFO - AdminManager initialized with managers: [1517662886]
+2025-09-08 04:36:17,312 - MrTrader - INFO - Symbol manager initialized successfully
+2025-09-08 04:36:17,314 - MrTrader - INFO - Referral system initialized successfully
+2025-09-08 04:36:17,314 - MrTrader - INFO - API configuration reloaded
+2025-09-08 04:36:17,316 - MrTrader - INFO - Report system initialized successfully
+2025-09-08 04:36:17,319 - MrTrader - INFO - Backup system initialized successfully
+2025-09-08 04:36:17,319 - MrTrader - INFO - All managers initialized successfully
+2025-09-08 04:36:17,322 - MrTrader - INFO - Referral system initialized successfully
+2025-09-08 04:36:17,323 - MrTrader - INFO - API configuration reloaded
+2025-09-08 04:36:17,325 - MrTrader - INFO - Symbol manager initialized successfully
+2025-09-08 04:36:17,327 - MrTrader - INFO - Report system initialized successfully
+2025-09-08 04:36:17,329 - MrTrader - INFO - Symbol manager initialized successfully
+2025-09-08 04:36:17,330 - MrTrader - INFO - All handlers initialized successfully
+2025-09-08 04:36:17,330 - MrTrader - INFO - MrTrader Bot initialized successfully
+2025-09-08 04:36:17,330 - MrTrader - INFO - Starting MrTrader Bot...
+2025-09-08 04:36:21,067 - MrTrader - INFO - Bot commands set successfully (initial attempt)
+2025-09-08 04:36:21,068 - MrTrader - INFO - Start handlers registered manually
+2025-09-08 04:36:21,068 - MrTrader - INFO - Callback handlers registered successfully
+2025-09-08 04:36:21,068 - MrTrader - INFO - Message handlers registered successfully
+2025-09-08 04:36:21,069 - MrTrader - INFO - All handlers registered successfully
+2025-09-08 04:36:21,069 - MrTrader - INFO - Bot application initialized successfully
+2025-09-08 04:36:21,070 - MrTrader - INFO - Starting bot startup tasks...
+2025-09-08 04:36:21,070 - MrTrader - INFO - Database health check: OK
+2025-09-08 04:36:21,072 - MrTrader - INFO - API ping check skipped - method not available
+2025-09-08 04:36:21,075 - MrTrader - INFO - System settings loading skipped - method not available
+2025-09-08 04:36:21,075 - MrTrader - INFO - Scheduled tasks configured:
+2025-09-08 04:36:21,076 - MrTrader - INFO - - Backup: Daily at 2:00 AM
+2025-09-08 04:36:21,076 - MrTrader - INFO - - Reports: Daily at 1:00 AM
+2025-09-08 04:36:21,077 - MrTrader - INFO - - Cleanup: Weekly on Sunday
+2025-09-08 04:36:21,077 - MrTrader - INFO - - Analytics: Hourly
+2025-09-08 04:36:21,304 - MrTrader - INFO - Startup notification sent successfully
+2025-09-08 04:36:21,307 - MrTrader - INFO - All startup tasks completed successfully
+2025-09-08 04:36:21,642 - MrTrader - INFO - Bot is running... Press Ctrl+C to stop
+2025-09-08 04:36:24,721 - MrTrader - INFO - Start command received from user 1517662886
+2025-09-08 04:36:24,723 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: start_command | Details: User started bot: am369ap
+2025-09-08 04:36:26,829 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: analysis_menu
+2025-09-08 04:36:28,542 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_strategy:volume_profile
+2025-09-08 04:36:29,870 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_symbol:volume_profile|MATIC
+2025-09-08 04:36:31,487 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_currency:volume_profile|MATIC|USDT
+2025-09-08 04:36:33,323 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_timeframe:volume_profile|MATIC|USDT|3m
+2025-09-08 04:36:33,544 - MrTrader - INFO - Starting analysis for user 1517662886: volume_profile MATIC/USDT @ 3m
+2025-09-08 04:36:33,549 - MrTrader - INFO - Calling API for volume_profile analysis: MATIC/USDT @ 3m
+2025-09-08 04:36:33,550 - MrTrader - INFO - Requesting volume_profile analysis for MATIC/USDT @ 3m (API: histohour)
+2025-09-08 04:36:35,968 - MrTrader - INFO - API request successful: POST http://91.198.77.208:8000/analyze_price_action_pandas_ta/
+2025-09-08 04:36:35,968 - MrTrader - INFO - Reading report file via API: save/price_action_pandas_ta/PriceAction_TXT/MATIC_histohour_20250908_010637.txt
+2025-09-08 04:36:36,123 - MrTrader - INFO - API request successful: POST http://91.198.77.208:8000/read_report_file/
+2025-09-08 04:36:36,123 - MrTrader - INFO - === REPORT CONTENT START ===
+2025-09-08 04:36:36,123 - MrTrader - INFO - 💰 قیمت لایو: 0.37940000  ⏰ زمان: 2025-09-08 01:06:37
+------------------------------------------------
+📊 تحلیل بازار MATIC/USDT
+🤞 تایم فریم تحلیل: histohour
+
+--------------------------------------------------
+[اندیکاتورها]
+- RSI (14 دوره‌ای): 52.08
+   توضیح: وضعیت تعادل
+- MACD: 0.00
+   توضیح: اندیکاتور تغییر جهت روند؛ اگر MACD زیر Signal باشد، روند نزولی است.
+- MACD Signal: 0.00
+- SMA 50: 0.38
+   توضیح: میانگین متحرک 50 دوره؛ بالاتر از قیمت نشان‌دهنده روند کوتاه‌مدت است.
+- SMA 200: 0.38295850000000003
+   توضیح: میانگین متحرک 200 دوره؛ برای تحلیل روند بلندمدت به کار می‌رود.
+- آخرین قیمت بسته شدن: 0.38
+
+[سطوح حمایت و مقاومت]
+- سطح حمایت (Support 1): 0.37
+- سطح مقاومت (Resistance 1): 0.39
+
+[تحلیل کلی]
+با توجه به اینکه:
+- RSI در سطح 52.08 (وضعیت تعادل)
+- MACD (0.00) نسبت به Signal (0.00) به سمت نزولی حرکت می‌کند.
+- قیمت بسته شدن (0.38) بالاتر از SMA 50 (0.38) است.
+
+نتیجه نهایی تحلیل: HOLD ( سیگنال نزولی (SELL) )
+قدرت سیگنال: SELL/ضعیف
+
+[جزییات معامله احتمالی]
+Entry: 0.38
+SL: 0.38
+TP: 0.37
+
+2025-09-08 04:36:36,125 - MrTrader - INFO - === REPORT CONTENT END ===
+2025-09-08 04:36:36,125 - MrTrader - INFO - Analysis completed for volume_profile MATIC/USDT @ 3m
+2025-09-08 04:36:36,126 - MrTrader - INFO - Analysis successful for volume_profile MATIC/USDT
+2025-09-08 04:37:06,131 - MrTrader - INFO - فایل حذف شد: temp_reports\volume_profile_MATIC_USDT_3m_20250908_043636.txt
+2025-09-08 04:37:06,132 - MrTrader - INFO - اطلاعات فایل از context حذف شد: report_volume_profile_MATIC_USDT_3m_20250908_043636.txt
+2025-09-08 04:47:40,196 - MrTrader - INFO - DB_MIGRATION | Version: initial | Status: completed
+2025-09-08 04:47:40,197 - MrTrader - INFO - DB_CONNECTION | Status: initialized | Details: D:\phonix coin\mr.trader\st\telegram_bot\MR-TRADER-BOT-01_git\data\mrtrader.db
+2025-09-08 04:47:40,207 - MrTrader - INFO - API configuration reloaded
+2025-09-08 04:47:40,439 - MrTrader - INFO - Logging system initialized
+2025-09-08 04:47:40,439 - MrTrader - INFO - Initialized 1 main managers
+2025-09-08 04:47:40,439 - MrTrader - INFO - AdminManager initialized with managers: [1517662886]
+2025-09-08 04:47:40,441 - MrTrader - INFO - Symbol manager initialized successfully
+2025-09-08 04:47:40,444 - MrTrader - INFO - Referral system initialized successfully
+2025-09-08 04:47:40,444 - MrTrader - INFO - API configuration reloaded
+2025-09-08 04:47:40,446 - MrTrader - INFO - Report system initialized successfully
+2025-09-08 04:47:40,448 - MrTrader - INFO - Backup system initialized successfully
+2025-09-08 04:47:40,448 - MrTrader - INFO - All managers initialized successfully
+2025-09-08 04:47:40,451 - MrTrader - INFO - Referral system initialized successfully
+2025-09-08 04:47:40,453 - MrTrader - INFO - API configuration reloaded
+2025-09-08 04:47:40,455 - MrTrader - INFO - Symbol manager initialized successfully
+2025-09-08 04:47:40,457 - MrTrader - INFO - Report system initialized successfully
+2025-09-08 04:47:40,459 - MrTrader - INFO - Symbol manager initialized successfully
+2025-09-08 04:47:40,459 - MrTrader - INFO - All handlers initialized successfully
+2025-09-08 04:47:40,459 - MrTrader - INFO - MrTrader Bot initialized successfully
+2025-09-08 04:47:40,460 - MrTrader - INFO - Starting MrTrader Bot...
+2025-09-08 04:47:44,441 - MrTrader - INFO - Bot commands set successfully (initial attempt)
+2025-09-08 04:47:44,442 - MrTrader - INFO - Start handlers registered manually
+2025-09-08 04:47:44,442 - MrTrader - INFO - Callback handlers registered successfully
+2025-09-08 04:47:44,443 - MrTrader - INFO - Message handlers registered successfully
+2025-09-08 04:47:44,443 - MrTrader - INFO - All handlers registered successfully
+2025-09-08 04:47:44,443 - MrTrader - INFO - Bot application initialized successfully
+2025-09-08 04:47:44,443 - MrTrader - INFO - Starting bot startup tasks...
+2025-09-08 04:47:44,444 - MrTrader - INFO - Database health check: OK
+2025-09-08 04:47:44,444 - MrTrader - INFO - API ping check skipped - method not available
+2025-09-08 04:47:44,444 - MrTrader - INFO - System settings loading skipped - method not available
+2025-09-08 04:47:44,445 - MrTrader - INFO - Scheduled tasks configured:
+2025-09-08 04:47:44,445 - MrTrader - INFO - - Backup: Daily at 2:00 AM
+2025-09-08 04:47:44,445 - MrTrader - INFO - - Reports: Daily at 1:00 AM
+2025-09-08 04:47:44,445 - MrTrader - INFO - - Cleanup: Weekly on Sunday
+2025-09-08 04:47:44,446 - MrTrader - INFO - - Analytics: Hourly
+2025-09-08 04:47:44,662 - MrTrader - INFO - Startup notification sent successfully
+2025-09-08 04:47:44,663 - MrTrader - INFO - All startup tasks completed successfully
+2025-09-08 04:47:44,976 - MrTrader - INFO - Bot is running... Press Ctrl+C to stop
+2025-09-08 04:47:46,446 - MrTrader - INFO - Start command received from user 1517662886
+2025-09-08 04:47:46,451 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: start_command | Details: User started bot: am369ap
+2025-09-08 04:47:48,560 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: analysis_menu
+2025-09-08 04:47:52,112 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_strategy:cci_analysis
+2025-09-08 04:47:53,935 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_symbol:cci_analysis|BTC
+2025-09-08 04:47:55,523 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_currency:cci_analysis|BTC|USDT
+2025-09-08 04:47:57,261 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_timeframe:cci_analysis|BTC|USDT|1m
+2025-09-08 04:47:57,498 - MrTrader - INFO - Starting analysis for user 1517662886: cci_analysis BTC/USDT @ 1m
+2025-09-08 04:47:57,502 - MrTrader - INFO - Calling API for cci_analysis analysis: BTC/USDT @ 1m
+2025-09-08 04:47:57,503 - MrTrader - INFO - Requesting cci_analysis analysis for BTC/USDT @ 1m (API: histominute)
+2025-09-08 04:48:02,977 - MrTrader - INFO - API request successful: POST http://91.198.77.208:8000/analyze_CCI_strategy/
+2025-09-08 04:48:02,978 - MrTrader - INFO - Reading report file via API: save/CCI_strategy/CCI_TXT/BTC_histominute_20250908_011803.txt
+2025-09-08 04:48:03,136 - MrTrader - INFO - API request successful: POST http://91.198.77.208:8000/read_report_file/
+2025-09-08 04:48:03,136 - MrTrader - INFO - === REPORT CONTENT START ===
+2025-09-08 04:48:03,137 - MrTrader - INFO - 📊 تحلیل CCI (Commodity Channel Index) BTC/USDT
+🕐 تایم فریم تحلیل: یک دقیقه‌ای
+
+💰 قیمت لایو بایننس: 110883.11
+⏰ زمان دریافت: 2025-09-08 01:18:00
+--------------------------------------------------
+
+## ⚙️ پارامترهای CCI
+- **دوره CCI:** 14
+- **نوع تایم‌فریم:** histominute
+- **توضیحات:** پارامترهای بهینه برای تایم‌فریم دقیقه‌ای
+
+## 📈 وضعیت فعلی CCI
+- **مقدار CCI:** -59.63
+- **میانگین CCI (SMA5):** -8.81
+- **سیگنال:** HOLD
+- **قدرت سیگنال:** ضعیف
+- **روند CCI:** صعودی
+
+## 📊 تفسیر سیگنال‌ها
+- **CCI > +100:** سیگنال فروش (SELL) - احتمال اشباع خرید
+- **CCI < -100:** سیگنال خرید (BUY) - احتمال اشباع فروش
+- **-100 ≤ CCI ≤ +100:** نگه داری (HOLD) - بازار در حالت تعادل
+
+## 📋 سطوح قدرت سیگنال
+- **|CCI| > 200:** سیگنال بسیار قوی
+- **150 < |CCI| ≤ 200:** سیگنال قوی
+- **100 < |CCI| ≤ 150:** سیگنال متوسط
+- **|CCI| ≤ 100:** سیگنال ضعیف یا خنثی
+
+## 💰 اطلاعات قیمت
+- **قیمت آخر:** 110883.11
+- **زمان تحلیل:** 2025-09-08 01:18:01
+
+## 🎯 نتیجه نهایی تحلیل: **HOLD** (قدرت: **ضعیف**)
+
+## 📋 جزییات معامله احتمالی
+- **قیمت ورود:** 110883.11
+- **حد ضرر:** 110806.63
+- **حد سود:** 110959.59
+- **نسبت ریسک به ریوارد:** 1.00
+
+## 💡 توصیه‌های عملی
+- **سیگنال خرید (CCI < -100):** ورود در سطوح اشباع فروش با تأیید برگشت CCI
+- **سیگنال فروش (CCI > +100):** ورود در سطوح اشباع خرید با تأیید برگشت CCI
+- **حالت نگه داری:** صبر برای سیگنال واضح خرید/فروش
+- **مراقبت از واگرایی:** نظارت بر روند CCI نسبت به قیمت
+
+---
+
+*تحلیل انجام شده توسط سیستم تحلیل CCI*
+
+2025-09-08 04:48:03,138 - MrTrader - INFO - === REPORT CONTENT END ===
+2025-09-08 04:48:03,139 - MrTrader - INFO - Analysis completed for cci_analysis BTC/USDT @ 1m
+2025-09-08 04:48:03,142 - MrTrader - INFO - Analysis successful for cci_analysis BTC/USDT
+2025-09-08 04:48:36,055 - MrTrader - INFO - DB_MIGRATION | Version: initial | Status: completed
+2025-09-08 04:48:36,055 - MrTrader - INFO - DB_CONNECTION | Status: initialized | Details: D:\phonix coin\mr.trader\st\telegram_bot\MR-TRADER-BOT-01_git\data\mrtrader.db
+2025-09-08 04:48:36,063 - MrTrader - INFO - API configuration reloaded
+2025-09-08 04:48:36,286 - MrTrader - INFO - Logging system initialized
+2025-09-08 04:48:36,286 - MrTrader - INFO - Initialized 1 main managers
+2025-09-08 04:48:36,287 - MrTrader - INFO - AdminManager initialized with managers: [1517662886]
+2025-09-08 04:48:36,289 - MrTrader - INFO - Symbol manager initialized successfully
+2025-09-08 04:48:36,292 - MrTrader - INFO - Referral system initialized successfully
+2025-09-08 04:48:36,293 - MrTrader - INFO - API configuration reloaded
+2025-09-08 04:48:36,295 - MrTrader - INFO - Report system initialized successfully
+2025-09-08 04:48:36,298 - MrTrader - INFO - Backup system initialized successfully
+2025-09-08 04:48:36,298 - MrTrader - INFO - All managers initialized successfully
+2025-09-08 04:48:36,300 - MrTrader - INFO - Referral system initialized successfully
+2025-09-08 04:48:36,301 - MrTrader - INFO - API configuration reloaded
+2025-09-08 04:48:36,303 - MrTrader - INFO - Symbol manager initialized successfully
+2025-09-08 04:48:36,305 - MrTrader - INFO - Report system initialized successfully
+2025-09-08 04:48:36,307 - MrTrader - INFO - Symbol manager initialized successfully
+2025-09-08 04:48:36,307 - MrTrader - INFO - All handlers initialized successfully
+2025-09-08 04:48:36,312 - MrTrader - INFO - MrTrader Bot initialized successfully
+2025-09-08 04:48:36,313 - MrTrader - INFO - Starting MrTrader Bot...
+2025-09-08 04:48:40,073 - MrTrader - INFO - Bot commands set successfully (initial attempt)
+2025-09-08 04:48:40,074 - MrTrader - INFO - Start handlers registered manually
+2025-09-08 04:48:40,074 - MrTrader - INFO - Callback handlers registered successfully
+2025-09-08 04:48:40,075 - MrTrader - INFO - Message handlers registered successfully
+2025-09-08 04:48:40,075 - MrTrader - INFO - All handlers registered successfully
+2025-09-08 04:48:40,075 - MrTrader - INFO - Bot application initialized successfully
+2025-09-08 04:48:40,075 - MrTrader - INFO - Starting bot startup tasks...
+2025-09-08 04:48:40,076 - MrTrader - INFO - Database health check: OK
+2025-09-08 04:48:40,076 - MrTrader - INFO - API ping check skipped - method not available
+2025-09-08 04:48:40,076 - MrTrader - INFO - System settings loading skipped - method not available
+2025-09-08 04:48:40,077 - MrTrader - INFO - Scheduled tasks configured:
+2025-09-08 04:48:40,077 - MrTrader - INFO - - Backup: Daily at 2:00 AM
+2025-09-08 04:48:40,078 - MrTrader - INFO - - Reports: Daily at 1:00 AM
+2025-09-08 04:48:40,078 - MrTrader - INFO - - Cleanup: Weekly on Sunday
+2025-09-08 04:48:40,079 - MrTrader - INFO - - Analytics: Hourly
+2025-09-08 04:48:40,256 - MrTrader - INFO - Startup notification sent successfully
+2025-09-08 04:48:40,257 - MrTrader - INFO - All startup tasks completed successfully
+2025-09-08 04:48:40,577 - MrTrader - INFO - Bot is running... Press Ctrl+C to stop
+2025-09-08 04:48:42,615 - MrTrader - INFO - Start command received from user 1517662886
+2025-09-08 04:48:42,616 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: start_command | Details: User started bot: am369ap
+2025-09-08 04:48:44,857 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: analysis_menu
+2025-09-08 04:48:47,028 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_strategy:a_candlestick
+2025-09-08 04:48:48,630 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_symbol:a_candlestick|DOGE
+2025-09-08 04:48:50,099 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_currency:a_candlestick|DOGE|USDT
+2025-09-08 04:48:51,867 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_timeframe:a_candlestick|DOGE|USDT|5m
+2025-09-08 04:48:52,063 - MrTrader - INFO - Starting analysis for user 1517662886: a_candlestick DOGE/USDT @ 5m
+2025-09-08 04:48:52,067 - MrTrader - INFO - Calling API for a_candlestick analysis: DOGE/USDT @ 5m
+2025-09-08 04:48:52,067 - MrTrader - INFO - Requesting a_candlestick analysis for DOGE/USDT @ 5m (API: histominute)
+2025-09-08 04:48:54,663 - MrTrader - INFO - API request successful: POST http://91.198.77.208:8000/analyze_price_action_pandas_ta/
+2025-09-08 04:48:54,663 - MrTrader - INFO - Reading report file via API: save/price_action_pandas_ta/PriceAction_TXT/DOGE_histominute_20250908_011855.txt
+2025-09-08 04:48:54,792 - MrTrader - INFO - API request successful: POST http://91.198.77.208:8000/read_report_file/
+2025-09-08 04:48:54,792 - MrTrader - INFO - === REPORT CONTENT START ===
+2025-09-08 04:48:54,793 - MrTrader - INFO - 💰 قیمت لایو: 0.22794000  ⏰ زمان: 2025-09-08 01:18:55
+------------------------------------------------
+📊 تحلیل بازار DOGE/USDT
+🤞 تایم فریم تحلیل: histominute
+
+--------------------------------------------------
+[اندیکاتورها]
+- RSI (14 دوره‌ای): 60.74
+   توضیح: وضعیت تعادل
+- MACD: 0.00
+   توضیح: اندیکاتور تغییر جهت روند؛ اگر MACD زیر Signal باشد، روند نزولی است.
+- MACD Signal: 0.00
+- SMA 50: 0.23
+   توضیح: میانگین متحرک 50 دوره؛ بالاتر از قیمت نشان‌دهنده روند کوتاه‌مدت است.
+- SMA 200: 0.22725640000000003
+   توضیح: میانگین متحرک 200 دوره؛ برای تحلیل روند بلندمدت به کار می‌رود.
+- آخرین قیمت بسته شدن: 0.23
+
+[سطوح حمایت و مقاومت]
+- سطح حمایت (Support 1): 0.23
+- سطح مقاومت (Resistance 1): 0.23
+
+[تحلیل کلی]
+با توجه به اینکه:
+- RSI در سطح 60.74 (وضعیت تعادل)
+- MACD (0.00) نسبت به Signal (0.00) به سمت صعودی حرکت می‌کند.
+- قیمت بسته شدن (0.23) بالاتر از SMA 50 (0.23) است.
+
+نتیجه نهایی تحلیل: HOLD ( سیگنال صعودی (BUY) )
+قدرت سیگنال: BUY/قوی
+
+[جزییات معامله احتمالی]
+Entry: 0.23
+SL: 0.23
+TP: 0.23
+
+2025-09-08 04:48:54,794 - MrTrader - INFO - === REPORT CONTENT END ===
+2025-09-08 04:48:54,794 - MrTrader - INFO - Analysis completed for a_candlestick DOGE/USDT @ 5m
+2025-09-08 04:48:54,802 - MrTrader - INFO - Analysis successful for a_candlestick DOGE/USDT
+2025-09-08 04:49:04,947 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: download_report:a_candlestick_DOGE_USDT_5m_20250908_044854.txt
+2025-09-08 04:49:05,499 - MrTrader - INFO - فایل بعد از ارسال حذف شد: temp_reports\a_candlestick_DOGE_USDT_5m_20250908_044854.txt
+2025-09-08 04:49:21,578 - MrTrader - INFO - Start command received from user 1517662886
+2025-09-08 04:49:21,579 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: start_command | Details: User started bot: am369ap
+2025-09-08 04:49:24,830 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: analysis_menu
+2025-09-08 04:49:29,683 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_strategy:ichimoku
+2025-09-08 04:49:31,875 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_symbol:ichimoku|BTC
+2025-09-08 04:49:33,257 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_currency:ichimoku|BTC|USDT
+2025-09-08 04:49:34,814 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_timeframe:ichimoku|BTC|USDT|4h
+2025-09-08 04:49:35,057 - MrTrader - INFO - Starting analysis for user 1517662886: ichimoku BTC/USDT @ 4h
+2025-09-08 04:49:35,060 - MrTrader - INFO - Calling API for ichimoku analysis: BTC/USDT @ 4h
+2025-09-08 04:49:35,061 - MrTrader - INFO - Requesting ichimoku analysis for BTC/USDT @ 4h (API: histohour)
+2025-09-08 04:49:38,842 - MrTrader - INFO - API request successful: POST http://91.198.77.208:8000/analyze_ichimoku_strategy/
+2025-09-08 04:49:38,842 - MrTrader - INFO - Reading report file via API: 📊 تحلیل ایچیموکو BTC/USDT
+🤞 تایم فریم تحلیل: یک ساعته
+
+💰 قیمت لایو بایننس: 110908.01
+⏰ زمان دریافت: 2025-09-08 01:19:38
+--------------------------------------------------
+[وضعیت اندیکاتور ایچیموکو]
+
+1. وضعیت ابر کومو:
+   - وضعیت فعلی: نزولی (قرمز)
+   - سنکو اسپن A: 110525.43
+   - سنکو اسپن B: 111570.10
+
+2. موقعیت قیمت:
+   - قیمت فعلی: 110908.01
+   - موقعیت نسبت به ابر: داخل ابر (خنثی)
+
+3. خطوط اصلی:
+   - تنکان-سن (Conversion Line): 111165.86
+   - کیجون-سن (Base Line): 110890.00
+   - وضعیت تقاطع: تنکان-سن بالای کیجون-سن (صعودی)
+
+--------------------------------------------------
+[تحلیل کلی]
+
+با توجه به شاخص‌های ایچیموکو، بازار در وضعیت داخل ابر (خنثی) قرار دارد.
+ابر کومو در حالت نزولی (قرمز) است و تنکان-سن بالای کیجون-سن (صعودی).
+
+🔍 نتیجه نهایی تحلیل: NEUTRAL/خنثی
+
+--------------------------------------------------
+[توصیه‌های عملی]
+
+1. در صورت سیگنال خرید:
+   - به دنبال تأیید صعودی بیشتر باشید
+   - ورود زمانی که قیمت بالای ابر تثبیت شده و تنکان-سن بالای کیجون-سن باشد
+
+2. در صورت سیگنال فروش:
+   - به دنبال تأیید نزولی بیشتر باشید
+   - ورود زمانی که قیمت زیر ابر تثبیت شده و تنکان-سن زیر کیجون-سن باشد
+
+3. در شرایط خنثی:
+   - صبر کنید تا سیگنال واضح‌تری شکل بگیرد
+   - از معامله در بازار رنج (جایی که قیمت داخل ابر است) خودداری کنید
+
+--------------------------------------------------
+[جزییات معامله احتمالی]
+Entry Price: 110908.01
+SL: 110311.58 (فاصله 596.43 واحدی یا 0.54%)
+TP: 111802.66 (فاصله 894.65 واحدی یا 0.81%)
+Risk/Reward: 1.50
+Signal: NEUTRAL/خنثی
+
+🔍 نکته مهم: این تحلیل باید با سایر اندیکاتورها و روش‌های تحلیل ترکیب شود.
+
+*تحلیل انجام شده توسط سیستم AI تحلیل ایچیموکو*
+
+2025-09-08 04:49:39,076 - MrTrader - WARNING - Client error (attempt 1): 400, message='{"detail":"دسترسی فقط به فایل\u200cهای save مجاز است"}', url='http://91.198.77.208:8000/read_report_file/'
+2025-09-08 04:49:40,357 - MrTrader - WARNING - Client error (attempt 2): 400, message='{"detail":"دسترسی فقط به فایل\u200cهای save مجاز است"}', url='http://91.198.77.208:8000/read_report_file/'
+2025-09-08 04:49:40,358 - MrTrader - ERROR - All retry attempts failed for http://91.198.77.208:8000/read_report_file/. Last error: Client error: 400, message='{"detail":"دسترسی فقط به فایل\u200cهای save مجاز است"}', url='http://91.198.77.208:8000/read_report_file/'
+2025-09-08 04:49:40,359 - MrTrader - ERROR - Failed to read report file: {'error': 'Client error: 400, message=\'{"detail":"دسترسی فقط به فایل\\u200cهای save مجاز است"}\', url=\'http://91.198.77.208:8000/read_report_file/\''}
+2025-09-08 04:49:40,359 - MrTrader - INFO - Analysis completed for ichimoku BTC/USDT @ 4h
+2025-09-08 04:49:40,361 - MrTrader - INFO - Analysis successful for ichimoku BTC/USDT

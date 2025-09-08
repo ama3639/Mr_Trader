@@ -209,17 +209,19 @@ def _extract_analysis_text_from_response(api_response: Dict[str, Any]) -> str:
 
 
 def _process_specific_strategy(strategy_type: str, analysis_text: str, signal_details: Dict[str, Any]):
-    """پردازش استراتژی‌های خاص با الگوهای دقیق"""
+    """پردازش استراتژی‌های خاص با الگوهای دقیق - نسخه بهبود یافته"""
     try:
         text_upper = analysis_text.upper()
         
+        # ✅ اصلاح: افزودن استراتژی‌های جدید
+        
         # استراتژی Ichimoku - بر اساس لاگ جدید
-        if strategy_type == "ichimoku" or "ICHIMOKU" in strategy_type.upper():
+        if strategy_type in ["ichimoku", "ichimoku_low_signal"] or "ICHIMOKU" in strategy_type.upper():
             # الگوهای خاص ichimoku
             ichimoku_patterns = [
                 r"نتیجه نهایی تحلیل[:\s]*([^\.]+)",
                 r"Signal[:\s]*([^\.]+)",
-                r"🔍 نتیجه نهایی[:\s]*([^\.]+)"
+                r"📍 نتیجه نهایی[:\s]*([^\.]+)"
             ]
             
             for pattern in ichimoku_patterns:
@@ -257,20 +259,47 @@ def _process_specific_strategy(strategy_type: str, analysis_text: str, signal_de
                     signal_details["signal_type"] = "SELL"
                     signal_details["signal_direction"] = "فروش"
                     
-        # استراتژی CCI
+        # ✅ اضافه: استراتژی CCI با پردازش بهتر
         elif strategy_type == "cci_analysis" or "CCI" in strategy_type.upper():
-            if "سیگنال: SELL" in analysis_text or "سیگنال:** SELL" in analysis_text:
-                signal_details["signal_type"] = "SELL"
-                signal_details["signal_direction"] = "فروش"
-            elif "سیگنال: BUY" in analysis_text or "سیگنال:** BUY" in analysis_text:
-                signal_details["signal_type"] = "BUY" 
-                signal_details["signal_direction"] = "خرید"
-            elif "سیگنال: HOLD" in analysis_text or "سیگنال:** HOLD" in analysis_text:
-                signal_details["signal_type"] = "HOLD"
-                signal_details["signal_direction"] = "نگه‌داری"
-                
-        # استراتژی RSI
+            # الگوهای مختلف برای CCI
+            cci_patterns = [
+                r"سیگنال:\s*(SELL|BUY|HOLD)",
+                r"سیگنال\*\*\s*(SELL|BUY|HOLD)",
+                r"نتیجه نهایی[:\s]*.*?(SELL|BUY|HOLD)",
+                r"CCI.*?(SELL|BUY|HOLD)"
+            ]
+            
+            for pattern in cci_patterns:
+                match = re.search(pattern, analysis_text, re.IGNORECASE)
+                if match:
+                    signal_word = match.group(1).upper()
+                    if signal_word == "SELL":
+                        signal_details["signal_type"] = "SELL"
+                        signal_details["signal_direction"] = "فروش"
+                    elif signal_word == "BUY":
+                        signal_details["signal_type"] = "BUY" 
+                        signal_details["signal_direction"] = "خرید"
+                    elif signal_word == "HOLD":
+                        signal_details["signal_type"] = "HOLD"
+                        signal_details["signal_direction"] = "نگه‌داری"
+                    break
+                    
+        # ✅ اضافه: استراتژی RSI با بررسی سطوح
         elif strategy_type == "rsi" or "RSI" in strategy_type.upper():
+            # بررسی سطوح RSI
+            rsi_value_match = re.search(r"RSI.*?(\d+\.?\d*)", analysis_text)
+            if rsi_value_match:
+                rsi_value = float(rsi_value_match.group(1))
+                if rsi_value < 30:
+                    signal_details["signal_type"] = "BUY"
+                    signal_details["signal_direction"] = "خرید"
+                    signal_details["description"] = "RSI در ناحیه اشباع فروش"
+                elif rsi_value > 70:
+                    signal_details["signal_type"] = "SELL"
+                    signal_details["signal_direction"] = "فروش"
+                    signal_details["description"] = "RSI در ناحیه اشباع خرید"
+            
+            # بررسی متنی
             if "اشباع فروش" in analysis_text or "RSI < 30" in analysis_text:
                 signal_details["signal_type"] = "BUY"
                 signal_details["signal_direction"] = "خرید"
@@ -278,16 +307,21 @@ def _process_specific_strategy(strategy_type: str, analysis_text: str, signal_de
                 signal_details["signal_type"] = "SELL"
                 signal_details["signal_direction"] = "فروش"
                 
-        # استراتژی MACD
+        # ✅ اضافه: استراتژی MACD با جزئیات بیشتر
         elif strategy_type == "macd" or "MACD" in strategy_type.upper():
-            if "سیگنال صعودی" in analysis_text or "MACD بالای سیگنال" in analysis_text:
+            macd_patterns = [
+                r"سیگنال صعودی|MACD بالای سیگنال|MACD.*?positive",
+                r"سیگنال نزولی|MACD زیر سیگنال|MACD.*?negative"
+            ]
+            
+            if any(re.search(pattern, analysis_text, re.IGNORECASE) for pattern in macd_patterns[:1]):
                 signal_details["signal_type"] = "BUY"
                 signal_details["signal_direction"] = "خرید"
-            elif "سیگنال نزولی" in analysis_text or "MACD زیر سیگنال" in analysis_text:
+            elif any(re.search(pattern, analysis_text, re.IGNORECASE) for pattern in macd_patterns[1:]):
                 signal_details["signal_type"] = "SELL"
                 signal_details["signal_direction"] = "فروش"
                 
-        # استراتژی EMA
+        # ✅ اضافه: سایر استراتژی‌ها
         elif strategy_type == "ema_analysis" or "EMA" in strategy_type.upper():
             if "روند صعودی" in analysis_text or "قیمت بالای EMA" in analysis_text:
                 signal_details["signal_type"] = "BUY"
@@ -296,7 +330,6 @@ def _process_specific_strategy(strategy_type: str, analysis_text: str, signal_de
                 signal_details["signal_type"] = "SELL"
                 signal_details["signal_direction"] = "فروش"
                 
-        # استراتژی Williams R
         elif strategy_type == "williams_r_analysis" or "WILLIAMS" in strategy_type.upper():
             if "اشباع فروش" in analysis_text or "Williams %R < -80" in analysis_text:
                 signal_details["signal_type"] = "BUY"
@@ -305,21 +338,49 @@ def _process_specific_strategy(strategy_type: str, analysis_text: str, signal_de
                 signal_details["signal_type"] = "SELL"
                 signal_details["signal_direction"] = "فروش"
                 
-        # الگوی گوه (Wedge Pattern)
+        # ✅ اضافه: الگوی گوه (Wedge Pattern)
         elif strategy_type == "wedge_pattern":
             if "شکست صعودی" in analysis_text or "bullish breakout" in text_upper:
                 signal_details["signal_type"] = "BUY"
                 signal_details["signal_direction"] = "خرید"
+                signal_details["description"] = "شکست صعودی الگوی گوه"
             elif "شکست نزولی" in analysis_text or "bearish breakout" in text_upper:
                 signal_details["signal_type"] = "SELL"
                 signal_details["signal_direction"] = "فروش"
+                signal_details["description"] = "شکست نزولی الگوی گوه"
                 
+        # ✅ اضافه: استراتژی‌های جدید در strategy_manager
+        elif strategy_type in ["bollinger_bands", "fibonacci_strategy", "head_shoulders_analysis", 
+                               "double_top_pattern", "macd_divergence", "atr", "diamond_pattern", 
+                               "crt", "vwap", "volume_profile"]:
+            # استفاده از الگوهای عمومی برای استراتژی‌های پیچیده
+            general_patterns = [
+                (r"STRONG.*?(BUY|SELL)", "قوی"),
+                (r"(BUY|SELL).*?STRONG", "قوی"),
+                (r"نتیجه.*?(خرید|فروش).*?قوی", "قوی"),
+                (r"سیگنال.*?(BUY|SELL)", "متوسط"),
+                (r"توصیه.*?(خرید|فروش)", "متوسط")
+            ]
+            
+            for pattern, strength in general_patterns:
+                match = re.search(pattern, analysis_text, re.IGNORECASE)
+                if match:
+                    signal_word = match.group(1).upper()
+                    if signal_word in ["BUY", "خرید"]:
+                        signal_details["signal_type"] = "BUY"
+                        signal_details["signal_direction"] = "خرید"
+                        signal_details["strength"] = strength
+                    elif signal_word in ["SELL", "فروش"]:
+                        signal_details["signal_type"] = "SELL"
+                        signal_details["signal_direction"] = "فروش"  
+                        signal_details["strength"] = strength
+                    break
+        
         # استخراج قدرت سیگنال
         _extract_signal_strength(analysis_text, signal_details)
         
     except Exception as e:
         logger.error(f"Error processing specific strategy {strategy_type}: {e}")
-
 
 def _extract_general_signal(analysis_text: str, signal_details: Dict[str, Any]):
     """استخراج سیگنال از الگوهای عمومی"""

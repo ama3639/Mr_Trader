@@ -12,6 +12,7 @@ import os
 from core.config import Config
 from utils.logger import logger
 from utils.helpers import extract_signal_details
+import httpx
 
 
 class ApiClient:
@@ -20,58 +21,9 @@ class ApiClient:
     def __init__(self):
         self.session = None
         self._rate_limiter = {}
-        # نقشه‌برداری استراتژی‌ها به URL های API
-        self.strategy_endpoints = {
-            # Demo strategies
-            "demo_price_action": "/analyze_price_action_pandas_ta/",
-            "demo_rsi": "/analyze_RSI_basic/",
-            
-            # Basic Package strategies
-            "cci_analysis": "/analyze_CCI_strategy/",
-            "ema_analysis": "/analyze_EMA_strategy/",
-            "ichimoku": "/analyze_ichimoku_strategy/",
-            "ichimoku_low_signal": "/analyze_ichimoku_strategy/",
-            "macd": "/analyze_MACD_basic/",
-            "price_action_pandas_ta": "/analyze_price_action_pandas_ta/",
-            "project_price_live_binance": "/live_price/",
-            "rsi": "/analyze_RSI_basic/",
-            "williams_r_analysis": "/analyze_WilliamsR/",
-            
-            # Premium Package strategies
-            "a_candlestick": "/analyze_price_action_pandas_ta/",
-            "b_pivot": "/analyze_fibonacci/",
-            "bollinger_bands": "/analyze_bollinger_bands_strategy/",
-            "c_trend_lines": "/analyze_price_action_pandas_ta/",
-            "double_top_pattern": "/analyze_double_top_strategy/",
-            "fibonacci_strategy": "/analyze_fibonacci/",
-            "flag_pattern": "/analyze_flag_pattern/",
-            "head_shoulders_analysis": "/analyze_head_shoulders_analysis/",
-            "heikin_ashi": "/analyze_heikin_ashi_strategy/",
-            "macd_divergence": "/analyze_macd_divergence_strategy/",
-            "martingale_low": "/analyze_momentum_strategy/",
-            "momentum": "/analyze_momentum_strategy/",
-            "stochastic": "/analyze_RSI_basic/",
-            "triangle_pattern": "/analyze_double_top_strategy/",
-            "wedge_pattern": "/analyze_double_top_strategy/",
-            "support_resistance": "/analyze_price_action_pandas_ta/",
-            "stoch_rsi": "/analyze_RSI_basic/",
-            "williams_alligator": "/analyze_WilliamsR/",
-            "parabolic_sar": "/analyze_price_action_pandas_ta/",
-            
-            # VIP Package strategies
-            "atr": "/analyze_atr/",
-            "sma_advanced": "/analyze_EMA_strategy/",
-            "volume_profile": "/analyze_price_action_pandas_ta/",
-            "vwap": "/analyze_price_action_pandas_ta/",
-            "diamond_pattern": "/analyze_Diamond_Pattern/",
-            "crt": "/analyze_CRT_strategy/",
-            "p3": "/analyze_momentum_strategy/",
-            "rtm": "/analyze_momentum_strategy/",
-            "multi_resistance": "/analyze_price_action_pandas_ta/"
-        }
-        
-        # Base URL برای API
-        self.base_url = "http://91.198.77.208:8000"
+        # ✅ دیگر نیازی به دیکشنری هاردکد شده نیست
+        # self.strategy_endpoints = { ... }
+        # self.base_url = "..."
     
     async def _get_session(self) -> aiohttp.ClientSession:
         """دریافت session HTTP"""
@@ -171,11 +123,16 @@ class ApiClient:
         return {"error": last_error}
     
     def get_strategy_url(self, strategy: str) -> Optional[str]:
-        """دریافت URL استراتژی"""
-        endpoint = self.strategy_endpoints.get(strategy)
-        if endpoint:
-            return f"{self.base_url}{endpoint}"
-        return None
+        """دریافت URL استراتژی از فایل کانفیگ"""
+        try:
+            config = Config.get_api_server_config('crypto_analysis')
+            endpoint = config['endpoints'].get(strategy)
+            if endpoint:
+                return f"{config['base_url']}{endpoint}"
+            return None
+        except Exception as e:
+            logger.error(f"Could not get URL for strategy '{strategy}': {e}")
+            return None
     
     def _convert_timeframe(self, timeframe: str) -> str:
         """تبدیل تایم‌فریم کاربری به فرمت API"""
@@ -320,17 +277,60 @@ class ApiClient:
         """دریافت تحلیل پرایس اکشن (سازگاری با کد قبلی)"""
         return await self.fetch_analysis("price_action_pandas_ta", symbol, currency, timeframe, use_cache)
     
-    async def fetch_live_price(
-        self, 
-        symbol: str, 
-        currency: str = "USDT",
-        use_cache: bool = True
-    ) -> float:
+    @staticmethod
+    async def fetch_live_price(symbol: str):
         """
-        دریافت قیمت زنده - غیرفعال شده
+        قیمت لحظه‌ای را با انتخاب هوشمند سرور (طلا/ارز یا کریپتو) دریافت کرده
+        و نتیجه را به صورت یک پیام آماده برای کاربر برمی‌گرداند.
         """
-        logger.warning(f"fetch_live_price called for {symbol}/{currency} - returning 0.0")
-        return 0.0
+        try:
+            # لیست نمادهای مربوط به سرور طلا و ارز
+            gold_currency_symbols = ['USD', 'EUR', 'GBP', 'XAUUSD']
+            is_gold_server_request = symbol.startswith('IR_') or symbol in gold_currency_symbols
+
+            # خواندن آدرس‌ها از فایل کانفیگ مرکزی
+            live_price_config = Config.get_api_server_config('live_price')
+            if not live_price_config:
+                return None, "❌ تنظیمات سرور قیمت لحظه‌ای یافت نشد."
+
+            # انتخاب سرور و ساخت URL نهایی
+            if is_gold_server_request:
+                url = f"{live_price_config.get('gold')}{symbol}"
+                logger.info(f"Fetching live price for '{symbol}' from GOLD server.")
+            else:
+                # برای کریپتو، جفت ارز با USDT ساخته می‌شود
+                url = f"{live_price_config.get('crypto')}{symbol.upper()}USDT"
+                logger.info(f"Fetching live price for '{symbol}' from CRYPTO server.")
+            
+            # ارسال درخواست به سرور
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.get(url)
+                response.raise_for_status() # در صورت بروز خطای HTTP، استثنا ایجاد می‌کند
+                price_data = response.json()
+                
+            # فرمت‌بندی قیمت برای نمایش بهتر
+            price_value = price_data.get('price', 'N/A')
+            if is_gold_server_request:
+                try:
+                    # برای قیمت‌های ریالی، فرمت را با کاما جدا می‌کنیم
+                    price_value = f"{int(float(price_value)):,}"
+                except (ValueError, TypeError):
+                    pass # اگر تبدیل ممکن نبود، همان مقدار رشته‌ای باقی می‌ماند
+            
+            # ساخت پیام نهایی برای نمایش به کاربر
+            formatted_text = (
+                f"💹 **قیمت لحظه‌ای {price_data.get('symbol', symbol)}**\n\n"
+                f"📈 قیمت: **{price_value}**\n"
+                f"🕒 زمان: {price_data.get('time', 'N/A')}\n"
+            )
+            return formatted_text, None # خروجی موفق: (متن پیام, بدون خطا)
+
+        except httpx.HTTPStatusError as e:
+            logger.error(f"HTTP error fetching live price for {symbol}: {e}")
+            return None, f"❌ قیمت برای نماد **{symbol}** یافت نشد. لطفاً از وجود آن مطمئن شوید."
+        except Exception as e:
+            logger.error(f"General error fetching live price for {symbol}: {e}")
+            return None, "❌ خطا در ارتباط با سرور قیمت لحظه‌ای. لطفاً بعداً تلاش کنید."
 
     
     async def fetch_market_data(
@@ -433,6 +433,45 @@ class ApiClient:
                 "error": str(e),
                 "timestamp": datetime.now().isoformat()
             }
+
+    @staticmethod
+    async def fetch_gold_analysis(symbol: str):
+        """Fetches analysis for gold and currency symbols."""
+        config = Config.get_api_server_config('gold_analysis')
+        url = f"{config['base_url']}{config['endpoint']}"
+        payload = {"symbol": symbol, "currency": "IRT", "timeframe": "1d"}
+        
+        try:
+            async with httpx.AsyncClient(timeout=60.0, follow_redirects=True) as client:
+                response = await client.post(url, json=payload)
+                response.raise_for_status()
+                return response.json(), None
+        except httpx.HTTPStatusError as e:
+            logger.error(f"HTTP error during gold analysis for {symbol}: {e}")
+            return None, f"خطا در ارتباط با سرور تحلیل: {e.response.status_code}"
+        except Exception as e:
+            logger.error(f"General error during gold analysis for {symbol}: {e}")
+            return None, "یک خطای غیرمنتظره در سرور تحلیل رخ داد."
+
+    @staticmethod
+    async def fetch_backtest_results(symbol: str):
+        """Fetches backtest results for a given symbol."""
+        config = Config.get_api_server_config('backtest')
+        url = f"{config['base_url']}{config['endpoint']}{symbol}"
+        
+        try:
+            async with httpx.AsyncClient(timeout=300.0, follow_redirects=True) as client:
+                response = await client.get(url)
+                response.raise_for_status()
+                return response.json(), None
+        except httpx.HTTPStatusError as e:
+            logger.error(f"HTTP error during backtest for {symbol}: {e}")
+            error_detail = e.response.json().get("detail", e.response.text)
+            return None, f"خطا در اجرای بک‌تست: {error_detail}"
+        except Exception as e:
+            logger.error(f"General error during backtest for {symbol}: {e}")
+            return None, "یک خطای غیرمنتظره در سرور بک‌تست رخ داد."
+
     
     async def __aenter__(self):
         """ورود به context manager"""
@@ -441,6 +480,7 @@ class ApiClient:
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         """خروج از context manager"""
         await self.close()
+
 
 
 # ایجاد نمونه سراسری

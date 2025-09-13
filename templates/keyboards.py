@@ -4,43 +4,94 @@
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from typing import List, Dict, Any, Optional, Union
+from managers.symbol_manager import symbol_manager
 
 class KeyboardTemplates:
     """کلاس قالب‌های کیبورد"""
     
+    
     @staticmethod
-    def main_menu(user_package: str = "free", is_admin: bool = False) -> InlineKeyboardMarkup:
-        """کیبورد منوی اصلی"""
+    def main_menu(is_admin: bool = False) -> InlineKeyboardMarkup:
+        """کیبورد منوی اصلی یکپارچه و نهایی"""
         keyboard = [
             [
-                
-                InlineKeyboardButton("📊 استراتژی‌ها", callback_data="menu_strategy"),
-                InlineKeyboardButton("💰 قیمت لایو", callback_data="menu_live_prices")
+                InlineKeyboardButton("🇮🇷 تحلیل طلا", callback_data="gold_menu"),
+                InlineKeyboardButton("💵 تحلیل ارز", callback_data="currency_menu")
             ],
             [
-                InlineKeyboardButton("💎 پکیج‌ها", callback_data="menu_packages"),
-                InlineKeyboardButton("👤 پروفایل", callback_data="user_profile")
+                InlineKeyboardButton("📈 تحلیل کریپتو", callback_data="analysis_menu"),
+                InlineKeyboardButton("🔬 بک‌تست", callback_data="backtest_menu")
             ],
             [
-                InlineKeyboardButton("📚 راهنما", callback_data="menu_help"),
-                InlineKeyboardButton("🎧 پشتیبانی", callback_data="support_contact")
+                InlineKeyboardButton("💎 قیمت لایو", callback_data="coins_list"),
+                InlineKeyboardButton("📈 نمودار قیمت", callback_data="price_chart")
+            ],
+            [
+                InlineKeyboardButton("🔔 هشدار قیمت", callback_data="price_alert"),
+                InlineKeyboardButton("🎯 سیگنال‌ها", callback_data="signals_menu")
+            ],
+            [
+                InlineKeyboardButton("📰 اخبار بازار", callback_data="market_news"),
+                InlineKeyboardButton("👤 حساب کاربری", callback_data="user_profile")
+            ],
+            [
+                InlineKeyboardButton("💰 کیف پول", callback_data="wallet_menu"),
+                InlineKeyboardButton("🛒 خرید پکیج", callback_data="packages_menu")
+            ],
+            [
+                InlineKeyboardButton("🎁 دعوت دوستان", callback_data="referral_menu"),
+                InlineKeyboardButton("ℹ️ راهنما", callback_data="help_menu")
+            ],
+            [
+                InlineKeyboardButton("📞 پشتیبانی", callback_data="support_menu")
             ]
         ]
         
-        # اضافه کردن دکمه ادمین
         if is_admin:
-            keyboard.append([
-                InlineKeyboardButton("🔧 پنل مدیریت", callback_data="admin_panel")
-            ])
-        
-        # اضافه کردن دکمه رفرال برای کاربران VIP
-        if user_package in ["vip", "ghost"]:
-            keyboard.append([
-                InlineKeyboardButton("🎁 دعوت دوستان", callback_data="referral_system")
-            ])
+            keyboard.append([InlineKeyboardButton("🔧 پنل مدیریت", callback_data="admin_panel")])
         
         return InlineKeyboardMarkup(keyboard)
-    
+
+    @staticmethod
+    def generate_gold_menu_keyboard():
+        """کیبورد کامل منوی تحلیل طلا و سکه را ایجاد می‌کند."""
+        return InlineKeyboardMarkup([
+            [InlineKeyboardButton("🪙 طلای 18 عیار", callback_data="analyze_gold:IR_GOLD_18K")],
+            [
+                InlineKeyboardButton("💰 سکه امامی", callback_data="analyze_gold:IR_COIN_EMAMI"),
+                InlineKeyboardButton("🪙 سکه بهار آزادی", callback_data="analyze_gold:IR_COIN_BAHAR")
+            ],
+            [
+                InlineKeyboardButton("💰 نیم سکه", callback_data="analyze_gold:IR_COIN_HALF"),
+                InlineKeyboardButton("🪙 ربع سکه", callback_data="analyze_gold:IR_COIN_QUARTER")
+            ],
+            [InlineKeyboardButton("✨ طلای 24 عیار", callback_data="analyze_gold:IR_GOLD_24K")],
+            [InlineKeyboardButton("🔙 بازگشت به منوی اصلی", callback_data="main_menu")],
+        ])
+
+    @staticmethod
+    def generate_currency_menu_keyboard():
+        """کیبورد کامل منوی تحلیل ارز را ایجاد می‌کند."""
+        return InlineKeyboardMarkup([
+            [InlineKeyboardButton("🇺🇸 دلار آمریکا", callback_data="analyze_gold:USD")],
+            [InlineKeyboardButton("🇪🇺 یورو", callback_data="analyze_gold:EUR")],
+            [InlineKeyboardButton("🇬🇧 پوند انگلیس", callback_data="analyze_gold:GBP")],
+            [InlineKeyboardButton("🌍 انس طلا جهانی", callback_data="analyze_gold:XAUUSD")],
+            [InlineKeyboardButton("🔙 بازگشت به منوی اصلی", callback_data="main_menu")],
+        ])
+
+    @staticmethod
+    def generate_backtest_menu_keyboard():
+        """کیبورد کامل منوی بک‌تست استراتژی را ایجاد می‌کند."""
+        return InlineKeyboardMarkup([
+            [InlineKeyboardButton("💵 دلار آمریکا (USD)", callback_data="backtest:USD")],
+            [InlineKeyboardButton("💰 سکه امامی (IR_COIN_EMAMI)", callback_data="backtest:IR_COIN_EMAMI")],
+            [InlineKeyboardButton("🪙 طلای 18 عیار (IR_GOLD_18K)", callback_data="backtest:IR_GOLD_18K")],
+            [InlineKeyboardButton("₿ بیت‌کوین (BTC)", callback_data="backtest:BTC")],
+            [InlineKeyboardButton("✨ همه نمادها", callback_data="backtest:ALL")],
+            [InlineKeyboardButton("🔙 بازگشت به منوی اصلی", callback_data="main_menu")],
+        ])
+
     @staticmethod
     def strategy_menu(user_package: str = "free") -> InlineKeyboardMarkup:
         """کیبورد منوی استراتژی‌ها - کامل با callback_data استاندارد شده"""
@@ -421,49 +472,56 @@ class KeyboardTemplates:
         ]
         
         return InlineKeyboardMarkup(keyboard)
-    
+
     @staticmethod
-    def live_prices_menu() -> InlineKeyboardMarkup:
-        """کیبورد منوی قیمت‌های زنده"""
+    def generate_live_price_menu_keyboard():
+        """منوی اصلی انتخاب بازار برای قیمت لحظه‌ای را ایجاد می‌کند."""
         keyboard = [
-            # صرافی‌های بین‌المللی
-            [
-                InlineKeyboardButton("🟡 بایننس", callback_data="live_binance"),
-                InlineKeyboardButton("🔵 کوین‌بیس", callback_data="live_coinbase")
-            ],
-            [
-                InlineKeyboardButton("🟢 کوکوین", callback_data="live_kucoin"),
-                InlineKeyboardButton("🟠 Bybit", callback_data="live_bybit")
-            ],
-            
-            # صرافی‌های ایرانی
-            [
-                InlineKeyboardButton("🔴 نوبیتکس", callback_data="live_nobitex"),
-                InlineKeyboardButton("🟣 تبدیل", callback_data="live_tabdeal")
-            ],
-            [
-                InlineKeyboardButton("🔵 والکس", callback_data="live_wallex"),
-                InlineKeyboardButton("🟢 آسان‌کوین", callback_data="live_asancoin")
-            ],
-            
-            # ابزارهای تحلیلی
-            [
-                InlineKeyboardButton("📊 مقایسه قیمت‌ها", callback_data="price_compare"),
-                InlineKeyboardButton("⚪ همه صرافی‌ها", callback_data="live_all_exchanges")
-            ],
-            [
-                InlineKeyboardButton("🔔 تنظیم هشدار قیمت", callback_data="set_price_alert"),
-                InlineKeyboardButton("📈 نمودارهای زنده", callback_data="live_charts")
-            ],
-            [
-                InlineKeyboardButton("📊 تحلیل تکنیکال", callback_data="technical_analysis"),
-                InlineKeyboardButton("📰 اخبار بازار", callback_data="market_news")
-            ],
-            
-            # بازگشت
-            [InlineKeyboardButton("🏠 بازگشت به منوی اصلی", callback_data="main_menu")]
+            [InlineKeyboardButton("🇮🇷 طلا و سکه", callback_data="show_market:gold")],
+            [InlineKeyboardButton("💵 ارزها", callback_data="show_market:currency")],
+            [InlineKeyboardButton("📈 ارزهای دیجیتال", callback_data="show_market:crypto")],
+            [InlineKeyboardButton("🔙 بازگشت به منوی اصلی", callback_data="main_menu")]
         ]
+        return InlineKeyboardMarkup(keyboard)
+
+    @staticmethod
+    def generate_symbols_keyboard(market_type: str) -> InlineKeyboardMarkup:
+        """کیبورد نمادها را به صورت پویا برای یک بازار خاص ایجاد می‌کند."""
         
+        # تعیین اینکه آیا لیست کامل کریپتو درخواست شده است
+        is_full_list = (market_type == 'crypto_full')
+        
+        # اگر لیست کامل درخواست شده، از آن استفاده کن، در غیر این صورت لیست عادی
+        symbols_market_type = 'crypto_full' if is_full_list else market_type.replace('_full', '')
+        symbols = symbol_manager.get_symbols_by_market(symbols_market_type)
+        
+        keyboard = []
+        prefix = "live_price:"
+
+        # ساخت دکمه‌ها به صورت دو ستونی (یا سه ستونی برای لیست کامل)
+        columns = 3 if is_full_list else 2
+        for i in range(0, len(symbols), columns):
+            row = []
+            for j in range(columns):
+                if i + j < len(symbols):
+                    # برای کریپتو نام انگلیسی و برای بقیه نام فارسی را نمایش بده
+                    display_name = symbols[i+j][1] if market_type.startswith('crypto') else symbols[i+j][0]
+                    row.append(InlineKeyboardButton(display_name, callback_data=f"{prefix}{symbols[i+j][1]}"))
+            keyboard.append(row)
+        
+        # اضافه کردن دکمه‌های مخصوص کریپتو
+        if market_type == 'crypto':
+            keyboard.extend([
+                [InlineKeyboardButton("✏️ ورود دستی نماد", callback_data="live_manual_input")],
+                [InlineKeyboardButton("📋 لیست کامل بایننس", callback_data="show_market:crypto_full")]
+            ])
+
+        # دکمه بازگشت
+        if is_full_list:
+            keyboard.append([InlineKeyboardButton("🔙 بازگشت به قیمت لایوی دیجیتال", callback_data="show_market:crypto")])
+        else:
+            keyboard.append([InlineKeyboardButton("🔙 بازگشت به انتخاب بازار", callback_data="coins_list")])
+            
         return InlineKeyboardMarkup(keyboard)
     
     @staticmethod

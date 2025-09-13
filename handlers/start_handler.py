@@ -11,7 +11,7 @@ from utils.logger import logger, log_user_action
 from utils.time_manager import TimeManager
 from managers.user_manager import UserManager
 from managers.security_manager import SecurityManager
-
+from managers.admin_manager import AdminManager
 
 
 class StartHandler:
@@ -194,54 +194,65 @@ class StartHandler:
     
     @staticmethod
     async def _show_main_menu(update: Update, user_data: Dict[str, Any]) -> None:
-        """نمایش منوی اصلی
-        
-        Args:
-            update: آپدیت تلگرام
-            user_data: اطلاعات کاربر
-        """
+        """نمایش منوی اصلی یکپارچه و صحیح"""
         try:
-            # ✅ ایجاد کیبورد منوی اصلی
+            # ایجاد کیبورد منوی اصلی تمیز و بدون تکرار
             keyboard = [
                 [
-                    InlineKeyboardButton("📊 تحلیل ارز", callback_data="analysis_menu"),
-                    InlineKeyboardButton("💎 لیست ارزها", callback_data="coins_list")
+                    InlineKeyboardButton("🇮🇷 تحلیل طلا", callback_data="gold_menu"),
+                    InlineKeyboardButton("💵 تحلیل ارز", callback_data="currency_menu")
                 ],
                 [
-                    InlineKeyboardButton("📈 نمودار قیمت", callback_data="price_chart"),
-                    InlineKeyboardButton("🔔 هشدار قیمت", callback_data="price_alert")
+                    InlineKeyboardButton("📈 تحلیل کریپتو", callback_data="analysis_menu"),
+                    InlineKeyboardButton("🔬 بک‌تست", callback_data="backtest_menu")
                 ],
                 [
-                    InlineKeyboardButton("🎯 سیگنال‌ها", callback_data="signals_menu"),
-                    InlineKeyboardButton("📰 اخبار بازار", callback_data="market_news")
+                    InlineKeyboardButton("💎 قیمت لایو", callback_data="coins_list"),
+                    InlineKeyboardButton("📈 نمودار قیمت", callback_data="price_chart")
                 ],
                 [
-                    InlineKeyboardButton("👤 حساب کاربری", callback_data="user_profile"),
-                    InlineKeyboardButton("💰 کیف پول", callback_data="wallet_menu")
+                    InlineKeyboardButton("🔔 هشدار قیمت", callback_data="price_alert"),
+                    InlineKeyboardButton("🎯 سیگنال‌ها", callback_data="signals_menu")
                 ],
                 [
-                    InlineKeyboardButton("🛒 خرید پکیج", callback_data="packages_menu"),
-                    InlineKeyboardButton("🎁 دعوت دوستان", callback_data="referral_menu")
+                    InlineKeyboardButton("📰 اخبار بازار", callback_data="market_news"),
+                    InlineKeyboardButton("👤 حساب کاربری", callback_data="user_profile")
                 ],
                 [
-                    InlineKeyboardButton("ℹ️ راهنما", callback_data="help_menu"),
+                    InlineKeyboardButton("💰 کیف پول", callback_data="wallet_menu"),
+                    InlineKeyboardButton("🛒 خرید پکیج", callback_data="packages_menu")
+                ],
+                [
+                    InlineKeyboardButton("🎁 دعوت دوستان", callback_data="referral_menu"),
+                    InlineKeyboardButton("ℹ️ راهنما", callback_data="help_menu")
+                ],
+                [
                     InlineKeyboardButton("📞 پشتیبانی", callback_data="support_menu")
                 ]
             ]
             
+            # بخش مدیریت ادمین
+            is_admin = AdminManager().is_admin(user_data.get('telegram_id'))
+            if is_admin:
+                keyboard.append([
+                    InlineKeyboardButton("🔧 پنل مدیریت", callback_data="admin_panel")
+                ])
+
             reply_markup = InlineKeyboardMarkup(keyboard)
             
+            # متن منو
             menu_text = """
 🏠 <b>منوی اصلی MrTrader</b>
 
 لطفاً از گزینه‌های زیر یکی را انتخاب کنید:
 
 📊 <b>تحلیل ارز:</b> تحلیل تکنیکال کامل
-💎 <b>لیست ارزها:</b> مشاهده قیمت ارزها
+💎 <b>قیمت لایو:</b> مشاهده قیمت ارزها
 📈 <b>نمودار قیمت:</b> رسم نمودار تعاملی
 🔔 <b>هشدار قیمت:</b> تنظیم آلارم قیمت
 🎯 <b>سیگنال‌ها:</b> سیگنال‌های خرید/فروش
 📰 <b>اخبار بازار:</b> آخرین اخبار کریپتو
+
             """
             
             await update.message.reply_text(
@@ -252,23 +263,21 @@ class StartHandler:
             
         except Exception as e:
             logger.error(f"Error showing main menu: {e}")
-            # ✅ منوی ساده در صورت خطا
+            # منوی ساده در صورت بروز خطا
             try:
                 simple_keyboard = [
-                    [InlineKeyboardButton("📊 تحلیل ارز", callback_data="analysis_menu")],
-                    [InlineKeyboardButton("💎 لیست ارزها", callback_data="coins_list")],
+                    [InlineKeyboardButton("📈 تحلیل کریپتو", callback_data="analysis_menu")],
+                    [InlineKeyboardButton("💎 قیمت لایو", callback_data="coins_list")],
                     [InlineKeyboardButton("ℹ️ راهنما", callback_data="help_menu")]
                 ]
-                
                 reply_markup = InlineKeyboardMarkup(simple_keyboard)
-                
                 await update.message.reply_text(
                     "🏠 منوی اصلی\n\nلطفاً یکی از گزینه‌ها را انتخاب کنید:",
                     reply_markup=reply_markup
                 )
             except Exception as simple_error:
-                logger.error(f"Error sending simple menu: {simple_error}")
-    
+                logger.error(f"Error sending simple menu: {simple_error}")                
+                    
     @staticmethod
     async def menu_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """هندلر کامند منو (/menu)

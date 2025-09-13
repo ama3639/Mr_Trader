@@ -220,3 +220,72 @@ AttributeError: 'ApiClient' object has no attribute 'fetch_strategy_analysis'
 2025-09-08 04:35:36,957 - MrTrader - ERROR - API returned error: Client error: 404, message='{"detail":"Not Found"}', url='http://91.198.77.208:8000/analyze_atr/'
 2025-09-08 04:49:40,358 - MrTrader - ERROR - All retry attempts failed for http://91.198.77.208:8000/read_report_file/. Last error: Client error: 400, message='{"detail":"دسترسی فقط به فایل\u200cهای save مجاز است"}', url='http://91.198.77.208:8000/read_report_file/'
 2025-09-08 04:49:40,359 - MrTrader - ERROR - Failed to read report file: {'error': 'Client error: 400, message=\'{"detail":"دسترسی فقط به فایل\\u200cهای save مجاز است"}\', url=\'http://91.198.77.208:8000/read_report_file/\''}
+2025-09-12 22:32:16,805 - MrTrader - ERROR - All retry attempts failed for http://91.198.77.208:8000/analyze_price_action_pandas_ta/. Last error: Client error: 500, message='Internal Server Error', url='http://91.198.77.208:8000/analyze_price_action_pandas_ta/'
+2025-09-12 22:32:16,829 - MrTrader - ERROR - API returned error: Client error: 500, message='Internal Server Error', url='http://91.198.77.208:8000/analyze_price_action_pandas_ta/'
+2025-09-12 22:39:43,197 - MrTrader - ERROR - All retry attempts failed for http://91.198.77.208:8000/analyze_atr/. Last error: Client error: 404, message='{"detail":"Not Found"}', url='http://91.198.77.208:8000/analyze_atr/'
+2025-09-12 22:39:43,198 - MrTrader - ERROR - API returned error: Client error: 404, message='{"detail":"Not Found"}', url='http://91.198.77.208:8000/analyze_atr/'
+2025-09-12 22:40:31,851 - MrTrader - ERROR - All retry attempts failed for http://91.198.77.208:8000/read_report_file/. Last error: Client error: 400, message='{"detail":"دسترسی فقط به فایل\u200cهای save مجاز است"}', url='http://91.198.77.208:8000/read_report_file/'
+2025-09-12 22:40:31,853 - MrTrader - ERROR - Failed to read report file: {'error': 'Client error: 400, message=\'{"detail":"دسترسی فقط به فایل\\u200cهای save مجاز است"}\', url=\'http://91.198.77.208:8000/read_report_file/\''}
+2025-09-12 22:45:09,781 - MrTrader - ERROR - All retry attempts failed for http://91.198.77.208:8000/read_report_file/. Last error: Client error: 400, message='{"detail":"دسترسی فقط به فایل\u200cهای save مجاز است"}', url='http://91.198.77.208:8000/read_report_file/'
+2025-09-12 22:45:09,783 - MrTrader - ERROR - Failed to read report file: {'error': 'Client error: 400, message=\'{"detail":"دسترسی فقط به فایل\\u200cهای save مجاز است"}\', url=\'http://91.198.77.208:8000/read_report_file/\''}
+2025-09-13 22:16:43,391 - MrTrader - ERROR - Could not get URL for strategy 'project_price_live_binance': type object 'Config' has no attribute 'get_api_server_config'
+2025-09-13 22:16:43,415 - MrTrader - ERROR - API returned error: URL not found for strategy: project_price_live_binance
+2025-09-13 22:34:53,640 - MrTrader - ERROR - Error processing callback analyze_gold:IR_GOLD_18K: type object 'ApiClient' has no attribute 'fetch_gold_analysis'
+Traceback (most recent call last):
+  File "D:\phonix coin\mr.trader\st\telegram_bot\MR-TRADER-BOT-01_git\handlers\callback_handlers.py", line 148, in _process_callback
+    await self.handle_gold_currency_analysis(query, context, param)
+  File "D:\phonix coin\mr.trader\st\telegram_bot\MR-TRADER-BOT-01_git\handlers\callback_handlers.py", line 595, in handle_gold_currency_analysis
+    response, error = await ApiClient.fetch_gold_analysis(symbol)
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: type object 'ApiClient' has no attribute 'fetch_gold_analysis'. Did you mean: 'fetch_analysis'?
+2025-09-13 22:35:28,236 - MrTrader - ERROR - Error processing callback analyze_gold:USD: type object 'ApiClient' has no attribute 'fetch_gold_analysis'
+Traceback (most recent call last):
+  File "D:\phonix coin\mr.trader\st\telegram_bot\MR-TRADER-BOT-01_git\handlers\callback_handlers.py", line 148, in _process_callback
+    await self.handle_gold_currency_analysis(query, context, param)
+  File "D:\phonix coin\mr.trader\st\telegram_bot\MR-TRADER-BOT-01_git\handlers\callback_handlers.py", line 595, in handle_gold_currency_analysis
+    response, error = await ApiClient.fetch_gold_analysis(symbol)
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: type object 'ApiClient' has no attribute 'fetch_gold_analysis'. Did you mean: 'fetch_analysis'?
+2025-09-13 22:35:47,034 - MrTrader - ERROR - Could not get URL for strategy 'cci_analysis': type object 'Config' has no attribute 'get_api_server_config'
+2025-09-13 22:35:47,035 - MrTrader - ERROR - API returned error: URL not found for strategy: cci_analysis
+2025-09-13 22:36:25,401 - MrTrader - ERROR - Error processing callback backtest:IR_GOLD_18K: type object 'ApiClient' has no attribute 'fetch_backtest_results'
+Traceback (most recent call last):
+  File "D:\phonix coin\mr.trader\st\telegram_bot\MR-TRADER-BOT-01_git\handlers\callback_handlers.py", line 152, in _process_callback
+    await self.handle_backtest_request(query, context, param)
+  File "D:\phonix coin\mr.trader\st\telegram_bot\MR-TRADER-BOT-01_git\handlers\callback_handlers.py", line 615, in handle_backtest_request
+    results, error = await ApiClient.fetch_backtest_results(symbol)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: type object 'ApiClient' has no attribute 'fetch_backtest_results'
+2025-09-13 22:37:49,752 - MrTrader - ERROR - Could not get URL for strategy 'cci_analysis': type object 'Config' has no attribute 'get_api_server_config'
+2025-09-13 22:37:49,753 - MrTrader - ERROR - API returned error: URL not found for strategy: cci_analysis
+2025-09-13 22:47:53,881 - MrTrader - ERROR - API returned error: URL not found for strategy: cci_analysis
+2025-09-13 22:50:24,073 - MrTrader - ERROR - Error reading report file: 'ApiClient' object has no attribute 'base_url'
+2025-09-13 23:22:09,017 - MrTrader - ERROR - HTTP error during backtest for USD: Server error '503 Service Unavailable' for url 'http://9.198.77.208:8080/backtest/USD'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/503
+2025-09-13 23:22:09,025 - MrTrader - ERROR - Error processing callback backtest:USD: Expecting value: line 1 column 1 (char 0)
+Traceback (most recent call last):
+  File "D:\phonix coin\mr.trader\st\telegram_bot\MR-TRADER-BOT-01_git\handlers\callback_handlers.py", line 187, in _process_callback
+    await self.handle_backtest_request(query, context, param)
+  File "D:\phonix coin\mr.trader\st\telegram_bot\MR-TRADER-BOT-01_git\handlers\callback_handlers.py", line 655, in handle_backtest_request
+    results, error = await ApiClient.fetch_backtest_results(symbol)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\phonix coin\mr.trader\st\telegram_bot\MR-TRADER-BOT-01_git\api\api_client.py", line 469, in fetch_backtest_results
+    error_detail = e.response.json().get("detail", e.response.text)
+                   ^^^^^^^^^^^^^^^^^
+  File "c:\Users\pc city\AppData\Local\Programs\Python\Python312\Lib\site-packages\httpx\_models.py", line 832, in json
+    return jsonlib.loads(self.content, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\pc city\AppData\Local\Programs\Python\Python312\Lib\json\__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\pc city\AppData\Local\Programs\Python\Python312\Lib\json\decoder.py", line 337, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\pc city\AppData\Local\Programs\Python\Python312\Lib\json\decoder.py", line 355, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+2025-09-13 23:24:15,598 - MrTrader - ERROR - API returned error: URL not found for strategy: macd
+2025-09-13 23:26:02,252 - MrTrader - ERROR - All retry attempts failed for http://91.198.77.208:8000/analyze_RTM_analysis_system/. Last error: Timeout error: 
+2025-09-13 23:26:02,253 - MrTrader - ERROR - API returned error: Timeout error: 
+2025-09-13 23:57:03,896 - MrTrader - ERROR - HTTP error fetching live price for IR_COIN_BOBBLE: Client error '404 Not Found' for url 'http://91.198.77.208:8080/live_price/IR_COIN_BOBBLE'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404

@@ -9,6 +9,7 @@ load_dotenv()
 import os
 from pathlib import Path
 from typing import Dict, List
+import json
 
 
 class Config:
@@ -668,6 +669,23 @@ class Config:
         except Exception as e:
             print(f"❌ Configuration validation failed: {e}")
             return False
+    
+    @staticmethod
+    def get_api_server_config(service_name: str):
+        """
+        تنظیمات یک سرویس خاص را از فایل api_servers_config.json می‌خواند.
+        """
+        # مسیر فایل کانفیگ را به درستی پیدا می‌کند
+        config_path = os.path.join(os.path.dirname(__file__), '..', 'config', 'api_servers_config.json')
+        try:
+            with open(config_path, 'r', encoding='utf-8') as f:
+                config_data = json.load(f)
+            return config_data[service_name]
+        except (FileNotFoundError, KeyError, json.JSONDecodeError) as e:
+            # از لاگر استفاده کنید اگر در این فایل تعریف شده، در غیر این صورت print
+            print(f"ERROR: Could not load API config for '{service_name}': {e}")
+            return None
+
     
     @classmethod
     def get_database_url(cls) -> str:

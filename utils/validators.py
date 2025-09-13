@@ -26,7 +26,7 @@ class Validators:
     CURRENCY_PATTERN = re.compile(r'^[A-Z]{3,10}$')
     TIMEFRAME_PATTERN = re.compile(r'^(1m|5m|15m|30m|1h|4h|1d|1w)$')
     
-    # لیست ارزهای مجاز
+    # قیمت لایوی مجاز
     VALID_SYMBOLS = [
         'BTC', 'ETH', 'BNB', 'ADA', 'SOL', 'XRP', 'DOGE', 'DOT', 'MATIC',
         'LINK', 'UNI', 'LTC', 'BCH', 'XLM', 'ATOM', 'TRX', 'AVAX', 'NEAR'

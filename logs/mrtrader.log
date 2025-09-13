@@ -8775,3 +8775,1117 @@ Signal: NEUTRAL/خنثی
 2025-09-08 04:49:40,359 - MrTrader - ERROR - Failed to read report file: {'error': 'Client error: 400, message=\'{"detail":"دسترسی فقط به فایل\\u200cهای save مجاز است"}\', url=\'http://91.198.77.208:8000/read_report_file/\''}
 2025-09-08 04:49:40,359 - MrTrader - INFO - Analysis completed for ichimoku BTC/USDT @ 4h
 2025-09-08 04:49:40,361 - MrTrader - INFO - Analysis successful for ichimoku BTC/USDT
+2025-09-12 22:31:44,445 - MrTrader - INFO - DB_MIGRATION | Version: initial | Status: completed
+2025-09-12 22:31:44,483 - MrTrader - INFO - DB_CONNECTION | Status: initialized | Details: D:\phonix coin\mr.trader\st\telegram_bot\MR-TRADER-BOT-01_git\data\mrtrader.db
+2025-09-12 22:31:44,800 - MrTrader - INFO - API configuration reloaded
+2025-09-12 22:31:45,522 - MrTrader - INFO - Logging system initialized
+2025-09-12 22:31:45,523 - MrTrader - INFO - Initialized 1 main managers
+2025-09-12 22:31:45,523 - MrTrader - INFO - AdminManager initialized with managers: [1517662886]
+2025-09-12 22:31:45,526 - MrTrader - INFO - Symbol manager initialized successfully
+2025-09-12 22:31:45,528 - MrTrader - INFO - Referral system initialized successfully
+2025-09-12 22:31:45,529 - MrTrader - INFO - API configuration reloaded
+2025-09-12 22:31:45,530 - MrTrader - INFO - Report system initialized successfully
+2025-09-12 22:31:45,533 - MrTrader - INFO - Backup system initialized successfully
+2025-09-12 22:31:45,533 - MrTrader - INFO - All managers initialized successfully
+2025-09-12 22:31:45,535 - MrTrader - INFO - Referral system initialized successfully
+2025-09-12 22:31:45,536 - MrTrader - INFO - API configuration reloaded
+2025-09-12 22:31:45,538 - MrTrader - INFO - Symbol manager initialized successfully
+2025-09-12 22:31:45,540 - MrTrader - INFO - Report system initialized successfully
+2025-09-12 22:31:45,541 - MrTrader - INFO - Symbol manager initialized successfully
+2025-09-12 22:31:45,542 - MrTrader - INFO - All handlers initialized successfully
+2025-09-12 22:31:45,542 - MrTrader - INFO - MrTrader Bot initialized successfully
+2025-09-12 22:31:45,542 - MrTrader - INFO - Starting MrTrader Bot...
+2025-09-12 22:31:49,563 - MrTrader - INFO - Bot commands set successfully (initial attempt)
+2025-09-12 22:31:49,564 - MrTrader - INFO - Start handlers registered manually
+2025-09-12 22:31:49,564 - MrTrader - INFO - Callback handlers registered successfully
+2025-09-12 22:31:49,564 - MrTrader - INFO - Message handlers registered successfully
+2025-09-12 22:31:49,565 - MrTrader - INFO - All handlers registered successfully
+2025-09-12 22:31:49,566 - MrTrader - INFO - Bot application initialized successfully
+2025-09-12 22:31:49,566 - MrTrader - INFO - Starting bot startup tasks...
+2025-09-12 22:31:49,566 - MrTrader - INFO - Database health check: OK
+2025-09-12 22:31:49,567 - MrTrader - INFO - API ping check skipped - method not available
+2025-09-12 22:31:49,567 - MrTrader - INFO - System settings loading skipped - method not available
+2025-09-12 22:31:49,567 - MrTrader - INFO - Scheduled tasks configured:
+2025-09-12 22:31:49,567 - MrTrader - INFO - - Backup: Daily at 2:00 AM
+2025-09-12 22:31:49,568 - MrTrader - INFO - - Reports: Daily at 1:00 AM
+2025-09-12 22:31:49,568 - MrTrader - INFO - - Cleanup: Weekly on Sunday
+2025-09-12 22:31:49,568 - MrTrader - INFO - - Analytics: Hourly
+2025-09-12 22:31:49,778 - MrTrader - INFO - Startup notification sent successfully
+2025-09-12 22:31:49,778 - MrTrader - INFO - All startup tasks completed successfully
+2025-09-12 22:31:50,066 - MrTrader - INFO - Bot is running... Press Ctrl+C to stop
+2025-09-12 22:31:54,204 - MrTrader - INFO - Start command received from user 1517662886
+2025-09-12 22:31:54,214 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: start_command | Details: User started bot: am369ap
+2025-09-12 22:31:56,775 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: analysis_menu
+2025-09-12 22:31:58,887 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_strategy:volume_profile
+2025-09-12 22:32:00,963 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_symbol:volume_profile|DOGE
+2025-09-12 22:32:03,012 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_currency:volume_profile|DOGE|USDT
+2025-09-12 22:32:05,655 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_timeframe:volume_profile|DOGE|USDT|1m
+2025-09-12 22:32:05,888 - MrTrader - INFO - Starting analysis for user 1517662886: volume_profile DOGE/USDT @ 1m
+2025-09-12 22:32:05,892 - MrTrader - INFO - Calling API for volume_profile analysis: DOGE/USDT @ 1m
+2025-09-12 22:32:05,893 - MrTrader - INFO - Requesting volume_profile analysis for DOGE/USDT @ 1m (API: histominute)
+2025-09-12 22:32:09,284 - MrTrader - WARNING - Client error (attempt 1): 500, message='Internal Server Error', url='http://91.198.77.208:8000/analyze_price_action_pandas_ta/'
+2025-09-12 22:32:12,617 - MrTrader - WARNING - Client error (attempt 2): 500, message='Internal Server Error', url='http://91.198.77.208:8000/analyze_price_action_pandas_ta/'
+2025-09-12 22:32:16,804 - MrTrader - WARNING - Client error (attempt 3): 500, message='Internal Server Error', url='http://91.198.77.208:8000/analyze_price_action_pandas_ta/'
+2025-09-12 22:32:16,805 - MrTrader - ERROR - All retry attempts failed for http://91.198.77.208:8000/analyze_price_action_pandas_ta/. Last error: Client error: 500, message='Internal Server Error', url='http://91.198.77.208:8000/analyze_price_action_pandas_ta/'
+2025-09-12 22:32:16,829 - MrTrader - ERROR - API returned error: Client error: 500, message='Internal Server Error', url='http://91.198.77.208:8000/analyze_price_action_pandas_ta/'
+2025-09-12 22:37:48,260 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: main_menu
+2025-09-12 22:37:50,182 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: analysis_menu
+2025-09-12 22:37:52,380 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_strategy:cci_analysis
+2025-09-12 22:37:55,967 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_symbol:cci_analysis|BTC
+2025-09-12 22:37:58,169 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_currency:cci_analysis|BTC|USDT
+2025-09-12 22:37:59,808 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_timeframe:cci_analysis|BTC|USDT|4h
+2025-09-12 22:38:00,002 - MrTrader - INFO - Starting analysis for user 1517662886: cci_analysis BTC/USDT @ 4h
+2025-09-12 22:38:00,007 - MrTrader - INFO - Calling API for cci_analysis analysis: BTC/USDT @ 4h
+2025-09-12 22:38:00,007 - MrTrader - INFO - Requesting cci_analysis analysis for BTC/USDT @ 4h (API: histohour)
+2025-09-12 22:38:05,623 - MrTrader - INFO - API request successful: POST http://91.198.77.208:8000/analyze_CCI_strategy/
+2025-09-12 22:38:05,625 - MrTrader - INFO - Reading report file via API: save/CCI_strategy/CCI_TXT/BTC_histohour_20250912_190805.txt
+2025-09-12 22:38:05,756 - MrTrader - INFO - API request successful: POST http://91.198.77.208:8000/read_report_file/
+2025-09-12 22:38:05,757 - MrTrader - INFO - === REPORT CONTENT START ===
+2025-09-12 22:38:05,757 - MrTrader - INFO - 📊 تحلیل CCI (Commodity Channel Index) BTC/USDT
+🕐 تایم فریم تحلیل: یک ساعته
+
+💰 قیمت لایو بایننس: 116391.49
+⏰ زمان دریافت: 2025-09-12 19:08:02
+--------------------------------------------------
+
+## ⚙️ پارامترهای CCI
+- **دوره CCI:** 20
+- **نوع تایم‌فریم:** histohour
+- **توضیحات:** پارامترهای بهینه برای تایم‌فریم ساعتی
+
+## 📈 وضعیت فعلی CCI
+- **مقدار CCI:** 221.81
+- **میانگین CCI (SMA5):** 128.33
+- **سیگنال:** SELL
+- **قدرت سیگنال:** بسیار قوی
+- **روند CCI:** نزولی
+
+## 📊 تفسیر سیگنال‌ها
+- **CCI > +100:** سیگنال فروش (SELL) - احتمال اشباع خرید
+- **CCI < -100:** سیگنال خرید (BUY) - احتمال اشباع فروش
+- **-100 ≤ CCI ≤ +100:** نگه داری (HOLD) - بازار در حالت تعادل
+
+## 📋 سطوح قدرت سیگنال
+- **|CCI| > 200:** سیگنال بسیار قوی
+- **150 < |CCI| ≤ 200:** سیگنال قوی
+- **100 < |CCI| ≤ 150:** سیگنال متوسط
+- **|CCI| ≤ 100:** سیگنال ضعیف یا خنثی
+
+## 💰 اطلاعات قیمت
+- **قیمت آخر:** 116391.49
+- **زمان تحلیل:** 2025-09-12 19:08:02
+
+## 🎯 نتیجه نهایی تحلیل: **SELL** (قدرت: **بسیار قوی**)
+
+## 📋 جزییات معامله احتمالی
+- **قیمت ورود:** 116391.49
+- **حد ضرر:** 118422.21
+- **حد سود:** 113345.41
+- **نسبت ریسک به ریوارد:** 1.50
+
+## 💡 توصیه‌های عملی
+- **سیگنال خرید (CCI < -100):** ورود در سطوح اشباع فروش با تأیید برگشت CCI
+- **سیگنال فروش (CCI > +100):** ورود در سطوح اشباع خرید با تأیید برگشت CCI
+- **حالت نگه داری:** صبر برای سیگنال واضح خرید/فروش
+- **مراقبت از واگرایی:** نظارت بر روند CCI نسبت به قیمت
+
+---
+
+*تحلیل انجام شده توسط سیستم تحلیل CCI*
+
+2025-09-12 22:38:05,759 - MrTrader - INFO - === REPORT CONTENT END ===
+2025-09-12 22:38:05,759 - MrTrader - INFO - Analysis completed for cci_analysis BTC/USDT @ 4h
+2025-09-12 22:38:05,780 - MrTrader - INFO - Analysis successful for cci_analysis BTC/USDT
+2025-09-12 22:38:35,792 - MrTrader - INFO - فایل حذف شد: temp_reports\cci_analysis_BTC_USDT_4h_20250912_223805.txt
+2025-09-12 22:38:35,793 - MrTrader - INFO - اطلاعات فایل از context حذف شد: report_cci_analysis_BTC_USDT_4h_20250912_223805.txt
+2025-09-12 22:39:08,835 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: download_report:cci_analysis_BTC_USDT_4h_20250912_223805.txt
+2025-09-12 22:39:23,477 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: download_report:cci_analysis_BTC_USDT_4h_20250912_223805.txt
+2025-09-12 22:39:27,047 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_strategy:cci_analysis
+2025-09-12 22:39:30,800 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: analysis_menu
+2025-09-12 22:39:34,005 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_strategy:atr
+2025-09-12 22:39:36,136 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_symbol:atr|DOGE
+2025-09-12 22:39:37,946 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_currency:atr|DOGE|USDT
+2025-09-12 22:39:39,504 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_timeframe:atr|DOGE|USDT|5m
+2025-09-12 22:39:39,675 - MrTrader - INFO - Starting analysis for user 1517662886: atr DOGE/USDT @ 5m
+2025-09-12 22:39:39,678 - MrTrader - INFO - Calling API for atr analysis: DOGE/USDT @ 5m
+2025-09-12 22:39:39,679 - MrTrader - INFO - Requesting atr analysis for DOGE/USDT @ 5m (API: histominute)
+2025-09-12 22:39:39,935 - MrTrader - WARNING - Client error (attempt 1): 404, message='{"detail":"Not Found"}', url='http://91.198.77.208:8000/analyze_atr/'
+2025-09-12 22:39:41,075 - MrTrader - WARNING - Client error (attempt 2): 404, message='{"detail":"Not Found"}', url='http://91.198.77.208:8000/analyze_atr/'
+2025-09-12 22:39:43,197 - MrTrader - WARNING - Client error (attempt 3): 404, message='{"detail":"Not Found"}', url='http://91.198.77.208:8000/analyze_atr/'
+2025-09-12 22:39:43,197 - MrTrader - ERROR - All retry attempts failed for http://91.198.77.208:8000/analyze_atr/. Last error: Client error: 404, message='{"detail":"Not Found"}', url='http://91.198.77.208:8000/analyze_atr/'
+2025-09-12 22:39:43,198 - MrTrader - ERROR - API returned error: Client error: 404, message='{"detail":"Not Found"}', url='http://91.198.77.208:8000/analyze_atr/'
+2025-09-12 22:40:08,930 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: analysis_menu
+2025-09-12 22:40:18,976 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_strategy:ema_analysis
+2025-09-12 22:40:20,851 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_symbol:ema_analysis|BTC
+2025-09-12 22:40:24,515 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_currency:ema_analysis|BTC|USDT
+2025-09-12 22:40:27,034 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_timeframe:ema_analysis|BTC|USDT|5m
+2025-09-12 22:40:27,209 - MrTrader - INFO - Starting analysis for user 1517662886: ema_analysis BTC/USDT @ 5m
+2025-09-12 22:40:27,213 - MrTrader - INFO - Calling API for ema_analysis analysis: BTC/USDT @ 5m
+2025-09-12 22:40:27,213 - MrTrader - INFO - Requesting ema_analysis analysis for BTC/USDT @ 5m (API: histominute)
+2025-09-12 22:40:30,518 - MrTrader - INFO - API request successful: POST http://91.198.77.208:8000/analyze_EMA_strategy/
+2025-09-12 22:40:30,519 - MrTrader - INFO - Reading report file via API: 📊 تحلیل استراتژی EMA - BTC/USDT
+🤞 تایم فریم تحلیل: 2025-09-12 19:10:00
+
+💰 قیمت لایو بایننس: 116431.10
+⏰ زمان دریافت: 2025-09-12 19:10:29
+--------------------------------------------------
+[تحلیل وضعیت EMA]
+- قیمت بسته شدن آخرین کندل: 116431.10
+- EMA 20: 116420.21
+- EMA 50: 116343.39
+- فاصله قیمت از EMA 20: 0.01%
+- فاصله قیمت از EMA 50: 0.08%
+
+[وضعیت روند و سیگنال]
+📈 روند صعودی: EMA کوتاه بالای EMA بلند
+بدون تقاطع اخیر
+⚪ بدون سیگنال
+
+[تحلیل روند]
+✅ روند صعودی قوی: قیمت و EMA کوتاه بالاتر از EMA بلند
+
+
+
+⚠️ وضعیت خنثی: روند نامشخص
+
+[سیگنال‌های تقاطع EMA]
+- تعداد سیگنال‌های خرید در کل تاریخچه: 12
+- تعداد سیگنال‌های فروش در کل تاریخچه: 11
+- آخرین سیگنال: ⚪ بدون سیگنال
+
+[جزییات معامله احتمالی]
+- Entry Price: 116431.10
+- SL: 116392.69 (فاصله 38.41 واحدی یا 0.03%)
+- TP: 116507.92 (فاصله 76.82 واحدی یا 0.07%)
+- Risk/Reward: 2.00
+
+[توصیه‌های عملی بر اساس استراتژی EMA]
+- در روند صعودی، خرید در بازگشت قیمت به EMA کوتاه
+- در روند نزولی، فروش در بازگشت قیمت به EMA کوتاه
+- تنظیم حد ضرر در زیر EMA بلند (برای خرید) یا بالای EMA بلند (برای فروش)
+- رعایت نسبت ریسک به ریوارد حداقل 1:2
+
+📝 توضیحات تکمیلی: استراتژی EMA Cross بهترین عملکرد را در بازارهای دارای روند مشخص دارد و در بازارهای رنج (Sideways) ممکن است سیگنال‌های اشتباه تولید کند.
+
+*تحلیل انجام شده توسط سیستم AI تحلیل EMA*
+
+2025-09-12 22:40:30,684 - MrTrader - WARNING - Client error (attempt 1): 400, message='{"detail":"دسترسی فقط به فایل\u200cهای save مجاز است"}', url='http://91.198.77.208:8000/read_report_file/'
+2025-09-12 22:40:31,850 - MrTrader - WARNING - Client error (attempt 2): 400, message='{"detail":"دسترسی فقط به فایل\u200cهای save مجاز است"}', url='http://91.198.77.208:8000/read_report_file/'
+2025-09-12 22:40:31,851 - MrTrader - ERROR - All retry attempts failed for http://91.198.77.208:8000/read_report_file/. Last error: Client error: 400, message='{"detail":"دسترسی فقط به فایل\u200cهای save مجاز است"}', url='http://91.198.77.208:8000/read_report_file/'
+2025-09-12 22:40:31,853 - MrTrader - ERROR - Failed to read report file: {'error': 'Client error: 400, message=\'{"detail":"دسترسی فقط به فایل\\u200cهای save مجاز است"}\', url=\'http://91.198.77.208:8000/read_report_file/\''}
+2025-09-12 22:40:31,854 - MrTrader - INFO - Analysis completed for ema_analysis BTC/USDT @ 5m
+2025-09-12 22:40:31,860 - MrTrader - INFO - Analysis successful for ema_analysis BTC/USDT
+2025-09-12 22:41:01,879 - MrTrader - INFO - فایل حذف شد: temp_reports\ema_analysis_BTC_USDT_5m_20250912_224031.txt
+2025-09-12 22:41:01,880 - MrTrader - INFO - اطلاعات فایل از context حذف شد: report_ema_analysis_BTC_USDT_5m_20250912_224031.txt
+2025-09-12 22:44:25,775 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: download_report:ema_analysis_BTC_USDT_5m_20250912_224031.txt
+2025-09-12 22:44:29,514 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: download_report:ema_analysis_BTC_USDT_5m_20250912_224031.txt
+2025-09-12 22:44:39,507 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: download_report:ema_analysis_BTC_USDT_5m_20250912_224031.txt
+2025-09-12 22:44:50,357 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: analysis_menu
+2025-09-12 22:44:53,121 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_strategy:sma_advanced
+2025-09-12 22:44:54,807 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_symbol:sma_advanced|UNI
+2025-09-12 22:44:56,836 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_currency:sma_advanced|UNI|USDT
+2025-09-12 22:45:04,042 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_timeframe:sma_advanced|UNI|USDT|15m
+2025-09-12 22:45:04,201 - MrTrader - INFO - Starting analysis for user 1517662886: sma_advanced UNI/USDT @ 15m
+2025-09-12 22:45:04,204 - MrTrader - INFO - Calling API for sma_advanced analysis: UNI/USDT @ 15m
+2025-09-12 22:45:04,204 - MrTrader - INFO - Requesting sma_advanced analysis for UNI/USDT @ 15m (API: histominute)
+2025-09-12 22:45:08,310 - MrTrader - INFO - API request successful: POST http://91.198.77.208:8000/analyze_EMA_strategy/
+2025-09-12 22:45:08,310 - MrTrader - INFO - Reading report file via API: 📊 تحلیل استراتژی EMA - UNI/USDT
+🤞 تایم فریم تحلیل: 2025-09-12 19:15:00
+
+💰 قیمت لایو بایننس: 10.11
+⏰ زمان دریافت: 2025-09-12 19:15:07
+--------------------------------------------------
+[تحلیل وضعیت EMA]
+- قیمت بسته شدن آخرین کندل: 10.11
+- EMA 20: 10.11
+- EMA 50: 10.11
+- فاصله قیمت از EMA 20: -0.06%
+- فاصله قیمت از EMA 50: -0.08%
+
+[وضعیت روند و سیگنال]
+📉 روند نزولی: EMA کوتاه زیر EMA بلند
+بدون تقاطع اخیر
+⚪ بدون سیگنال
+
+[تحلیل روند]
+
+
+🔻 روند نزولی قوی: قیمت و EMA کوتاه پایین‌تر از EMA بلند
+
+⚠️ وضعیت خنثی: روند نامشخص
+
+[سیگنال‌های تقاطع EMA]
+- تعداد سیگنال‌های خرید در کل تاریخچه: 9
+- تعداد سیگنال‌های فروش در کل تاریخچه: 9
+- آخرین سیگنال: ⚪ بدون سیگنال
+
+[جزییات معامله احتمالی]
+- Entry Price: 10.11
+- SL: 10.11 (فاصله 0.00 واحدی یا 0.01%)
+- TP: 10.10 (فاصله 0.00 واحدی یا 0.02%)
+- Risk/Reward: 2.00
+
+[توصیه‌های عملی بر اساس استراتژی EMA]
+- در روند صعودی، خرید در بازگشت قیمت به EMA کوتاه
+- در روند نزولی، فروش در بازگشت قیمت به EMA کوتاه
+- تنظیم حد ضرر در زیر EMA بلند (برای خرید) یا بالای EMA بلند (برای فروش)
+- رعایت نسبت ریسک به ریوارد حداقل 1:2
+
+📝 توضیحات تکمیلی: استراتژی EMA Cross بهترین عملکرد را در بازارهای دارای روند مشخص دارد و در بازارهای رنج (Sideways) ممکن است سیگنال‌های اشتباه تولید کند.
+
+*تحلیل انجام شده توسط سیستم AI تحلیل EMA*
+
+2025-09-12 22:45:08,473 - MrTrader - WARNING - Client error (attempt 1): 400, message='{"detail":"دسترسی فقط به فایل\u200cهای save مجاز است"}', url='http://91.198.77.208:8000/read_report_file/'
+2025-09-12 22:45:09,780 - MrTrader - WARNING - Client error (attempt 2): 400, message='{"detail":"دسترسی فقط به فایل\u200cهای save مجاز است"}', url='http://91.198.77.208:8000/read_report_file/'
+2025-09-12 22:45:09,781 - MrTrader - ERROR - All retry attempts failed for http://91.198.77.208:8000/read_report_file/. Last error: Client error: 400, message='{"detail":"دسترسی فقط به فایل\u200cهای save مجاز است"}', url='http://91.198.77.208:8000/read_report_file/'
+2025-09-12 22:45:09,783 - MrTrader - ERROR - Failed to read report file: {'error': 'Client error: 400, message=\'{"detail":"دسترسی فقط به فایل\\u200cهای save مجاز است"}\', url=\'http://91.198.77.208:8000/read_report_file/\''}
+2025-09-12 22:45:09,783 - MrTrader - INFO - Analysis completed for sma_advanced UNI/USDT @ 15m
+2025-09-12 22:45:09,787 - MrTrader - INFO - Analysis successful for sma_advanced UNI/USDT
+2025-09-12 22:45:39,790 - MrTrader - INFO - فایل حذف شد: temp_reports\sma_advanced_UNI_USDT_15m_20250912_224509.txt
+2025-09-12 22:45:39,791 - MrTrader - INFO - اطلاعات فایل از context حذف شد: report_sma_advanced_UNI_USDT_15m_20250912_224509.txt
+2025-09-13 21:17:46,214 - MrTrader - INFO - DB_MIGRATION | Version: initial | Status: completed
+2025-09-13 21:17:46,229 - MrTrader - INFO - DB_CONNECTION | Status: initialized | Details: D:\phonix coin\mr.trader\st\telegram_bot\MR-TRADER-BOT-01_git\data\mrtrader.db
+2025-09-13 21:17:46,358 - MrTrader - INFO - API configuration reloaded
+2025-09-13 21:17:46,852 - MrTrader - INFO - Logging system initialized
+2025-09-13 21:17:46,852 - MrTrader - INFO - Initialized 1 main managers
+2025-09-13 21:17:46,853 - MrTrader - INFO - AdminManager initialized with managers: [1517662886]
+2025-09-13 21:17:46,857 - MrTrader - INFO - Symbol manager initialized successfully
+2025-09-13 21:17:46,861 - MrTrader - INFO - Referral system initialized successfully
+2025-09-13 21:17:46,862 - MrTrader - INFO - API configuration reloaded
+2025-09-13 21:17:46,867 - MrTrader - INFO - Report system initialized successfully
+2025-09-13 21:17:46,870 - MrTrader - INFO - Backup system initialized successfully
+2025-09-13 21:17:46,871 - MrTrader - INFO - All managers initialized successfully
+2025-09-13 21:17:46,874 - MrTrader - INFO - Referral system initialized successfully
+2025-09-13 21:17:46,875 - MrTrader - INFO - API configuration reloaded
+2025-09-13 21:17:46,878 - MrTrader - INFO - Symbol manager initialized successfully
+2025-09-13 21:17:46,881 - MrTrader - INFO - Report system initialized successfully
+2025-09-13 21:17:46,886 - MrTrader - INFO - Symbol manager initialized successfully
+2025-09-13 21:17:46,886 - MrTrader - INFO - All handlers initialized successfully
+2025-09-13 21:17:46,886 - MrTrader - INFO - MrTrader Bot initialized successfully
+2025-09-13 21:17:46,887 - MrTrader - INFO - Starting MrTrader Bot...
+2025-09-13 21:17:50,787 - MrTrader - INFO - Bot commands set successfully (initial attempt)
+2025-09-13 21:17:50,787 - MrTrader - INFO - Start handlers registered manually
+2025-09-13 21:17:50,788 - MrTrader - INFO - Callback handlers registered successfully
+2025-09-13 21:17:50,788 - MrTrader - INFO - Message handlers registered successfully
+2025-09-13 21:17:50,788 - MrTrader - INFO - All handlers registered successfully
+2025-09-13 21:17:50,788 - MrTrader - INFO - Bot application initialized successfully
+2025-09-13 21:17:50,789 - MrTrader - INFO - Starting bot startup tasks...
+2025-09-13 21:17:50,789 - MrTrader - INFO - Database health check: OK
+2025-09-13 21:17:50,789 - MrTrader - INFO - API ping check skipped - method not available
+2025-09-13 21:17:50,790 - MrTrader - INFO - System settings loading skipped - method not available
+2025-09-13 21:17:50,790 - MrTrader - INFO - Scheduled tasks configured:
+2025-09-13 21:17:50,790 - MrTrader - INFO - - Backup: Daily at 2:00 AM
+2025-09-13 21:17:50,790 - MrTrader - INFO - - Reports: Daily at 1:00 AM
+2025-09-13 21:17:50,791 - MrTrader - INFO - - Cleanup: Weekly on Sunday
+2025-09-13 21:17:50,791 - MrTrader - INFO - - Analytics: Hourly
+2025-09-13 21:17:51,068 - MrTrader - INFO - Startup notification sent successfully
+2025-09-13 21:17:51,071 - MrTrader - INFO - All startup tasks completed successfully
+2025-09-13 21:17:51,457 - MrTrader - INFO - Bot is running... Press Ctrl+C to stop
+2025-09-13 21:18:47,664 - MrTrader - INFO - Start command received from user 1517662886
+2025-09-13 21:18:47,670 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: start_command | Details: User started bot: am369ap
+2025-09-13 21:18:50,221 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: analysis_menu
+2025-09-13 21:18:52,035 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_strategy:volume_profile
+2025-09-13 21:18:53,946 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_symbol:volume_profile|ETH
+2025-09-13 21:18:55,810 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_currency:volume_profile|ETH|USDT
+2025-09-13 21:18:59,787 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_timeframe:volume_profile|ETH|USDT|1h
+2025-09-13 21:18:59,970 - MrTrader - INFO - Starting analysis for user 1517662886: volume_profile ETH/USDT @ 1h
+2025-09-13 21:18:59,973 - MrTrader - INFO - Calling API for volume_profile analysis: ETH/USDT @ 1h
+2025-09-13 21:18:59,974 - MrTrader - INFO - Requesting volume_profile analysis for ETH/USDT @ 1h (API: histohour)
+2025-09-13 21:19:02,243 - MrTrader - INFO - API request successful: POST http://91.198.77.208:8000/analyze_price_action_pandas_ta/
+2025-09-13 21:19:02,244 - MrTrader - INFO - Analysis completed for volume_profile ETH/USDT @ 1h
+2025-09-13 21:19:02,268 - MrTrader - INFO - Analysis successful for volume_profile ETH/USDT
+2025-09-13 21:19:32,264 - MrTrader - INFO - فایل حذف شد: temp_reports\volume_profile_ETH_USDT_1h_20250913_211902.txt
+2025-09-13 21:19:32,264 - MrTrader - INFO - اطلاعات فایل از context حذف شد: report_volume_profile_ETH_USDT_1h_20250913_211902.txt
+2025-09-13 21:29:00,358 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: download_report:volume_profile_ETH_USDT_1h_20250913_211902.txt
+2025-09-13 21:29:03,439 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_strategy:volume_profile
+2025-09-13 21:29:06,530 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: analysis_menu
+2025-09-13 21:29:12,548 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: packages_menu
+2025-09-13 21:29:19,146 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: packages_compare
+2025-09-13 21:29:21,338 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: main_menu
+2025-09-13 21:29:26,529 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: packages_menu
+2025-09-13 21:29:33,984 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: purchase_consultation
+2025-09-13 21:29:36,723 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: main_menu
+2025-09-13 21:58:07,046 - MrTrader - INFO - DB_MIGRATION | Version: initial | Status: completed
+2025-09-13 21:58:07,047 - MrTrader - INFO - DB_CONNECTION | Status: initialized | Details: D:\phonix coin\mr.trader\st\telegram_bot\MR-TRADER-BOT-01_git\data\mrtrader.db
+2025-09-13 21:58:07,053 - MrTrader - INFO - API configuration reloaded
+2025-09-13 21:58:07,488 - MrTrader - INFO - Logging system initialized
+2025-09-13 21:58:07,488 - MrTrader - INFO - Initialized 1 main managers
+2025-09-13 21:58:07,488 - MrTrader - INFO - AdminManager initialized with managers: [1517662886]
+2025-09-13 21:58:07,490 - MrTrader - INFO - Symbol manager initialized successfully
+2025-09-13 21:58:07,493 - MrTrader - INFO - Referral system initialized successfully
+2025-09-13 21:58:07,493 - MrTrader - INFO - API configuration reloaded
+2025-09-13 21:58:07,495 - MrTrader - INFO - Report system initialized successfully
+2025-09-13 21:58:07,497 - MrTrader - INFO - Backup system initialized successfully
+2025-09-13 21:58:07,498 - MrTrader - INFO - All managers initialized successfully
+2025-09-13 21:58:07,500 - MrTrader - INFO - Referral system initialized successfully
+2025-09-13 21:58:07,500 - MrTrader - INFO - API configuration reloaded
+2025-09-13 21:58:07,502 - MrTrader - INFO - Symbol manager initialized successfully
+2025-09-13 21:58:07,509 - MrTrader - INFO - Report system initialized successfully
+2025-09-13 21:58:07,511 - MrTrader - INFO - Symbol manager initialized successfully
+2025-09-13 21:58:07,511 - MrTrader - INFO - All handlers initialized successfully
+2025-09-13 21:58:07,511 - MrTrader - INFO - MrTrader Bot initialized successfully
+2025-09-13 21:58:07,512 - MrTrader - INFO - Starting MrTrader Bot...
+2025-09-13 21:58:11,496 - MrTrader - INFO - Bot commands set successfully (initial attempt)
+2025-09-13 21:58:11,497 - MrTrader - INFO - Start handlers registered manually
+2025-09-13 21:58:11,497 - MrTrader - INFO - Callback handlers registered successfully
+2025-09-13 21:58:11,497 - MrTrader - INFO - Message handlers registered successfully
+2025-09-13 21:58:11,497 - MrTrader - INFO - All handlers registered successfully
+2025-09-13 21:58:11,498 - MrTrader - INFO - Bot application initialized successfully
+2025-09-13 21:58:11,498 - MrTrader - INFO - Starting bot startup tasks...
+2025-09-13 21:58:11,498 - MrTrader - INFO - Database health check: OK
+2025-09-13 21:58:11,499 - MrTrader - INFO - API ping check skipped - method not available
+2025-09-13 21:58:11,499 - MrTrader - INFO - System settings loading skipped - method not available
+2025-09-13 21:58:11,499 - MrTrader - INFO - Scheduled tasks configured:
+2025-09-13 21:58:11,499 - MrTrader - INFO - - Backup: Daily at 2:00 AM
+2025-09-13 21:58:11,500 - MrTrader - INFO - - Reports: Daily at 1:00 AM
+2025-09-13 21:58:11,500 - MrTrader - INFO - - Cleanup: Weekly on Sunday
+2025-09-13 21:58:11,500 - MrTrader - INFO - - Analytics: Hourly
+2025-09-13 21:58:11,738 - MrTrader - INFO - Startup notification sent successfully
+2025-09-13 21:58:11,739 - MrTrader - INFO - All startup tasks completed successfully
+2025-09-13 21:58:12,038 - MrTrader - INFO - Bot is running... Press Ctrl+C to stop
+2025-09-13 21:58:14,188 - MrTrader - INFO - Start command received from user 1517662886
+2025-09-13 21:58:14,190 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: start_command | Details: User started bot: am369ap
+2025-09-13 21:59:07,378 - MrTrader - INFO - DB_MIGRATION | Version: initial | Status: completed
+2025-09-13 21:59:07,378 - MrTrader - INFO - DB_CONNECTION | Status: initialized | Details: D:\phonix coin\mr.trader\st\telegram_bot\MR-TRADER-BOT-01_git\data\mrtrader.db
+2025-09-13 21:59:07,389 - MrTrader - INFO - API configuration reloaded
+2025-09-13 21:59:07,633 - MrTrader - INFO - Logging system initialized
+2025-09-13 21:59:07,634 - MrTrader - INFO - Initialized 1 main managers
+2025-09-13 21:59:07,634 - MrTrader - INFO - AdminManager initialized with managers: [1517662886]
+2025-09-13 21:59:07,636 - MrTrader - INFO - Symbol manager initialized successfully
+2025-09-13 21:59:07,639 - MrTrader - INFO - Referral system initialized successfully
+2025-09-13 21:59:07,639 - MrTrader - INFO - API configuration reloaded
+2025-09-13 21:59:07,642 - MrTrader - INFO - Report system initialized successfully
+2025-09-13 21:59:07,646 - MrTrader - INFO - Backup system initialized successfully
+2025-09-13 21:59:07,647 - MrTrader - INFO - All managers initialized successfully
+2025-09-13 21:59:07,650 - MrTrader - INFO - Referral system initialized successfully
+2025-09-13 21:59:07,651 - MrTrader - INFO - API configuration reloaded
+2025-09-13 21:59:07,654 - MrTrader - INFO - Symbol manager initialized successfully
+2025-09-13 21:59:07,655 - MrTrader - INFO - Report system initialized successfully
+2025-09-13 21:59:07,657 - MrTrader - INFO - Symbol manager initialized successfully
+2025-09-13 21:59:07,658 - MrTrader - INFO - All handlers initialized successfully
+2025-09-13 21:59:07,658 - MrTrader - INFO - MrTrader Bot initialized successfully
+2025-09-13 21:59:07,658 - MrTrader - INFO - Starting MrTrader Bot...
+2025-09-13 21:59:11,433 - MrTrader - INFO - Bot commands set successfully (initial attempt)
+2025-09-13 21:59:11,434 - MrTrader - INFO - Start handlers registered manually
+2025-09-13 21:59:11,435 - MrTrader - INFO - Callback handlers registered successfully
+2025-09-13 21:59:11,435 - MrTrader - INFO - Message handlers registered successfully
+2025-09-13 21:59:11,435 - MrTrader - INFO - All handlers registered successfully
+2025-09-13 21:59:11,436 - MrTrader - INFO - Bot application initialized successfully
+2025-09-13 21:59:11,436 - MrTrader - INFO - Starting bot startup tasks...
+2025-09-13 21:59:11,436 - MrTrader - INFO - Database health check: OK
+2025-09-13 21:59:11,437 - MrTrader - INFO - API ping check skipped - method not available
+2025-09-13 21:59:11,437 - MrTrader - INFO - System settings loading skipped - method not available
+2025-09-13 21:59:11,437 - MrTrader - INFO - Scheduled tasks configured:
+2025-09-13 21:59:11,437 - MrTrader - INFO - - Backup: Daily at 2:00 AM
+2025-09-13 21:59:11,438 - MrTrader - INFO - - Reports: Daily at 1:00 AM
+2025-09-13 21:59:11,438 - MrTrader - INFO - - Cleanup: Weekly on Sunday
+2025-09-13 21:59:11,438 - MrTrader - INFO - - Analytics: Hourly
+2025-09-13 21:59:11,638 - MrTrader - INFO - Startup notification sent successfully
+2025-09-13 21:59:11,638 - MrTrader - INFO - All startup tasks completed successfully
+2025-09-13 21:59:11,924 - MrTrader - INFO - Bot is running... Press Ctrl+C to stop
+2025-09-13 21:59:24,180 - MrTrader - INFO - Start command received from user 1517662886
+2025-09-13 21:59:24,181 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: start_command | Details: User started bot: am369ap
+2025-09-13 22:00:29,303 - MrTrader - INFO - DB_MIGRATION | Version: initial | Status: completed
+2025-09-13 22:00:29,305 - MrTrader - INFO - DB_CONNECTION | Status: initialized | Details: D:\phonix coin\mr.trader\st\telegram_bot\MR-TRADER-BOT-01_git\data\mrtrader.db
+2025-09-13 22:00:29,315 - MrTrader - INFO - API configuration reloaded
+2025-09-13 22:00:29,632 - MrTrader - INFO - Logging system initialized
+2025-09-13 22:00:29,633 - MrTrader - INFO - Initialized 1 main managers
+2025-09-13 22:00:29,633 - MrTrader - INFO - AdminManager initialized with managers: [1517662886]
+2025-09-13 22:00:29,635 - MrTrader - INFO - Symbol manager initialized successfully
+2025-09-13 22:00:29,639 - MrTrader - INFO - Referral system initialized successfully
+2025-09-13 22:00:29,641 - MrTrader - INFO - API configuration reloaded
+2025-09-13 22:00:29,643 - MrTrader - INFO - Report system initialized successfully
+2025-09-13 22:00:29,646 - MrTrader - INFO - Backup system initialized successfully
+2025-09-13 22:00:29,647 - MrTrader - INFO - All managers initialized successfully
+2025-09-13 22:00:29,649 - MrTrader - INFO - Referral system initialized successfully
+2025-09-13 22:00:29,650 - MrTrader - INFO - API configuration reloaded
+2025-09-13 22:00:29,652 - MrTrader - INFO - Symbol manager initialized successfully
+2025-09-13 22:00:29,656 - MrTrader - INFO - Report system initialized successfully
+2025-09-13 22:00:29,658 - MrTrader - INFO - Symbol manager initialized successfully
+2025-09-13 22:00:29,659 - MrTrader - INFO - All handlers initialized successfully
+2025-09-13 22:00:29,659 - MrTrader - INFO - MrTrader Bot initialized successfully
+2025-09-13 22:00:29,659 - MrTrader - INFO - Starting MrTrader Bot...
+2025-09-13 22:00:33,536 - MrTrader - INFO - Bot commands set successfully (initial attempt)
+2025-09-13 22:00:33,537 - MrTrader - INFO - Start handlers registered manually
+2025-09-13 22:00:33,537 - MrTrader - INFO - Callback handlers registered successfully
+2025-09-13 22:00:33,537 - MrTrader - INFO - Message handlers registered successfully
+2025-09-13 22:00:33,538 - MrTrader - INFO - All handlers registered successfully
+2025-09-13 22:00:33,538 - MrTrader - INFO - Bot application initialized successfully
+2025-09-13 22:00:33,538 - MrTrader - INFO - Starting bot startup tasks...
+2025-09-13 22:00:33,539 - MrTrader - INFO - Database health check: OK
+2025-09-13 22:00:33,539 - MrTrader - INFO - API ping check skipped - method not available
+2025-09-13 22:00:33,539 - MrTrader - INFO - System settings loading skipped - method not available
+2025-09-13 22:00:33,540 - MrTrader - INFO - Scheduled tasks configured:
+2025-09-13 22:00:33,540 - MrTrader - INFO - - Backup: Daily at 2:00 AM
+2025-09-13 22:00:33,540 - MrTrader - INFO - - Reports: Daily at 1:00 AM
+2025-09-13 22:00:33,540 - MrTrader - INFO - - Cleanup: Weekly on Sunday
+2025-09-13 22:00:33,541 - MrTrader - INFO - - Analytics: Hourly
+2025-09-13 22:00:33,756 - MrTrader - INFO - Startup notification sent successfully
+2025-09-13 22:00:33,756 - MrTrader - INFO - All startup tasks completed successfully
+2025-09-13 22:00:34,043 - MrTrader - INFO - Bot is running... Press Ctrl+C to stop
+2025-09-13 22:00:35,476 - MrTrader - INFO - Start command received from user 1517662886
+2025-09-13 22:00:35,478 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: start_command | Details: User started bot: am369ap
+2025-09-13 22:00:37,470 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: analysis_menu
+2025-09-13 22:02:08,511 - MrTrader - INFO - DB_MIGRATION | Version: initial | Status: completed
+2025-09-13 22:02:08,511 - MrTrader - INFO - DB_CONNECTION | Status: initialized | Details: D:\phonix coin\mr.trader\st\telegram_bot\MR-TRADER-BOT-01_git\data\mrtrader.db
+2025-09-13 22:02:08,517 - MrTrader - INFO - API configuration reloaded
+2025-09-13 22:02:08,812 - MrTrader - INFO - Logging system initialized
+2025-09-13 22:02:08,813 - MrTrader - INFO - Initialized 1 main managers
+2025-09-13 22:02:08,813 - MrTrader - INFO - AdminManager initialized with managers: [1517662886]
+2025-09-13 22:02:08,815 - MrTrader - INFO - Symbol manager initialized successfully
+2025-09-13 22:02:08,817 - MrTrader - INFO - Referral system initialized successfully
+2025-09-13 22:02:08,818 - MrTrader - INFO - API configuration reloaded
+2025-09-13 22:02:08,819 - MrTrader - INFO - Report system initialized successfully
+2025-09-13 22:02:08,822 - MrTrader - INFO - Backup system initialized successfully
+2025-09-13 22:02:08,822 - MrTrader - INFO - All managers initialized successfully
+2025-09-13 22:02:08,830 - MrTrader - INFO - Referral system initialized successfully
+2025-09-13 22:02:08,831 - MrTrader - INFO - API configuration reloaded
+2025-09-13 22:02:08,833 - MrTrader - INFO - Symbol manager initialized successfully
+2025-09-13 22:02:08,836 - MrTrader - INFO - Report system initialized successfully
+2025-09-13 22:02:08,838 - MrTrader - INFO - Symbol manager initialized successfully
+2025-09-13 22:02:08,838 - MrTrader - INFO - All handlers initialized successfully
+2025-09-13 22:02:08,839 - MrTrader - INFO - MrTrader Bot initialized successfully
+2025-09-13 22:02:08,839 - MrTrader - INFO - Starting MrTrader Bot...
+2025-09-13 22:02:12,568 - MrTrader - INFO - Bot commands set successfully (initial attempt)
+2025-09-13 22:02:12,569 - MrTrader - INFO - Start handlers registered manually
+2025-09-13 22:02:12,570 - MrTrader - INFO - Callback handlers registered successfully
+2025-09-13 22:02:12,570 - MrTrader - INFO - Message handlers registered successfully
+2025-09-13 22:02:12,570 - MrTrader - INFO - All handlers registered successfully
+2025-09-13 22:02:12,571 - MrTrader - INFO - Bot application initialized successfully
+2025-09-13 22:02:12,571 - MrTrader - INFO - Starting bot startup tasks...
+2025-09-13 22:02:12,571 - MrTrader - INFO - Database health check: OK
+2025-09-13 22:02:12,572 - MrTrader - INFO - API ping check skipped - method not available
+2025-09-13 22:02:12,572 - MrTrader - INFO - System settings loading skipped - method not available
+2025-09-13 22:02:12,572 - MrTrader - INFO - Scheduled tasks configured:
+2025-09-13 22:02:12,573 - MrTrader - INFO - - Backup: Daily at 2:00 AM
+2025-09-13 22:02:12,573 - MrTrader - INFO - - Reports: Daily at 1:00 AM
+2025-09-13 22:02:12,573 - MrTrader - INFO - - Cleanup: Weekly on Sunday
+2025-09-13 22:02:12,573 - MrTrader - INFO - - Analytics: Hourly
+2025-09-13 22:02:12,775 - MrTrader - INFO - Startup notification sent successfully
+2025-09-13 22:02:12,776 - MrTrader - INFO - All startup tasks completed successfully
+2025-09-13 22:02:13,080 - MrTrader - INFO - Bot is running... Press Ctrl+C to stop
+2025-09-13 22:15:49,094 - MrTrader - INFO - DB_MIGRATION | Version: initial | Status: completed
+2025-09-13 22:15:49,094 - MrTrader - INFO - DB_CONNECTION | Status: initialized | Details: D:\phonix coin\mr.trader\st\telegram_bot\MR-TRADER-BOT-01_git\data\mrtrader.db
+2025-09-13 22:15:49,102 - MrTrader - INFO - API configuration reloaded
+2025-09-13 22:15:49,381 - MrTrader - INFO - Logging system initialized
+2025-09-13 22:15:49,381 - MrTrader - INFO - Initialized 1 main managers
+2025-09-13 22:15:49,382 - MrTrader - INFO - AdminManager initialized with managers: [1517662886]
+2025-09-13 22:15:49,383 - MrTrader - INFO - Symbol manager initialized successfully
+2025-09-13 22:15:49,386 - MrTrader - INFO - Referral system initialized successfully
+2025-09-13 22:15:49,386 - MrTrader - INFO - API configuration reloaded
+2025-09-13 22:15:49,388 - MrTrader - INFO - Report system initialized successfully
+2025-09-13 22:15:49,392 - MrTrader - INFO - Backup system initialized successfully
+2025-09-13 22:15:49,392 - MrTrader - INFO - All managers initialized successfully
+2025-09-13 22:15:49,395 - MrTrader - INFO - Referral system initialized successfully
+2025-09-13 22:15:49,395 - MrTrader - INFO - API configuration reloaded
+2025-09-13 22:15:49,397 - MrTrader - INFO - Symbol manager initialized successfully
+2025-09-13 22:15:49,399 - MrTrader - INFO - Report system initialized successfully
+2025-09-13 22:15:49,401 - MrTrader - INFO - Symbol manager initialized successfully
+2025-09-13 22:15:49,401 - MrTrader - INFO - All handlers initialized successfully
+2025-09-13 22:15:49,401 - MrTrader - INFO - MrTrader Bot initialized successfully
+2025-09-13 22:15:49,401 - MrTrader - INFO - Starting MrTrader Bot...
+2025-09-13 22:15:52,913 - MrTrader - INFO - Bot commands set successfully (initial attempt)
+2025-09-13 22:15:52,915 - MrTrader - INFO - Start handlers registered manually
+2025-09-13 22:15:52,916 - MrTrader - INFO - Callback handlers registered successfully
+2025-09-13 22:15:52,917 - MrTrader - INFO - Message handlers registered successfully
+2025-09-13 22:15:52,918 - MrTrader - INFO - All handlers registered successfully
+2025-09-13 22:15:52,919 - MrTrader - INFO - Bot application initialized successfully
+2025-09-13 22:15:52,920 - MrTrader - INFO - Starting bot startup tasks...
+2025-09-13 22:15:52,922 - MrTrader - INFO - Database health check: OK
+2025-09-13 22:15:52,923 - MrTrader - INFO - API ping check skipped - method not available
+2025-09-13 22:15:52,924 - MrTrader - INFO - System settings loading skipped - method not available
+2025-09-13 22:15:52,924 - MrTrader - INFO - Scheduled tasks configured:
+2025-09-13 22:15:52,925 - MrTrader - INFO - - Backup: Daily at 2:00 AM
+2025-09-13 22:15:52,928 - MrTrader - INFO - - Reports: Daily at 1:00 AM
+2025-09-13 22:15:52,929 - MrTrader - INFO - - Cleanup: Weekly on Sunday
+2025-09-13 22:15:52,930 - MrTrader - INFO - - Analytics: Hourly
+2025-09-13 22:15:53,120 - MrTrader - INFO - Startup notification sent successfully
+2025-09-13 22:15:53,121 - MrTrader - INFO - All startup tasks completed successfully
+2025-09-13 22:15:53,465 - MrTrader - INFO - Bot is running... Press Ctrl+C to stop
+2025-09-13 22:15:55,043 - MrTrader - INFO - Start command received from user 1517662886
+2025-09-13 22:15:55,045 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: start_command | Details: User started bot: am369ap
+2025-09-13 22:15:57,261 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: analysis_menu
+2025-09-13 22:16:01,601 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: main_menu
+2025-09-13 22:16:07,629 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: coins_list
+2025-09-13 22:16:09,459 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: main_menu
+2025-09-13 22:16:14,708 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: analysis_menu
+2025-09-13 22:16:34,835 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_strategy:project_price_live_binance
+2025-09-13 22:16:37,227 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_symbol:project_price_live_binance|VET
+2025-09-13 22:16:39,853 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_currency:project_price_live_binance|VET|USDT
+2025-09-13 22:16:43,117 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_timeframe:project_price_live_binance|VET|USDT|5m
+2025-09-13 22:16:43,384 - MrTrader - INFO - Starting analysis for user 1517662886: project_price_live_binance VET/USDT @ 5m
+2025-09-13 22:16:43,390 - MrTrader - INFO - Calling API for project_price_live_binance analysis: VET/USDT @ 5m
+2025-09-13 22:16:43,391 - MrTrader - ERROR - Could not get URL for strategy 'project_price_live_binance': type object 'Config' has no attribute 'get_api_server_config'
+2025-09-13 22:16:43,415 - MrTrader - ERROR - API returned error: URL not found for strategy: project_price_live_binance
+2025-09-13 22:16:45,624 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: main_menu
+2025-09-13 22:16:51,588 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: user_profile
+2025-09-13 22:17:05,788 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: main_menu
+2025-09-13 22:24:57,291 - MrTrader - INFO - DB_MIGRATION | Version: initial | Status: completed
+2025-09-13 22:24:57,291 - MrTrader - INFO - DB_CONNECTION | Status: initialized | Details: D:\phonix coin\mr.trader\st\telegram_bot\MR-TRADER-BOT-01_git\data\mrtrader.db
+2025-09-13 22:24:57,297 - MrTrader - INFO - API configuration reloaded
+2025-09-13 22:24:57,519 - MrTrader - INFO - Logging system initialized
+2025-09-13 22:24:57,520 - MrTrader - INFO - Initialized 1 main managers
+2025-09-13 22:24:57,520 - MrTrader - INFO - AdminManager initialized with managers: [1517662886]
+2025-09-13 22:24:57,522 - MrTrader - INFO - Symbol manager initialized successfully
+2025-09-13 22:24:57,523 - MrTrader - INFO - Referral system initialized successfully
+2025-09-13 22:24:57,524 - MrTrader - INFO - API configuration reloaded
+2025-09-13 22:24:57,526 - MrTrader - INFO - Report system initialized successfully
+2025-09-13 22:24:57,528 - MrTrader - INFO - Backup system initialized successfully
+2025-09-13 22:24:57,528 - MrTrader - INFO - All managers initialized successfully
+2025-09-13 22:24:57,531 - MrTrader - INFO - Referral system initialized successfully
+2025-09-13 22:24:57,531 - MrTrader - INFO - API configuration reloaded
+2025-09-13 22:24:57,534 - MrTrader - INFO - Symbol manager initialized successfully
+2025-09-13 22:24:57,537 - MrTrader - INFO - Report system initialized successfully
+2025-09-13 22:24:57,542 - MrTrader - INFO - Symbol manager initialized successfully
+2025-09-13 22:24:57,543 - MrTrader - INFO - All handlers initialized successfully
+2025-09-13 22:24:57,543 - MrTrader - INFO - MrTrader Bot initialized successfully
+2025-09-13 22:24:57,543 - MrTrader - INFO - Starting MrTrader Bot...
+2025-09-13 22:25:01,133 - MrTrader - INFO - Bot commands set successfully (initial attempt)
+2025-09-13 22:25:01,135 - MrTrader - INFO - Start handlers registered manually
+2025-09-13 22:25:01,136 - MrTrader - INFO - Callback handlers registered successfully
+2025-09-13 22:25:01,137 - MrTrader - INFO - Message handlers registered successfully
+2025-09-13 22:25:01,138 - MrTrader - INFO - All handlers registered successfully
+2025-09-13 22:25:01,138 - MrTrader - INFO - Bot application initialized successfully
+2025-09-13 22:25:01,139 - MrTrader - INFO - Starting bot startup tasks...
+2025-09-13 22:25:01,140 - MrTrader - INFO - Database health check: OK
+2025-09-13 22:25:01,141 - MrTrader - INFO - API ping check skipped - method not available
+2025-09-13 22:25:01,142 - MrTrader - INFO - System settings loading skipped - method not available
+2025-09-13 22:25:01,142 - MrTrader - INFO - Scheduled tasks configured:
+2025-09-13 22:25:01,143 - MrTrader - INFO - - Backup: Daily at 2:00 AM
+2025-09-13 22:25:01,145 - MrTrader - INFO - - Reports: Daily at 1:00 AM
+2025-09-13 22:25:01,146 - MrTrader - INFO - - Cleanup: Weekly on Sunday
+2025-09-13 22:25:01,146 - MrTrader - INFO - - Analytics: Hourly
+2025-09-13 22:25:01,372 - MrTrader - INFO - Startup notification sent successfully
+2025-09-13 22:25:01,373 - MrTrader - INFO - All startup tasks completed successfully
+2025-09-13 22:25:01,740 - MrTrader - INFO - Bot is running... Press Ctrl+C to stop
+2025-09-13 22:25:06,049 - MrTrader - INFO - Start command received from user 1517662886
+2025-09-13 22:25:06,051 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: start_command | Details: User started bot: am369ap
+2025-09-13 22:25:09,387 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: analysis_menu
+2025-09-13 22:25:12,839 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: main_menu
+2025-09-13 22:25:20,872 - MrTrader - INFO - Start command received from user 1517662886
+2025-09-13 22:25:20,873 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: start_command | Details: User started bot: am369ap
+2025-09-13 22:26:03,154 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: analysis_menu
+2025-09-13 22:26:04,892 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: main_menu
+2025-09-13 22:34:24,446 - MrTrader - INFO - DB_MIGRATION | Version: initial | Status: completed
+2025-09-13 22:34:24,447 - MrTrader - INFO - DB_CONNECTION | Status: initialized | Details: D:\phonix coin\mr.trader\st\telegram_bot\MR-TRADER-BOT-01_git\data\mrtrader.db
+2025-09-13 22:34:24,457 - MrTrader - INFO - API configuration reloaded
+2025-09-13 22:34:24,719 - MrTrader - INFO - Logging system initialized
+2025-09-13 22:34:24,720 - MrTrader - INFO - Initialized 1 main managers
+2025-09-13 22:34:24,720 - MrTrader - INFO - AdminManager initialized with managers: [1517662886]
+2025-09-13 22:34:24,722 - MrTrader - INFO - Symbol manager initialized successfully
+2025-09-13 22:34:24,724 - MrTrader - INFO - Referral system initialized successfully
+2025-09-13 22:34:24,725 - MrTrader - INFO - API configuration reloaded
+2025-09-13 22:34:24,727 - MrTrader - INFO - Report system initialized successfully
+2025-09-13 22:34:24,730 - MrTrader - INFO - Backup system initialized successfully
+2025-09-13 22:34:24,730 - MrTrader - INFO - All managers initialized successfully
+2025-09-13 22:34:24,740 - MrTrader - INFO - Referral system initialized successfully
+2025-09-13 22:34:24,741 - MrTrader - INFO - API configuration reloaded
+2025-09-13 22:34:24,744 - MrTrader - INFO - Symbol manager initialized successfully
+2025-09-13 22:34:24,746 - MrTrader - INFO - Report system initialized successfully
+2025-09-13 22:34:24,748 - MrTrader - INFO - Symbol manager initialized successfully
+2025-09-13 22:34:24,748 - MrTrader - INFO - All handlers initialized successfully
+2025-09-13 22:34:24,748 - MrTrader - INFO - MrTrader Bot initialized successfully
+2025-09-13 22:34:24,748 - MrTrader - INFO - Starting MrTrader Bot...
+2025-09-13 22:34:28,779 - MrTrader - INFO - Bot commands set successfully (initial attempt)
+2025-09-13 22:34:28,779 - MrTrader - INFO - Start handlers registered manually
+2025-09-13 22:34:28,780 - MrTrader - INFO - Callback handlers registered successfully
+2025-09-13 22:34:28,780 - MrTrader - INFO - Message handlers registered successfully
+2025-09-13 22:34:28,780 - MrTrader - INFO - All handlers registered successfully
+2025-09-13 22:34:28,780 - MrTrader - INFO - Bot application initialized successfully
+2025-09-13 22:34:28,781 - MrTrader - INFO - Starting bot startup tasks...
+2025-09-13 22:34:28,781 - MrTrader - INFO - Database health check: OK
+2025-09-13 22:34:28,781 - MrTrader - INFO - API ping check skipped - method not available
+2025-09-13 22:34:28,782 - MrTrader - INFO - System settings loading skipped - method not available
+2025-09-13 22:34:28,782 - MrTrader - INFO - Scheduled tasks configured:
+2025-09-13 22:34:28,782 - MrTrader - INFO - - Backup: Daily at 2:00 AM
+2025-09-13 22:34:28,783 - MrTrader - INFO - - Reports: Daily at 1:00 AM
+2025-09-13 22:34:28,783 - MrTrader - INFO - - Cleanup: Weekly on Sunday
+2025-09-13 22:34:28,783 - MrTrader - INFO - - Analytics: Hourly
+2025-09-13 22:34:29,012 - MrTrader - INFO - Startup notification sent successfully
+2025-09-13 22:34:29,013 - MrTrader - INFO - All startup tasks completed successfully
+2025-09-13 22:34:29,348 - MrTrader - INFO - Bot is running... Press Ctrl+C to stop
+2025-09-13 22:34:48,524 - MrTrader - INFO - Start command received from user 1517662886
+2025-09-13 22:34:48,526 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: start_command | Details: User started bot: am369ap
+2025-09-13 22:34:51,372 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: gold_menu
+2025-09-13 22:34:53,442 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: analyze_gold:IR_GOLD_18K
+2025-09-13 22:34:53,640 - MrTrader - ERROR - Error processing callback analyze_gold:IR_GOLD_18K: type object 'ApiClient' has no attribute 'fetch_gold_analysis'
+Traceback (most recent call last):
+  File "D:\phonix coin\mr.trader\st\telegram_bot\MR-TRADER-BOT-01_git\handlers\callback_handlers.py", line 148, in _process_callback
+    await self.handle_gold_currency_analysis(query, context, param)
+  File "D:\phonix coin\mr.trader\st\telegram_bot\MR-TRADER-BOT-01_git\handlers\callback_handlers.py", line 595, in handle_gold_currency_analysis
+    response, error = await ApiClient.fetch_gold_analysis(symbol)
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: type object 'ApiClient' has no attribute 'fetch_gold_analysis'. Did you mean: 'fetch_analysis'?
+2025-09-13 22:35:20,992 - MrTrader - INFO - Start command received from user 1517662886
+2025-09-13 22:35:20,996 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: start_command | Details: User started bot: am369ap
+2025-09-13 22:35:26,198 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: currency_menu
+2025-09-13 22:35:28,022 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: analyze_gold:USD
+2025-09-13 22:35:28,236 - MrTrader - ERROR - Error processing callback analyze_gold:USD: type object 'ApiClient' has no attribute 'fetch_gold_analysis'
+Traceback (most recent call last):
+  File "D:\phonix coin\mr.trader\st\telegram_bot\MR-TRADER-BOT-01_git\handlers\callback_handlers.py", line 148, in _process_callback
+    await self.handle_gold_currency_analysis(query, context, param)
+  File "D:\phonix coin\mr.trader\st\telegram_bot\MR-TRADER-BOT-01_git\handlers\callback_handlers.py", line 595, in handle_gold_currency_analysis
+    response, error = await ApiClient.fetch_gold_analysis(symbol)
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: type object 'ApiClient' has no attribute 'fetch_gold_analysis'. Did you mean: 'fetch_analysis'?
+2025-09-13 22:35:33,092 - MrTrader - INFO - Start command received from user 1517662886
+2025-09-13 22:35:33,097 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: start_command | Details: User started bot: am369ap
+2025-09-13 22:35:35,708 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: analysis_menu
+2025-09-13 22:35:40,937 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_strategy:cci_analysis
+2025-09-13 22:35:43,395 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_symbol:cci_analysis|BTC
+2025-09-13 22:35:44,955 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_currency:cci_analysis|BTC|USDT
+2025-09-13 22:35:46,793 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_timeframe:cci_analysis|BTC|USDT|1m
+2025-09-13 22:35:47,024 - MrTrader - INFO - Starting analysis for user 1517662886: cci_analysis BTC/USDT @ 1m
+2025-09-13 22:35:47,033 - MrTrader - INFO - Calling API for cci_analysis analysis: BTC/USDT @ 1m
+2025-09-13 22:35:47,034 - MrTrader - ERROR - Could not get URL for strategy 'cci_analysis': type object 'Config' has no attribute 'get_api_server_config'
+2025-09-13 22:35:47,035 - MrTrader - ERROR - API returned error: URL not found for strategy: cci_analysis
+2025-09-13 22:36:10,689 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: main_menu
+2025-09-13 22:36:22,921 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: backtest_menu
+2025-09-13 22:36:25,218 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: backtest:IR_GOLD_18K
+2025-09-13 22:36:25,401 - MrTrader - ERROR - Error processing callback backtest:IR_GOLD_18K: type object 'ApiClient' has no attribute 'fetch_backtest_results'
+Traceback (most recent call last):
+  File "D:\phonix coin\mr.trader\st\telegram_bot\MR-TRADER-BOT-01_git\handlers\callback_handlers.py", line 152, in _process_callback
+    await self.handle_backtest_request(query, context, param)
+  File "D:\phonix coin\mr.trader\st\telegram_bot\MR-TRADER-BOT-01_git\handlers\callback_handlers.py", line 615, in handle_backtest_request
+    results, error = await ApiClient.fetch_backtest_results(symbol)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: type object 'ApiClient' has no attribute 'fetch_backtest_results'
+2025-09-13 22:36:27,861 - MrTrader - INFO - Start command received from user 1517662886
+2025-09-13 22:36:27,863 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: start_command | Details: User started bot: am369ap
+2025-09-13 22:37:36,521 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: analysis_menu
+2025-09-13 22:37:41,800 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_strategy:cci_analysis
+2025-09-13 22:37:43,994 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_symbol:cci_analysis|BTC
+2025-09-13 22:37:46,698 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_currency:cci_analysis|BTC|USDT
+2025-09-13 22:37:49,462 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_timeframe:cci_analysis|BTC|USDT|1m
+2025-09-13 22:37:49,747 - MrTrader - INFO - Starting analysis for user 1517662886: cci_analysis BTC/USDT @ 1m
+2025-09-13 22:37:49,752 - MrTrader - INFO - Calling API for cci_analysis analysis: BTC/USDT @ 1m
+2025-09-13 22:37:49,752 - MrTrader - ERROR - Could not get URL for strategy 'cci_analysis': type object 'Config' has no attribute 'get_api_server_config'
+2025-09-13 22:37:49,753 - MrTrader - ERROR - API returned error: URL not found for strategy: cci_analysis
+2025-09-13 22:37:52,146 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: main_menu
+2025-09-13 22:47:12,670 - MrTrader - INFO - DB_MIGRATION | Version: initial | Status: completed
+2025-09-13 22:47:12,670 - MrTrader - INFO - DB_CONNECTION | Status: initialized | Details: D:\phonix coin\mr.trader\st\telegram_bot\MR-TRADER-BOT-01_git\data\mrtrader.db
+2025-09-13 22:47:12,676 - MrTrader - INFO - API configuration reloaded
+2025-09-13 22:47:12,932 - MrTrader - INFO - Logging system initialized
+2025-09-13 22:47:12,933 - MrTrader - INFO - Initialized 1 main managers
+2025-09-13 22:47:12,933 - MrTrader - INFO - AdminManager initialized with managers: [1517662886]
+2025-09-13 22:47:12,938 - MrTrader - INFO - Symbol manager initialized successfully
+2025-09-13 22:47:12,940 - MrTrader - INFO - Referral system initialized successfully
+2025-09-13 22:47:12,941 - MrTrader - INFO - API configuration reloaded
+2025-09-13 22:47:12,943 - MrTrader - INFO - Report system initialized successfully
+2025-09-13 22:47:12,945 - MrTrader - INFO - Backup system initialized successfully
+2025-09-13 22:47:12,945 - MrTrader - INFO - All managers initialized successfully
+2025-09-13 22:47:12,950 - MrTrader - INFO - Referral system initialized successfully
+2025-09-13 22:47:12,950 - MrTrader - INFO - API configuration reloaded
+2025-09-13 22:47:12,952 - MrTrader - INFO - Symbol manager initialized successfully
+2025-09-13 22:47:12,954 - MrTrader - INFO - Report system initialized successfully
+2025-09-13 22:47:12,956 - MrTrader - INFO - Symbol manager initialized successfully
+2025-09-13 22:47:12,956 - MrTrader - INFO - All handlers initialized successfully
+2025-09-13 22:47:12,956 - MrTrader - INFO - MrTrader Bot initialized successfully
+2025-09-13 22:47:12,956 - MrTrader - INFO - Starting MrTrader Bot...
+2025-09-13 22:47:16,942 - MrTrader - INFO - Bot commands set successfully (initial attempt)
+2025-09-13 22:47:16,944 - MrTrader - INFO - Start handlers registered manually
+2025-09-13 22:47:16,944 - MrTrader - INFO - Callback handlers registered successfully
+2025-09-13 22:47:16,945 - MrTrader - INFO - Message handlers registered successfully
+2025-09-13 22:47:16,946 - MrTrader - INFO - All handlers registered successfully
+2025-09-13 22:47:16,946 - MrTrader - INFO - Bot application initialized successfully
+2025-09-13 22:47:16,947 - MrTrader - INFO - Starting bot startup tasks...
+2025-09-13 22:47:16,948 - MrTrader - INFO - Database health check: OK
+2025-09-13 22:47:16,949 - MrTrader - INFO - API ping check skipped - method not available
+2025-09-13 22:47:16,950 - MrTrader - INFO - System settings loading skipped - method not available
+2025-09-13 22:47:16,950 - MrTrader - INFO - Scheduled tasks configured:
+2025-09-13 22:47:16,951 - MrTrader - INFO - - Backup: Daily at 2:00 AM
+2025-09-13 22:47:16,952 - MrTrader - INFO - - Reports: Daily at 1:00 AM
+2025-09-13 22:47:16,953 - MrTrader - INFO - - Cleanup: Weekly on Sunday
+2025-09-13 22:47:16,953 - MrTrader - INFO - - Analytics: Hourly
+2025-09-13 22:47:17,152 - MrTrader - INFO - Startup notification sent successfully
+2025-09-13 22:47:17,153 - MrTrader - INFO - All startup tasks completed successfully
+2025-09-13 22:47:17,636 - MrTrader - INFO - Bot is running... Press Ctrl+C to stop
+2025-09-13 22:47:23,248 - MrTrader - INFO - Start command received from user 1517662886
+2025-09-13 22:47:23,250 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: start_command | Details: User started bot: am369ap
+2025-09-13 22:47:27,678 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: gold_menu
+2025-09-13 22:47:29,539 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: main_menu
+2025-09-13 22:47:39,672 - MrTrader - INFO - Start command received from user 1517662886
+2025-09-13 22:47:39,674 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: start_command | Details: User started bot: am369ap
+2025-09-13 22:47:46,219 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: analysis_menu
+2025-09-13 22:47:48,395 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_strategy:cci_analysis
+2025-09-13 22:47:50,143 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_symbol:cci_analysis|BTC
+2025-09-13 22:47:52,150 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_currency:cci_analysis|BTC|USDT
+2025-09-13 22:47:53,652 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_timeframe:cci_analysis|BTC|USDT|15m
+2025-09-13 22:47:53,877 - MrTrader - INFO - Starting analysis for user 1517662886: cci_analysis BTC/USDT @ 15m
+2025-09-13 22:47:53,880 - MrTrader - INFO - Calling API for cci_analysis analysis: BTC/USDT @ 15m
+2025-09-13 22:47:53,881 - MrTrader - ERROR - API returned error: URL not found for strategy: cci_analysis
+2025-09-13 22:48:01,819 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: main_menu
+2025-09-13 22:48:03,253 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: gold_menu
+2025-09-13 22:48:05,271 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: analyze_gold:IR_GOLD_18K
+2025-09-13 22:48:20,266 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: main_menu
+2025-09-13 22:48:43,885 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: analysis_menu
+2025-09-13 22:48:45,741 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_strategy:atr
+2025-09-13 22:48:48,147 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_symbol:atr|ADA
+2025-09-13 22:48:49,976 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_currency:atr|ADA|USDT
+2025-09-13 22:48:52,153 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_timeframe:atr|ADA|USDT|30m
+2025-09-13 22:48:52,411 - MrTrader - INFO - Starting analysis for user 1517662886: atr ADA/USDT @ 30m
+2025-09-13 22:48:52,421 - MrTrader - INFO - Calling API for atr analysis: ADA/USDT @ 30m
+2025-09-13 22:48:52,422 - MrTrader - INFO - Requesting atr analysis for ADA/USDT @ 30m (API: histominute)
+2025-09-13 22:49:23,245 - MrTrader - WARNING - Request timeout (attempt 1): http://91.198.77.208:8000/analyze_ATR_strategy/
+2025-09-13 22:49:55,238 - MrTrader - WARNING - Request timeout (attempt 2): http://91.198.77.208:8000/analyze_ATR_strategy/
+2025-09-13 22:50:24,072 - MrTrader - INFO - API request successful: POST http://91.198.77.208:8000/analyze_ATR_strategy/
+2025-09-13 22:50:24,072 - MrTrader - INFO - Reading report file via API: save/ATR_strategy/ATR_TXT/ADA_histominute_20250913_192024.txt
+2025-09-13 22:50:24,073 - MrTrader - ERROR - Error reading report file: 'ApiClient' object has no attribute 'base_url'
+2025-09-13 22:50:24,073 - MrTrader - INFO - Analysis completed for atr ADA/USDT @ 30m
+2025-09-13 22:50:24,074 - MrTrader - INFO - Analysis successful for atr ADA/USDT
+2025-09-13 22:50:29,413 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: download_report:atr_ADA_USDT_30m_20250913_225024.txt
+2025-09-13 22:50:30,065 - MrTrader - INFO - فایل بعد از ارسال حذف شد: temp_reports\atr_ADA_USDT_30m_20250913_225024.txt
+2025-09-13 23:12:59,727 - MrTrader - INFO - DB_MIGRATION | Version: initial | Status: completed
+2025-09-13 23:12:59,727 - MrTrader - INFO - DB_CONNECTION | Status: initialized | Details: D:\phonix coin\mr.trader\st\telegram_bot\MR-TRADER-BOT-01_git\data\mrtrader.db
+2025-09-13 23:12:59,734 - MrTrader - INFO - API configuration reloaded
+2025-09-13 23:12:59,986 - MrTrader - INFO - Logging system initialized
+2025-09-13 23:12:59,986 - MrTrader - INFO - Initialized 1 main managers
+2025-09-13 23:12:59,986 - MrTrader - INFO - AdminManager initialized with managers: [1517662886]
+2025-09-13 23:12:59,988 - MrTrader - INFO - Symbol manager initialized successfully
+2025-09-13 23:12:59,991 - MrTrader - INFO - Referral system initialized successfully
+2025-09-13 23:12:59,992 - MrTrader - INFO - API configuration reloaded
+2025-09-13 23:12:59,993 - MrTrader - INFO - Report system initialized successfully
+2025-09-13 23:12:59,996 - MrTrader - INFO - Backup system initialized successfully
+2025-09-13 23:12:59,996 - MrTrader - INFO - All managers initialized successfully
+2025-09-13 23:12:59,999 - MrTrader - INFO - Referral system initialized successfully
+2025-09-13 23:13:00,000 - MrTrader - INFO - API configuration reloaded
+2025-09-13 23:13:00,002 - MrTrader - INFO - Symbol manager initialized successfully
+2025-09-13 23:13:00,004 - MrTrader - INFO - Report system initialized successfully
+2025-09-13 23:13:00,007 - MrTrader - INFO - Symbol manager initialized successfully
+2025-09-13 23:13:00,007 - MrTrader - INFO - All handlers initialized successfully
+2025-09-13 23:13:00,007 - MrTrader - INFO - MrTrader Bot initialized successfully
+2025-09-13 23:13:00,007 - MrTrader - INFO - Starting MrTrader Bot...
+2025-09-13 23:13:03,568 - MrTrader - INFO - Bot commands set successfully (initial attempt)
+2025-09-13 23:13:03,568 - MrTrader - INFO - Start handlers registered manually
+2025-09-13 23:13:03,568 - MrTrader - INFO - Callback handlers registered successfully
+2025-09-13 23:13:03,569 - MrTrader - INFO - Message handlers registered successfully
+2025-09-13 23:13:03,569 - MrTrader - INFO - All handlers registered successfully
+2025-09-13 23:13:03,569 - MrTrader - INFO - Bot application initialized successfully
+2025-09-13 23:13:03,570 - MrTrader - INFO - Starting bot startup tasks...
+2025-09-13 23:13:03,570 - MrTrader - INFO - Database health check: OK
+2025-09-13 23:13:03,571 - MrTrader - INFO - API ping check skipped - method not available
+2025-09-13 23:13:03,571 - MrTrader - INFO - System settings loading skipped - method not available
+2025-09-13 23:13:03,571 - MrTrader - INFO - Scheduled tasks configured:
+2025-09-13 23:13:03,571 - MrTrader - INFO - - Backup: Daily at 2:00 AM
+2025-09-13 23:13:03,572 - MrTrader - INFO - - Reports: Daily at 1:00 AM
+2025-09-13 23:13:03,572 - MrTrader - INFO - - Cleanup: Weekly on Sunday
+2025-09-13 23:13:03,572 - MrTrader - INFO - - Analytics: Hourly
+2025-09-13 23:13:03,814 - MrTrader - INFO - Startup notification sent successfully
+2025-09-13 23:13:03,814 - MrTrader - INFO - All startup tasks completed successfully
+2025-09-13 23:13:04,148 - MrTrader - INFO - Bot is running... Press Ctrl+C to stop
+2025-09-13 23:13:06,262 - MrTrader - INFO - Start command received from user 1517662886
+2025-09-13 23:13:06,263 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: start_command | Details: User started bot: am369ap
+2025-09-13 23:13:11,530 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: coins_list
+2025-09-13 23:13:14,566 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: noop
+2025-09-13 23:13:16,538 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: main_menu
+2025-09-13 23:13:18,951 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: coins_list
+2025-09-13 23:13:20,596 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: live_price:IR_GOLD_18K
+2025-09-13 23:13:20,932 - MrTrader - INFO - Fetching live price for 'IR_GOLD_18K' from GOLD server.
+2025-09-13 23:13:28,376 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: coins_list
+2025-09-13 23:13:35,701 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: main_menu
+2025-09-13 23:13:45,476 - MrTrader - INFO - Start command received from user 1517662886
+2025-09-13 23:13:45,479 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: start_command | Details: User started bot: am369ap
+2025-09-13 23:14:00,507 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: price_chart
+2025-09-13 23:14:01,978 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: main_menu
+2025-09-13 23:14:07,801 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: coins_list
+2025-09-13 23:20:32,805 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: live_price:BTC
+2025-09-13 23:20:33,305 - MrTrader - INFO - Fetching live price for 'BTC' from CRYPTO server.
+2025-09-13 23:20:39,776 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: coins_list
+2025-09-13 23:20:41,678 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: main_menu
+2025-09-13 23:20:44,300 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: backtest_menu
+2025-09-13 23:20:46,095 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: backtest:USD
+2025-09-13 23:22:09,017 - MrTrader - ERROR - HTTP error during backtest for USD: Server error '503 Service Unavailable' for url 'http://9.198.77.208:8080/backtest/USD'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/503
+2025-09-13 23:22:09,025 - MrTrader - ERROR - Error processing callback backtest:USD: Expecting value: line 1 column 1 (char 0)
+Traceback (most recent call last):
+  File "D:\phonix coin\mr.trader\st\telegram_bot\MR-TRADER-BOT-01_git\handlers\callback_handlers.py", line 187, in _process_callback
+    await self.handle_backtest_request(query, context, param)
+  File "D:\phonix coin\mr.trader\st\telegram_bot\MR-TRADER-BOT-01_git\handlers\callback_handlers.py", line 655, in handle_backtest_request
+    results, error = await ApiClient.fetch_backtest_results(symbol)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\phonix coin\mr.trader\st\telegram_bot\MR-TRADER-BOT-01_git\api\api_client.py", line 469, in fetch_backtest_results
+    error_detail = e.response.json().get("detail", e.response.text)
+                   ^^^^^^^^^^^^^^^^^
+  File "c:\Users\pc city\AppData\Local\Programs\Python\Python312\Lib\site-packages\httpx\_models.py", line 832, in json
+    return jsonlib.loads(self.content, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\pc city\AppData\Local\Programs\Python\Python312\Lib\json\__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\pc city\AppData\Local\Programs\Python\Python312\Lib\json\decoder.py", line 337, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\pc city\AppData\Local\Programs\Python\Python312\Lib\json\decoder.py", line 355, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+2025-09-13 23:23:31,777 - MrTrader - INFO - Start command received from user 1517662886
+2025-09-13 23:23:31,781 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: start_command | Details: User started bot: am369ap
+2025-09-13 23:23:36,976 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: currency_menu
+2025-09-13 23:23:38,590 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: analyze_gold:USD
+2025-09-13 23:24:05,477 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: main_menu
+2025-09-13 23:24:07,311 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: analysis_menu
+2025-09-13 23:24:10,461 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_strategy:macd
+2025-09-13 23:24:12,354 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_symbol:macd|BTC
+2025-09-13 23:24:13,973 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_currency:macd|BTC|USDT
+2025-09-13 23:24:15,386 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_timeframe:macd|BTC|USDT|15m
+2025-09-13 23:24:15,591 - MrTrader - INFO - Starting analysis for user 1517662886: macd BTC/USDT @ 15m
+2025-09-13 23:24:15,598 - MrTrader - INFO - Calling API for macd analysis: BTC/USDT @ 15m
+2025-09-13 23:24:15,598 - MrTrader - ERROR - API returned error: URL not found for strategy: macd
+2025-09-13 23:24:19,086 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: analysis_menu
+2025-09-13 23:24:21,167 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_strategy:rtm
+2025-09-13 23:24:23,017 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_symbol:rtm|ADA
+2025-09-13 23:24:24,581 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_currency:rtm|ADA|USDT
+2025-09-13 23:24:26,137 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: select_timeframe:rtm|ADA|USDT|1h
+2025-09-13 23:24:26,362 - MrTrader - INFO - Starting analysis for user 1517662886: rtm ADA/USDT @ 1h
+2025-09-13 23:24:26,365 - MrTrader - INFO - Calling API for rtm analysis: ADA/USDT @ 1h
+2025-09-13 23:24:26,366 - MrTrader - INFO - Requesting rtm analysis for ADA/USDT @ 1h (API: histohour)
+2025-09-13 23:24:57,236 - MrTrader - WARNING - Request timeout (attempt 1): http://91.198.77.208:8000/analyze_RTM_analysis_system/
+2025-09-13 23:25:29,256 - MrTrader - WARNING - Request timeout (attempt 2): http://91.198.77.208:8000/analyze_RTM_analysis_system/
+2025-09-13 23:26:02,252 - MrTrader - WARNING - Request timeout (attempt 3): http://91.198.77.208:8000/analyze_RTM_analysis_system/
+2025-09-13 23:26:02,252 - MrTrader - ERROR - All retry attempts failed for http://91.198.77.208:8000/analyze_RTM_analysis_system/. Last error: Timeout error: 
+2025-09-13 23:26:02,253 - MrTrader - ERROR - API returned error: Timeout error: 
+2025-09-13 23:44:28,351 - MrTrader - INFO - DB_MIGRATION | Version: initial | Status: completed
+2025-09-13 23:44:28,351 - MrTrader - INFO - DB_CONNECTION | Status: initialized | Details: D:\phonix coin\mr.trader\st\telegram_bot\MR-TRADER-BOT-01_git\data\mrtrader.db
+2025-09-13 23:44:28,360 - MrTrader - INFO - API configuration reloaded
+2025-09-13 23:44:28,646 - MrTrader - INFO - Logging system initialized
+2025-09-13 23:44:28,646 - MrTrader - INFO - Initialized 1 main managers
+2025-09-13 23:44:28,647 - MrTrader - INFO - AdminManager initialized with managers: [1517662886]
+2025-09-13 23:44:28,649 - MrTrader - INFO - Referral system initialized successfully
+2025-09-13 23:44:28,649 - MrTrader - INFO - API configuration reloaded
+2025-09-13 23:44:28,651 - MrTrader - INFO - Report system initialized successfully
+2025-09-13 23:44:28,654 - MrTrader - INFO - Backup system initialized successfully
+2025-09-13 23:44:28,654 - MrTrader - INFO - All managers initialized successfully
+2025-09-13 23:44:28,659 - MrTrader - INFO - Referral system initialized successfully
+2025-09-13 23:44:28,660 - MrTrader - INFO - API configuration reloaded
+2025-09-13 23:44:28,661 - MrTrader - INFO - Report system initialized successfully
+2025-09-13 23:44:28,662 - MrTrader - INFO - All handlers initialized successfully
+2025-09-13 23:44:28,662 - MrTrader - INFO - MrTrader Bot initialized successfully
+2025-09-13 23:44:28,662 - MrTrader - INFO - Starting MrTrader Bot...
+2025-09-13 23:44:32,386 - MrTrader - INFO - Bot commands set successfully (initial attempt)
+2025-09-13 23:44:32,387 - MrTrader - INFO - Start handlers registered manually
+2025-09-13 23:44:32,389 - MrTrader - INFO - Callback handlers registered successfully
+2025-09-13 23:44:32,389 - MrTrader - INFO - Message handlers registered successfully
+2025-09-13 23:44:32,390 - MrTrader - INFO - All handlers registered successfully
+2025-09-13 23:44:32,390 - MrTrader - INFO - Bot application initialized successfully
+2025-09-13 23:44:32,390 - MrTrader - INFO - Starting bot startup tasks...
+2025-09-13 23:44:32,391 - MrTrader - INFO - Database health check: OK
+2025-09-13 23:44:32,392 - MrTrader - INFO - API ping check skipped - method not available
+2025-09-13 23:44:32,392 - MrTrader - INFO - System settings loading skipped - method not available
+2025-09-13 23:44:32,392 - MrTrader - INFO - Scheduled tasks configured:
+2025-09-13 23:44:32,393 - MrTrader - INFO - - Backup: Daily at 2:00 AM
+2025-09-13 23:44:32,393 - MrTrader - INFO - - Reports: Daily at 1:00 AM
+2025-09-13 23:44:32,393 - MrTrader - INFO - - Cleanup: Weekly on Sunday
+2025-09-13 23:44:32,393 - MrTrader - INFO - - Analytics: Hourly
+2025-09-13 23:44:32,577 - MrTrader - INFO - Startup notification sent successfully
+2025-09-13 23:44:32,577 - MrTrader - INFO - All startup tasks completed successfully
+2025-09-13 23:44:32,935 - MrTrader - INFO - Bot is running... Press Ctrl+C to stop
+2025-09-13 23:44:34,813 - MrTrader - INFO - Start command received from user 1517662886
+2025-09-13 23:44:34,815 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: start_command | Details: User started bot: am369ap
+2025-09-13 23:44:39,933 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: coins_list
+2025-09-13 23:44:41,645 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: show_market:gold
+2025-09-13 23:44:43,671 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: live_price:IR_COIN_BAHAR
+2025-09-13 23:44:44,062 - MrTrader - INFO - Fetching live price for 'IR_COIN_BAHAR' from GOLD server.
+2025-09-13 23:44:50,853 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: show_market:gold
+2025-09-13 23:44:52,693 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: live_price:IR_COIN_HALF
+2025-09-13 23:44:53,050 - MrTrader - INFO - Fetching live price for 'IR_COIN_HALF' from GOLD server.
+2025-09-13 23:44:57,730 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: show_market:gold
+2025-09-13 23:44:59,458 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: coins_list
+2025-09-13 23:45:02,616 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: show_market:currency
+2025-09-13 23:45:04,911 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: live_price:USD
+2025-09-13 23:45:05,357 - MrTrader - INFO - Fetching live price for 'USD' from GOLD server.
+2025-09-13 23:45:09,341 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: show_market:currency
+2025-09-13 23:45:12,698 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: coins_list
+2025-09-13 23:45:15,274 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: show_market:crypto
+2025-09-13 23:45:18,043 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: live_price:ADA
+2025-09-13 23:45:18,430 - MrTrader - INFO - Fetching live price for 'ADA' from CRYPTO server.
+2025-09-13 23:45:23,204 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: show_market:crypto
+2025-09-13 23:45:26,150 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: show_market:crypto_full
+2025-09-13 23:45:28,381 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: show_market:crypto
+2025-09-13 23:45:30,210 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: coins_list
+2025-09-13 23:45:32,655 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: show_market:currency
+2025-09-13 23:46:30,395 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: coins_list
+2025-09-13 23:46:32,181 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: show_market:gold
+2025-09-13 23:46:39,989 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: coins_list
+2025-09-13 23:46:41,823 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: show_market:crypto
+2025-09-13 23:53:56,361 - MrTrader - INFO - DB_MIGRATION | Version: initial | Status: completed
+2025-09-13 23:53:56,362 - MrTrader - INFO - DB_CONNECTION | Status: initialized | Details: D:\phonix coin\mr.trader\st\telegram_bot\MR-TRADER-BOT-01_git\data\mrtrader.db
+2025-09-13 23:53:56,368 - MrTrader - INFO - API configuration reloaded
+2025-09-13 23:53:56,620 - MrTrader - INFO - Logging system initialized
+2025-09-13 23:53:56,620 - MrTrader - INFO - Initialized 1 main managers
+2025-09-13 23:53:56,621 - MrTrader - INFO - AdminManager initialized with managers: [1517662886]
+2025-09-13 23:53:56,623 - MrTrader - INFO - Referral system initialized successfully
+2025-09-13 23:53:56,624 - MrTrader - INFO - API configuration reloaded
+2025-09-13 23:53:56,628 - MrTrader - INFO - Report system initialized successfully
+2025-09-13 23:53:56,630 - MrTrader - INFO - Backup system initialized successfully
+2025-09-13 23:53:56,631 - MrTrader - INFO - All managers initialized successfully
+2025-09-13 23:53:56,633 - MrTrader - INFO - Referral system initialized successfully
+2025-09-13 23:53:56,634 - MrTrader - INFO - API configuration reloaded
+2025-09-13 23:53:56,635 - MrTrader - INFO - Report system initialized successfully
+2025-09-13 23:53:56,636 - MrTrader - INFO - All handlers initialized successfully
+2025-09-13 23:53:56,636 - MrTrader - INFO - MrTrader Bot initialized successfully
+2025-09-13 23:53:56,636 - MrTrader - INFO - Starting MrTrader Bot...
+2025-09-13 23:54:01,087 - MrTrader - INFO - Bot commands set successfully (initial attempt)
+2025-09-13 23:54:01,088 - MrTrader - INFO - Start handlers registered manually
+2025-09-13 23:54:01,091 - MrTrader - INFO - Callback handlers registered successfully
+2025-09-13 23:54:01,092 - MrTrader - INFO - Message handlers registered successfully
+2025-09-13 23:54:01,092 - MrTrader - INFO - All handlers registered successfully
+2025-09-13 23:54:01,093 - MrTrader - INFO - Bot application initialized successfully
+2025-09-13 23:54:01,093 - MrTrader - INFO - Starting bot startup tasks...
+2025-09-13 23:54:01,094 - MrTrader - INFO - Database health check: OK
+2025-09-13 23:54:01,095 - MrTrader - INFO - API ping check skipped - method not available
+2025-09-13 23:54:01,097 - MrTrader - INFO - System settings loading skipped - method not available
+2025-09-13 23:54:01,099 - MrTrader - INFO - Scheduled tasks configured:
+2025-09-13 23:54:01,100 - MrTrader - INFO - - Backup: Daily at 2:00 AM
+2025-09-13 23:54:01,100 - MrTrader - INFO - - Reports: Daily at 1:00 AM
+2025-09-13 23:54:01,101 - MrTrader - INFO - - Cleanup: Weekly on Sunday
+2025-09-13 23:54:01,101 - MrTrader - INFO - - Analytics: Hourly
+2025-09-13 23:54:01,332 - MrTrader - INFO - Startup notification sent successfully
+2025-09-13 23:54:01,333 - MrTrader - INFO - All startup tasks completed successfully
+2025-09-13 23:54:01,643 - MrTrader - INFO - Bot is running... Press Ctrl+C to stop
+2025-09-13 23:54:04,492 - MrTrader - INFO - Start command received from user 1517662886
+2025-09-13 23:54:04,495 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: start_command | Details: User started bot: am369ap
+2025-09-13 23:54:14,758 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: coins_list
+2025-09-13 23:54:17,571 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: show_market:gold
+2025-09-13 23:54:19,012 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: live_price:IR_COIN_BAHAR
+2025-09-13 23:54:19,812 - MrTrader - INFO - Fetching live price for 'IR_COIN_BAHAR' from GOLD server.
+2025-09-13 23:54:25,404 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: show_market:gold
+2025-09-13 23:54:29,362 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: coins_list
+2025-09-13 23:54:31,256 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: show_market:currency
+2025-09-13 23:54:33,612 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: coins_list
+2025-09-13 23:56:47,245 - MrTrader - INFO - DB_MIGRATION | Version: initial | Status: completed
+2025-09-13 23:56:47,245 - MrTrader - INFO - DB_CONNECTION | Status: initialized | Details: D:\phonix coin\mr.trader\st\telegram_bot\MR-TRADER-BOT-01_git\data\mrtrader.db
+2025-09-13 23:56:47,253 - MrTrader - INFO - API configuration reloaded
+2025-09-13 23:56:47,473 - MrTrader - INFO - Logging system initialized
+2025-09-13 23:56:47,474 - MrTrader - INFO - Initialized 1 main managers
+2025-09-13 23:56:47,474 - MrTrader - INFO - AdminManager initialized with managers: [1517662886]
+2025-09-13 23:56:47,476 - MrTrader - INFO - Referral system initialized successfully
+2025-09-13 23:56:47,477 - MrTrader - INFO - API configuration reloaded
+2025-09-13 23:56:47,479 - MrTrader - INFO - Report system initialized successfully
+2025-09-13 23:56:47,482 - MrTrader - INFO - Backup system initialized successfully
+2025-09-13 23:56:47,482 - MrTrader - INFO - All managers initialized successfully
+2025-09-13 23:56:47,485 - MrTrader - INFO - Referral system initialized successfully
+2025-09-13 23:56:47,486 - MrTrader - INFO - API configuration reloaded
+2025-09-13 23:56:47,487 - MrTrader - INFO - Report system initialized successfully
+2025-09-13 23:56:47,488 - MrTrader - INFO - All handlers initialized successfully
+2025-09-13 23:56:47,488 - MrTrader - INFO - MrTrader Bot initialized successfully
+2025-09-13 23:56:47,488 - MrTrader - INFO - Starting MrTrader Bot...
+2025-09-13 23:56:51,262 - MrTrader - INFO - Bot commands set successfully (initial attempt)
+2025-09-13 23:56:51,263 - MrTrader - INFO - Start handlers registered manually
+2025-09-13 23:56:51,265 - MrTrader - INFO - Callback handlers registered successfully
+2025-09-13 23:56:51,267 - MrTrader - INFO - Message handlers registered successfully
+2025-09-13 23:56:51,267 - MrTrader - INFO - All handlers registered successfully
+2025-09-13 23:56:51,267 - MrTrader - INFO - Bot application initialized successfully
+2025-09-13 23:56:51,268 - MrTrader - INFO - Starting bot startup tasks...
+2025-09-13 23:56:51,268 - MrTrader - INFO - Database health check: OK
+2025-09-13 23:56:51,269 - MrTrader - INFO - API ping check skipped - method not available
+2025-09-13 23:56:51,269 - MrTrader - INFO - System settings loading skipped - method not available
+2025-09-13 23:56:51,269 - MrTrader - INFO - Scheduled tasks configured:
+2025-09-13 23:56:51,270 - MrTrader - INFO - - Backup: Daily at 2:00 AM
+2025-09-13 23:56:51,270 - MrTrader - INFO - - Reports: Daily at 1:00 AM
+2025-09-13 23:56:51,270 - MrTrader - INFO - - Cleanup: Weekly on Sunday
+2025-09-13 23:56:51,270 - MrTrader - INFO - - Analytics: Hourly
+2025-09-13 23:56:51,461 - MrTrader - INFO - Startup notification sent successfully
+2025-09-13 23:56:51,462 - MrTrader - INFO - All startup tasks completed successfully
+2025-09-13 23:56:51,752 - MrTrader - INFO - Bot is running... Press Ctrl+C to stop
+2025-09-13 23:56:53,389 - MrTrader - INFO - Start command received from user 1517662886
+2025-09-13 23:56:53,391 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: start_command | Details: User started bot: am369ap
+2025-09-13 23:56:56,627 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: coins_list
+2025-09-13 23:56:58,478 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: show_market:gold
+2025-09-13 23:57:01,916 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: live_price:IR_COIN_BOBBLE
+2025-09-13 23:57:02,294 - MrTrader - INFO - Fetching live price for 'IR_COIN_BOBBLE' from GOLD server.
+2025-09-13 23:57:03,896 - MrTrader - ERROR - HTTP error fetching live price for IR_COIN_BOBBLE: Client error '404 Not Found' for url 'http://91.198.77.208:8080/live_price/IR_COIN_BOBBLE'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+2025-09-13 23:57:11,451 - MrTrader - INFO - Start command received from user 1517662886
+2025-09-13 23:57:11,453 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: start_command | Details: User started bot: am369ap
+2025-09-13 23:57:26,644 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: coins_list
+2025-09-13 23:57:28,946 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: show_market:currency
+2025-09-13 23:57:32,603 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: live_price:USD
+2025-09-13 23:57:33,017 - MrTrader - INFO - Fetching live price for 'USD' from GOLD server.
+2025-09-13 23:59:43,036 - MrTrader - INFO - Start command received from user 1517662886
+2025-09-13 23:59:43,042 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: start_command | Details: User started bot: am369ap
+2025-09-13 23:59:50,453 - MrTrader - INFO - DB_MIGRATION | Version: initial | Status: completed
+2025-09-13 23:59:50,454 - MrTrader - INFO - DB_CONNECTION | Status: initialized | Details: D:\phonix coin\mr.trader\st\telegram_bot\MR-TRADER-BOT-01_git\data\mrtrader.db
+2025-09-13 23:59:50,460 - MrTrader - INFO - API configuration reloaded
+2025-09-13 23:59:50,675 - MrTrader - INFO - Logging system initialized
+2025-09-13 23:59:50,675 - MrTrader - INFO - Initialized 1 main managers
+2025-09-13 23:59:50,675 - MrTrader - INFO - AdminManager initialized with managers: [1517662886]
+2025-09-13 23:59:50,679 - MrTrader - INFO - Referral system initialized successfully
+2025-09-13 23:59:50,679 - MrTrader - INFO - API configuration reloaded
+2025-09-13 23:59:50,681 - MrTrader - INFO - Report system initialized successfully
+2025-09-13 23:59:50,684 - MrTrader - INFO - Backup system initialized successfully
+2025-09-13 23:59:50,684 - MrTrader - INFO - All managers initialized successfully
+2025-09-13 23:59:50,686 - MrTrader - INFO - Referral system initialized successfully
+2025-09-13 23:59:50,686 - MrTrader - INFO - API configuration reloaded
+2025-09-13 23:59:50,688 - MrTrader - INFO - Report system initialized successfully
+2025-09-13 23:59:50,689 - MrTrader - INFO - All handlers initialized successfully
+2025-09-13 23:59:50,689 - MrTrader - INFO - MrTrader Bot initialized successfully
+2025-09-13 23:59:50,689 - MrTrader - INFO - Starting MrTrader Bot...
+2025-09-13 23:59:54,536 - MrTrader - INFO - Bot commands set successfully (initial attempt)
+2025-09-13 23:59:54,537 - MrTrader - INFO - Start handlers registered manually
+2025-09-13 23:59:54,538 - MrTrader - INFO - Callback handlers registered successfully
+2025-09-13 23:59:54,539 - MrTrader - INFO - Message handlers registered successfully
+2025-09-13 23:59:54,539 - MrTrader - INFO - All handlers registered successfully
+2025-09-13 23:59:54,539 - MrTrader - INFO - Bot application initialized successfully
+2025-09-13 23:59:54,540 - MrTrader - INFO - Starting bot startup tasks...
+2025-09-13 23:59:54,540 - MrTrader - INFO - Database health check: OK
+2025-09-13 23:59:54,540 - MrTrader - INFO - API ping check skipped - method not available
+2025-09-13 23:59:54,541 - MrTrader - INFO - System settings loading skipped - method not available
+2025-09-13 23:59:54,541 - MrTrader - INFO - Scheduled tasks configured:
+2025-09-13 23:59:54,541 - MrTrader - INFO - - Backup: Daily at 2:00 AM
+2025-09-13 23:59:54,541 - MrTrader - INFO - - Reports: Daily at 1:00 AM
+2025-09-13 23:59:54,542 - MrTrader - INFO - - Cleanup: Weekly on Sunday
+2025-09-13 23:59:54,542 - MrTrader - INFO - - Analytics: Hourly
+2025-09-13 23:59:54,778 - MrTrader - INFO - Startup notification sent successfully
+2025-09-13 23:59:54,778 - MrTrader - INFO - All startup tasks completed successfully
+2025-09-13 23:59:55,110 - MrTrader - INFO - Bot is running... Press Ctrl+C to stop
+2025-09-14 00:00:36,962 - MrTrader - INFO - DB_MIGRATION | Version: initial | Status: completed
+2025-09-14 00:00:36,962 - MrTrader - INFO - DB_CONNECTION | Status: initialized | Details: D:\phonix coin\mr.trader\st\telegram_bot\MR-TRADER-BOT-01_git\data\mrtrader.db
+2025-09-14 00:00:36,968 - MrTrader - INFO - API configuration reloaded
+2025-09-14 00:00:37,224 - MrTrader - INFO - Logging system initialized
+2025-09-14 00:00:37,224 - MrTrader - INFO - Initialized 1 main managers
+2025-09-14 00:00:37,224 - MrTrader - INFO - AdminManager initialized with managers: [1517662886]
+2025-09-14 00:00:37,227 - MrTrader - INFO - Referral system initialized successfully
+2025-09-14 00:00:37,228 - MrTrader - INFO - API configuration reloaded
+2025-09-14 00:00:37,230 - MrTrader - INFO - Report system initialized successfully
+2025-09-14 00:00:37,233 - MrTrader - INFO - Backup system initialized successfully
+2025-09-14 00:00:37,233 - MrTrader - INFO - All managers initialized successfully
+2025-09-14 00:00:37,235 - MrTrader - INFO - Referral system initialized successfully
+2025-09-14 00:00:37,236 - MrTrader - INFO - API configuration reloaded
+2025-09-14 00:00:37,238 - MrTrader - INFO - Report system initialized successfully
+2025-09-14 00:00:37,238 - MrTrader - INFO - All handlers initialized successfully
+2025-09-14 00:00:37,238 - MrTrader - INFO - MrTrader Bot initialized successfully
+2025-09-14 00:00:37,238 - MrTrader - INFO - Starting MrTrader Bot...
+2025-09-14 00:00:40,953 - MrTrader - INFO - Bot commands set successfully (initial attempt)
+2025-09-14 00:00:40,954 - MrTrader - INFO - Start handlers registered manually
+2025-09-14 00:00:40,955 - MrTrader - INFO - Callback handlers registered successfully
+2025-09-14 00:00:40,956 - MrTrader - INFO - Message handlers registered successfully
+2025-09-14 00:00:40,956 - MrTrader - INFO - All handlers registered successfully
+2025-09-14 00:00:40,956 - MrTrader - INFO - Bot application initialized successfully
+2025-09-14 00:00:40,957 - MrTrader - INFO - Starting bot startup tasks...
+2025-09-14 00:00:40,957 - MrTrader - INFO - Database health check: OK
+2025-09-14 00:00:40,957 - MrTrader - INFO - API ping check skipped - method not available
+2025-09-14 00:00:40,957 - MrTrader - INFO - System settings loading skipped - method not available
+2025-09-14 00:00:40,958 - MrTrader - INFO - Scheduled tasks configured:
+2025-09-14 00:00:40,958 - MrTrader - INFO - - Backup: Daily at 2:00 AM
+2025-09-14 00:00:40,958 - MrTrader - INFO - - Reports: Daily at 1:00 AM
+2025-09-14 00:00:40,958 - MrTrader - INFO - - Cleanup: Weekly on Sunday
+2025-09-14 00:00:40,959 - MrTrader - INFO - - Analytics: Hourly
+2025-09-14 00:00:41,209 - MrTrader - INFO - Startup notification sent successfully
+2025-09-14 00:00:41,209 - MrTrader - INFO - All startup tasks completed successfully
+2025-09-14 00:00:41,527 - MrTrader - INFO - Bot is running... Press Ctrl+C to stop
+2025-09-14 00:00:44,092 - MrTrader - INFO - Start command received from user 1517662886
+2025-09-14 00:00:44,093 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: start_command | Details: User started bot: am369ap
+2025-09-14 00:00:46,412 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: coins_list
+2025-09-14 00:00:49,364 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: show_market:gold
+2025-09-14 00:00:53,084 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: live_price:IR_GOLD_24K
+2025-09-14 00:00:53,562 - MrTrader - INFO - Fetching live price for 'IR_GOLD_24K' from GOLD server.
+2025-09-14 00:01:03,848 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: show_market:gold
+2025-09-14 00:01:07,067 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: coins_list
+2025-09-14 00:01:44,272 - MrTrader - INFO - USER_ACTION | UserID: 1517662886 | Action: callback_query | Details: Callback: main_menu
+2025-09-14 00:02:10,164 - MrTrader - INFO - USER_ACTION | UserID: 476739427 | Action: callback_query | Details: Callback: back_main
+2025-09-14 00:02:13,309 - MrTrader - INFO - USER_ACTION | UserID: 476739427 | Action: callback_query | Details: Callback: main_menu
+2025-09-14 00:02:20,763 - MrTrader - INFO - USER_ACTION | UserID: 476739427 | Action: callback_query | Details: Callback: user_profile
+2025-09-14 00:02:35,165 - MrTrader - INFO - USER_ACTION | UserID: 476739427 | Action: callback_query | Details: Callback: user_stats
+2025-09-14 00:02:39,366 - MrTrader - INFO - USER_ACTION | UserID: 476739427 | Action: callback_query | Details: Callback: main_menu
+2025-09-14 00:02:41,873 - MrTrader - INFO - USER_ACTION | UserID: 476739427 | Action: callback_query | Details: Callback: gold_menu
+2025-09-14 00:02:44,343 - MrTrader - INFO - USER_ACTION | UserID: 476739427 | Action: callback_query | Details: Callback: analyze_gold:IR_GOLD_18K

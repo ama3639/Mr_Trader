@@ -3,7 +3,7 @@
 """
 
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery
-from telegram.ext import ContextTypes, CallbackQueryHandler, MessageHandler, filters
+from telegram.ext import ContextTypes, CallbackQueryHandler, MessageHandler, filters , ConversationHandler , CommandHandler
 from telegram.constants import ParseMode
 from typing import Dict, List, Any, Optional
 import asyncio
@@ -21,15 +21,18 @@ from managers.referral_manager import ReferralManager
 from managers.settings_manager import SettingsManager
 from managers.message_manager import MessageManager
 from managers.payment_manager import PaymentManager
-from managers.symbol_manager import SymbolManager
+from managers.symbol_manager import SymbolManager , symbol_manager
 from managers.strategy_manager import StrategyManager
 from managers.report_manager import ReportManager
 from api.api_client import api_client
+from api.api_client import ApiClient
 from utils.time_manager import TimeManager
 from utils.helpers import extract_signal_details, format_signal_message
 from templates.keyboards import KeyboardTemplates
 from templates.messages import MessageTemplates
 from core.cache import cache
+
+WAITING_FOR_SYMBOL_INPUT = 1
 
 class CallbackHandler:
     """هندلر اصلی Callback Query ها"""
@@ -47,6 +50,7 @@ class CallbackHandler:
         self.strategy_manager = StrategyManager()
         self.report_manager = ReportManager()
         self.time_manager = TimeManager()
+        self.api_client = ApiClient()
 
     # =========================
     # هندلر اصلی Callback Query
@@ -125,22 +129,108 @@ class CallbackHandler:
         except Exception as e:
             logger.error(f"خطا در دانلود گزارش {filename}: {e}", exc_info=True)
             await query.answer("⚠️ خطا در ارسال فایل گزارش.", show_alert=True)                
+
+    async def handle_live_price_request(self, query: CallbackQuery, context: ContextTypes.DEFAULT_TYPE, symbol: str):
+        """درخواست قیمت لحظه‌ای را پردازش کرده و نتیجه را با دکمه بازگشت هوشمند نمایش می‌دهد."""
+        try:
+            await query.answer("در حال دریافت قیمت...")
+            await query.edit_message_text(f"🔄 در حال دریافت قیمت لحظه‌ای {symbol}... ⏳")
+            
+            # فراخوانی متد هوشمند از نمونه ApiClient
+            formatted_text, error = await self.api_client.fetch_live_price(symbol)
+            
+            if error:
+                await query.edit_message_text(error, parse_mode=ParseMode.HTML)
+                return
+
+            # --- بخش دکمه بازگشت هوشمند ---
+            # تشخیص اینکه نماد متعلق به کدام بازار است
+            gold_symbols = [s[1] for s in symbol_manager.get_symbols_by_market('gold')]
+            currency_symbols = [s[1] for s in symbol_manager.get_symbols_by_market('currency')]
+            
+            if symbol in gold_symbols:
+                back_callback = "show_market:gold"
+                back_text = "🔙 بازگشت به لیست طلا"
+            elif symbol in currency_symbols:
+                back_callback = "show_market:currency"
+                back_text = "🔙 بازگشت به قیمت لایو"
+            else: # در غیر این صورت کریپتو است
+                back_callback = "show_market:crypto"
+                back_text = "🔙 بازگشت به لیست کریپتو"
+
+            # ساخت کیبورد برای دکمه "بروزرسانی" و "بازگشت هوشمند"
+            keyboard = InlineKeyboardMarkup([
+                [InlineKeyboardButton("🔄 بروزرسانی", callback_data=f"live_price:{symbol}")],
+                [InlineKeyboardButton(back_text, callback_data=back_callback)]
+            ])
+
+            # نمایش نتیجه موفق به کاربر
+            await query.edit_message_text(
+                formatted_text,
+                reply_markup=keyboard,
+                parse_mode=ParseMode.HTML
+            )
+        except Exception as e:
+            logger.error(f"Error in handle_live_price_request for {symbol}: {e}")
+            await query.edit_message_text("❌ خطای غیرمنتظره‌ای در پردازش درخواست رخ داد.")
+
+    # --- متدهای جدید برای ورودی دستی ---
+    async def start_manual_live_price_input(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+        """مکالمه برای دریافت دستی نماد را شروع می‌کند."""
+        query = update.callback_query
+        await query.answer()
+        await query.edit_message_text("✏️ لطفاً نماد ارز دیجیتال مورد نظر را به انگلیسی وارد کنید (مثال: BTC):")
+        return WAITING_FOR_SYMBOL_INPUT
+
+    async def handle_manual_live_price_symbol(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+        """نماد وارد شده توسط کاربر را پردازش می‌کند."""
+        symbol = update.message.text.upper().strip()
+        # ایجاد یک شیء CallbackQuery ساختگی برای ارسال به هندلر اصلی
+        class FakeQuery:
+            def __init__(self, message):
+                self.message = message
+            async def answer(self, *args, **kwargs): pass
+            async def edit_message_text(self, *args, **kwargs):
+                return await self.message.reply_text(*args, **kwargs)
+
+        fake_query = FakeQuery(update.message)
+        await self.handle_live_price_request(fake_query, context, symbol)
+        return ConversationHandler.END
+        
+    async def cancel_conversation(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+        """مکالمه را لغو می‌کند."""
+        await update.message.reply_text("عملیات لغو شد.")
+        return ConversationHandler.END
+
         
     async def _process_callback(self, query: CallbackQuery, context: ContextTypes.DEFAULT_TYPE, callback_data: str):
-        """پردازش callback بر اساس نوع"""
+        """پردازش callback بر اساس نوع (نسخه اصلاح شده با روتر کامل)"""
         try:
-            # تجزیه callback data
             if ':' in callback_data:
-                parts = callback_data.split(':', 1)
-                action = parts[0]
-                param = parts[1] if len(parts) > 1 else None
+                action, param = callback_data.split(':', 1)
             else:
-                action = callback_data
-                param = None
+                action, param = callback_data, None
             
-            # پردازش بر اساس action
             if action == "main_menu":
                 await self.show_main_menu(query, context)
+            elif action == "coins_list":
+                await self.show_live_price_menu(query, context)
+            elif action == "show_market":
+                await self.show_market_submenu(query, context, param)
+            elif action == "live_price":
+                await self.handle_live_price_request(query, context, param)     
+            elif action == "gold_menu":
+                await self.show_gold_menu(query, context)
+            elif action == "gold_menu":
+                await self.show_gold_menu(query, context)
+            elif action == "currency_menu":
+                await self.show_currency_menu(query, context)
+            elif action == "analyze_gold":
+                await self.handle_gold_currency_analysis(query, context, param)
+            elif action == "backtest_menu":
+                await self.show_backtest_menu(query, context)
+            elif action == "backtest":
+                await self.handle_backtest_request(query, context, param)
             elif action == "user_profile":
                 await self.show_user_profile(query, context)
             elif action == "wallet_menu":
@@ -193,15 +283,15 @@ class CallbackHandler:
                 await self.handle_currency_selection(query, context, param)
             elif action == "select_timeframe":
                 await self.handle_timeframe_selection(query, context, param)
-            elif action == "download_report":  # ✅ اضافه شده
+            elif action == "download_report":  
                 await self.handle_download_report(query, context, param)
 
             else:
-                # سایر callback های ساده
+                # این بخش برای مدیریت سایر callback هاست
                 await self.handle_simple_callbacks(query, context, action)
                     
         except Exception as e:
-            logger.error(f"Error processing callback {callback_data}: {e}")
+            logger.error(f"Error processing callback {callback_data}: {e}", exc_info=True)
             await query.edit_message_text("❌ خطا در پردازش درخواست.")
 
     # =========================
@@ -209,60 +299,70 @@ class CallbackHandler:
     # =========================
 
     async def show_main_menu(self, query: CallbackQuery, context: ContextTypes.DEFAULT_TYPE):
-        """نمایش منوی اصلی"""
+        """نمایش منوی اصلی یکپارچه و صحیح از طریق callback"""
         try:
             user = query.from_user
-            user_data = self.user_manager.get_user_by_telegram_id(user.id) or {}
-            user_package = user_data.get('package', 'demo')
-            is_admin = self.admin_manager.is_admin(user.id)
             
-            menu_message = f"""🏠 <b>منوی اصلی MrTrader</b>
-
-👋 سلام {user.first_name}
-📦 پکیج فعال: <b>{user_package.upper()}</b>
-
-لطفاً از گزینه‌های زیر یکی را انتخاب کنید:
-
-📊 <b>تحلیل ارز:</b> تحلیل تکنیکال کامل
-💎 <b>لیست ارزها:</b> مشاهده قیمت ارزها
-📈 <b>نمودار قیمت:</b> رسم نمودار تعاملی
-🔔 <b>هشدار قیمت:</b> تنظیم آلارم قیمت
-🎯 <b>سیگنال‌ها:</b> سیگنال‌های خرید/فروش
-📰 <b>اخبار بازار:</b> آخرین اخبار کریپتو"""
-            
+            # ایجاد کیبورد منوی اصلی تمیز و بدون تکرار
             keyboard = [
                 [
-                    InlineKeyboardButton("📊 تحلیل ارز", callback_data="analysis_menu"),
-                    InlineKeyboardButton("💎 لیست ارزها", callback_data="coins_list")
+                    InlineKeyboardButton("🇮🇷 تحلیل طلا", callback_data="gold_menu"),
+                    InlineKeyboardButton("💵 تحلیل ارز", callback_data="currency_menu")
                 ],
                 [
-                    InlineKeyboardButton("📈 نمودار قیمت", callback_data="price_chart"),
-                    InlineKeyboardButton("🔔 هشدار قیمت", callback_data="price_alert")
+                    InlineKeyboardButton("📈 تحلیل کریپتو", callback_data="analysis_menu"),
+                    InlineKeyboardButton("🔬 بک‌تست", callback_data="backtest_menu")
                 ],
                 [
-                    InlineKeyboardButton("🎯 سیگنال‌ها", callback_data="signals_menu"),
-                    InlineKeyboardButton("📰 اخبار بازار", callback_data="market_news")
+                    InlineKeyboardButton("💎 قیمت لایو", callback_data="coins_list"),
+                    InlineKeyboardButton("📈 نمودار قیمت", callback_data="price_chart")
                 ],
                 [
-                    InlineKeyboardButton("👤 حساب کاربری", callback_data="user_profile"),
-                    InlineKeyboardButton("💰 کیف پول", callback_data="wallet_menu")
+                    InlineKeyboardButton("🔔 هشدار قیمت", callback_data="price_alert"),
+                    InlineKeyboardButton("🎯 سیگنال‌ها", callback_data="signals_menu")
                 ],
                 [
-                    InlineKeyboardButton("🛒 خرید پکیج", callback_data="packages_menu"),
-                    InlineKeyboardButton("🎁 دعوت دوستان", callback_data="referral_menu")
+                    InlineKeyboardButton("📰 اخبار بازار", callback_data="market_news"),
+                    InlineKeyboardButton("👤 حساب کاربری", callback_data="user_profile")
                 ],
                 [
-                    InlineKeyboardButton("ℹ️ راهنما", callback_data="help_menu"),
+                    InlineKeyboardButton("💰 کیف پول", callback_data="wallet_menu"),
+                    InlineKeyboardButton("🛒 خرید پکیج", callback_data="packages_menu")
+                ],
+                [
+                    InlineKeyboardButton("🎁 دعوت دوستان", callback_data="referral_menu"),
+                    InlineKeyboardButton("ℹ️ راهنما", callback_data="help_menu")
+                ],
+                [
                     InlineKeyboardButton("📞 پشتیبانی", callback_data="support_menu")
                 ]
             ]
             
+            # بخش مدیریت ادمین
+            is_admin = self.admin_manager.is_admin(user.id)
             if is_admin:
                 keyboard.append([
                     InlineKeyboardButton("🔧 پنل مدیریت", callback_data="admin_panel")
                 ])
-            
+
             reply_markup = InlineKeyboardMarkup(keyboard)
+            
+            # متن منو
+            menu_message = f"""🏠 <b>منوی اصلی MrTrader</b>
+
+👋 سلام {user.first_name}
+لطفاً از گزینه‌های زیر یکی را انتخاب کنید:
+
+
+📊 <b>تحلیل ارز:</b> تحلیل تکنیکال کامل
+💎 <b>قیمت لایو:</b> مشاهده قیمت ارزها
+📈 <b>نمودار قیمت:</b> رسم نمودار تعاملی
+🔔 <b>هشدار قیمت:</b> تنظیم آلارم قیمت
+🎯 <b>سیگنال‌ها:</b> سیگنال‌های خرید/فروش
+📰 <b>اخبار بازار:</b> آخرین اخبار کریپتو
+
+
+"""
             
             await query.edit_message_text(
                 menu_message.strip(),
@@ -271,9 +371,9 @@ class CallbackHandler:
             )
             
         except Exception as e:
-            logger.error(f"Error showing main menu: {e}")
-            await query.edit_message_text("⛔ خطا در نمایش منو.")
-
+            logger.error(f"Error showing main menu in callback: {e}")
+            await query.edit_message_text("⛔ خطا در نمایش منو.")        
+        
     async def show_user_profile(self, query: CallbackQuery, context: ContextTypes.DEFAULT_TYPE):
         """نمایش پروفایل کاربر"""
         try:
@@ -561,6 +661,51 @@ class CallbackHandler:
             logger.error(f"Error converting markdown to HTML: {e}")
             # در صورت خطا، فقط escape کردن کاراکترهای HTML
             return html.escape(str(text)) if text else ""
+        
+        
+    # --- Gold & Currency Handlers (متدهای جدید) ---
+    async def show_gold_menu(self, query: CallbackQuery, context: ContextTypes.DEFAULT_TYPE):
+        """منوی تحلیل طلا را نمایش می‌دهد."""
+        keyboard = KeyboardTemplates.generate_gold_menu_keyboard()
+        await query.edit_message_text("🇮🇷 لطفاً یکی از موارد زیر را برای تحلیل انتخاب کنید:", reply_markup=keyboard)
+
+    async def show_currency_menu(self, query: CallbackQuery, context: ContextTypes.DEFAULT_TYPE):
+        """منوی تحلیل ارز را نمایش می‌دهد."""
+        keyboard = KeyboardTemplates.generate_currency_menu_keyboard()
+        await query.edit_message_text("💵 لطفاً یک ارز را برای تحلیل انتخاب کنید:", reply_markup=keyboard)
+
+    async def handle_gold_currency_analysis(self, query: CallbackQuery, context: ContextTypes.DEFAULT_TYPE, symbol: str):
+        """درخواست تحلیل طلا یا ارز را پردازش می‌کند."""
+        await query.edit_message_text(f"🔄 در حال تحلیل نماد {symbol}...\nلطفاً کمی صبر کنید... ⏳")
+        
+        response, error = await ApiClient.fetch_gold_analysis(symbol)
+        
+        if error:
+            await query.edit_message_text(f"❌ خطا در تحلیل:\n{error}")
+            return
+            
+        analysis_text = response.get('report_text', 'گزارشی یافت نشد.')
+        await query.edit_message_text(analysis_text, reply_markup=KeyboardTemplates.back_to_menu("main_menu"))
+
+    # --- Backtest Handlers (متدهای جدید) ---
+    async def show_backtest_menu(self, query: CallbackQuery, context: ContextTypes.DEFAULT_TYPE):
+        """منوی بک‌تست را نمایش می‌دهد."""
+        keyboard = KeyboardTemplates.generate_backtest_menu_keyboard()
+        text = MessageTemplates.get_backtest_menu_text()
+        await query.edit_message_text(text, reply_markup=keyboard)
+
+    async def handle_backtest_request(self, query: CallbackQuery, context: ContextTypes.DEFAULT_TYPE, symbol: str):
+        """درخواست بک‌تست را برای یک نماد پردازش می‌کند."""
+        await query.edit_message_text(f"🔬 در حال اجرای بک‌تست برای نماد {symbol}...\nاین فرآیند ممکن است کمی طول بکشد ⏳")
+        
+        results, error = await ApiClient.fetch_backtest_results(symbol)
+        
+        if error:
+            await query.edit_message_text(f"❌ خطا در اجرای بک‌تست:\n{error}")
+            return
+            
+        report = MessageTemplates.format_backtest_results(results)
+        await query.edit_message_text(report, reply_markup=KeyboardTemplates.back_to_menu("backtest_menu", "🔬 بک‌تست جدید"))
                                     
     # =========================
     # توابع پنل ادمین
@@ -1186,16 +1331,48 @@ class CallbackHandler:
         keyboard = [[InlineKeyboardButton("🔙 بازگشت", callback_data="main_menu")]]
         await query.edit_message_text(simple_message, reply_markup=InlineKeyboardMarkup(keyboard))
 
+    async def show_live_price_menu(self, query: CallbackQuery, context: ContextTypes.DEFAULT_TYPE):
+        """منوی قیمت لحظه‌ای را نمایش می‌دهد."""
+        keyboard = KeyboardTemplates.generate_live_price_menu_keyboard()
+        await query.edit_message_text(
+            "💹 **قیمت لحظه‌ای بازار**\n\n"
+            "لطفاً یک نماد را برای مشاهده قیمت لحظه‌ای انتخاب کنید:",
+            reply_markup=keyboard
+        )
+
+    async def show_market_submenu(self, query: CallbackQuery, context: ContextTypes.DEFAULT_TYPE, market_type: str):
+        """زیرمنوی نمادها را برای بازار انتخاب شده نمایش می‌دهد."""
+        market_names = {
+            "gold": "طلا و سکه", "currency": "ارزها", 
+            "crypto": "ارزهای دیجیتال", "crypto_full": "لیست کامل ارزهای دیجیتال"
+        }
+        message = f"**{market_names.get(market_type, 'لیست')}**\n\nلطفاً نماد مورد نظر را انتخاب کنید:"
+        keyboard = KeyboardTemplates.generate_symbols_keyboard(market_type)
+        await query.edit_message_text(message, reply_markup=keyboard, parse_mode="Markdown")
+
+
     # =========================
     # Get Handlers
     # =========================
 
-    def get_handlers(self) -> List:
-        """دریافت لیست هندلرها"""
-        return [
-            CallbackQueryHandler(self.handle_callback_query),
-            MessageHandler(filters.TEXT & ~filters.COMMAND, self.handle_admin_text_message)
-        ]
+    def get_handlers(self):
+        """
+        تمام هندلرهای این کلاس، شامل ConversationHandler برای ورودی دستی را برمی‌گرداند.
+        """
+        # ساخت ConversationHandler برای ورودی دستی
+        manual_input_conv = ConversationHandler(
+            entry_points=[CallbackQueryHandler(self.start_manual_live_price_input, pattern="^live_manual_input$")],
+            states={
+                WAITING_FOR_SYMBOL_INPUT: [MessageHandler(filters.TEXT & ~filters.COMMAND, self.handle_manual_live_price_symbol)],
+            },
+            fallbacks=[CommandHandler('cancel', self.cancel_conversation)],
+        )
+
+        # هندلر اصلی برای تمام دکمه‌های دیگر
+        main_callback_handler = CallbackQueryHandler(self.handle_callback_query)
+
+        return [manual_input_conv, main_callback_handler]
+
 
 # Export
 __all__ = ['CallbackHandler']

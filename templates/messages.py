@@ -9,6 +9,34 @@ from utils.helpers import format_currency, format_percentage
 
 class MessageTemplates:
     """کلاس قالب‌های پیام"""
+
+    @staticmethod
+    def get_backtest_menu_text():
+        return (
+            "🔬 **بک‌تست استراتژی**\n\n"
+            "این بخش عملکرد استراتژی تحلیل را بر روی داده‌های تاریخی (گذشته) آزمایش می‌کند.\n\n"
+            "**توجه:** نتایج گذشته تضمینی برای آینده نیست و این ابزار صرفاً جهت ارزیابی کارایی استراتژی است.\n\n"
+            "لطفاً یک نماد را برای اجرای بک‌تست انتخاب کنید:"
+        )
+
+    @staticmethod
+    def format_backtest_results(results: dict):
+        """نتایج بک‌تست را به یک پیام خوانا برای کاربر تبدیل می‌کند."""
+        report_text = "📊 **نتایج نهایی بک‌تست**\n\n"
+        for sym, stats in results.items():
+            if "error" in stats:
+                report_text += f"--- **{sym}** ---\n"
+                report_text += f"❌ خطا: {stats['error']}\n\n"
+            else:
+                report_text += f"--- **{sym}** ---\n"
+                report_text += f"** بازدهی کل:** {stats.get('Return [%]', 'N/A')}%\n"
+                report_text += f"** درصد موفقیت:** {stats.get('Win Rate [%]', 'N/A')}%\n"
+                report_text += f"** حداکثر افت سرمایه:** {stats.get('Max. Drawdown [%]', 'N/A')}%\n"
+                report_text += f"** تعداد معاملات:** {stats.get('# Trades', 'N/A')}\n"
+                report_text += f"** دوره تست:** {stats.get('Duration', 'N/A')}\n\n"
+        
+        report_text += "⚠️ **نکته:** این نتایج بر اساس داده‌های گذشته است و تضمینی برای عملکرد آینده نیست."
+        return report_text
     
     @staticmethod
     def welcome_message(user_name: str, is_new_user: bool = True) -> str:

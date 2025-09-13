@@ -1,36 +1,54 @@
- {
-    "price_action": "http://91.198.77.208:8000/analyze_price_action_pandas_ta/",
-    "macd_divergence": "http://91.198.77.208:8000/analyze_macd_divergence_strategy/",
-    "head_shoulders": "http://91.198.77.208:8000/analyze_head_shoulders_analysis/",
-    "fibonacci": "http://91.198.77.208:8000/analyze_fibonacci/",
-    "cup_handle": "http://91.198.77.208:8000/analyze_cup_handle_pattern_code/",
-    "bollinger": "http://91.198.77.208:8000/analyze_bollinger/",
-    "atr": "http://91.198.77.208:8000/analyze_atr/",
-    "crt": "http://91.198.77.208:8000/analyze_CRT_strategy/",
-    "diamond": "http://91.198.77.208:8000/analyze_Diamond_Pattern/",
-    "cci": "http://91.198.77.208:8000/analyze_CCI_strategy/",
-    "ema": "http://91.198.77.208:8000/analyze_EMA_strategy/",
-    "ichimoku_strategy": "http://91.198.77.208:8000/analyze_ichimoku_strategy/",
-    "macd_basic": "http://91.198.77.208:8000/analyze_MACD_basic/",
-    "rsi_basic": "http://91.198.77.208:8000/analyze_RSI_basic/",
-    "williams_r": "http://91.198.77.208:8000/analyze_WilliamsR/",
-    "heikin_ashi": "http://91.198.77.208:8000/analyze_heikin_ashi_strategy/",
-    "double_top": "http://91.198.77.208:8000/analyze_double_top_strategy/",
-    "flag_pattern": "http://91.198.77.208:8000/analyze_flag_pattern/",
-    "momentum": "http://91.198.77.208:8000/analyze_momentum_strategy/",
-    "stochastic": "http://91.198.77.208:8000/analyze_stochastic_signal/",
-    "wedge_pattern": "http://91.198.77.208:8000/analyze_wedge_pattern/",
-    "triangle": "http://91.198.77.208:8000/analyze_triangle_pattern_code/",
-    "candlestick": "http://91.198.77.208:8000/analyze_candl_estick/",
-    "pivot": "http://91.198.77.208:8000/analyze_pivot/",
-    "ichimoku_hi_signal": "http://91.198.77.208:8000/analyze_ichimoku_Hi_signal/",
-    "hh_hl": "http://91.198.77.208:8000/analyze_hh_hl_strategy/",
-    "volume_profile": "http://91.198.77.208:8000/analyze_Volume_Profile_strategy/",
-    "p3": "http://91.198.77.208:8000/analyze_p3_strategy_code/",
-    "rtm": "http://91.198.77.208:8000/analyze_RTM_analysis_system/",
-    "sfefq": "http://91.198.77.208:8000/analyze_SFEFQ/",
-    "vwap": "http://91.198.77.208:8000/analyze_vwap_strategy_script/",
-    "binance_live": "http://91.198.77.208:8000/live_price/",
-    "read_file": "http://91.198.77.208:8000/read_report_file/"
+{
+  "crypto_analysis": {
+    "base_url": "http://91.198.77.208:8000",
+    "endpoints": {
+      "price_action": "/analyze_price_action_pandas_ta/",
+      "macd_divergence": "/analyze_macd_divergence_strategy/",
+      "head_shoulders": "/analyze_head_shoulders_analysis/",
+      "fibonacci": "/analyze_fibonacci_strategy/",
+      "cup_handle": "/analyze_cup_handle_pattern_code/",
+      "bollinger": "/analyze_bollinger_bands_strategy/",
+      "atr": "/analyze_ATR_strategy/",
+      "crt": "/analyze_CRT_strategy/",
+      "diamond": "/analyze_Diamond_Pattern/",
+      "cci": "/analyze_CCI_strategy/",
+      "ema": "/analyze_EMA_strategy/",
+      "ichimoku_strategy": "/analyze_ichimoku_strategy/",
+      "macd_basic": "/analyze_MACD_basic/",
+      "rsi_basic": "/analyze_RSI_basic/",
+      "williams_r": "/analyze_WilliamsR/",
+      "heikin_ashi": "/analyze_heikin_ashi_strategy/",
+      "double_top": "/analyze_double_top_strategy/",
+      "flag_pattern": "/analyze_flag_pattern/",
+      "momentum": "/analyze_momentum_strategy/",
+      "stochastic": "/analyze_stochastic_signal/",
+      "wedge_pattern": "/analyze_wedge_pattern/",
+      "triangle": "/analyze_triangle_pattern_code/",
+      "candlestick": "/analyze_candl_estick/",
+      "pivot": "/analyze_pivot/",
+      "ichimoku_hi_signal": "/analyze_ichimoku_Hi_signal/",
+      "hh_hl": "/analyze_hh_hl_strategy/",
+      "volume_profile": "/analyze_Volume_Profile_strategy/",
+      "p3": "/analyze_p3_strategy_code/",
+      "rtm": "/analyze_RTM_analysis_system/",
+      "sfefq": "/analyze_SFEFQ/",
+      "vwap": "/analyze_vwap_strategy_script/"
+    }
+  },
+  "gold_analysis": {
+    "base_url": "http://91.198.77.208:8080",
+    "endpoint": "/analyze_gold_strategy/"
+  },
+  "backtest": {
+    "base_url": "http://9.198.77.208:8080",
+    "endpoint": "/backtest/"
+  },
+  "live_price": {
+    "crypto": "http://91.198.77.208:8000/live_price/",
+    "gold": "http://91.198.77.208:8080/live_price/"
+  },
+  "file_reader": {
+    "base_url": "http://91.198.77.208:8000",
+    "endpoint": "/read_report_file/"
+  }
 }
-
